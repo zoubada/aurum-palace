@@ -203,10 +203,10 @@ input,select{font:inherit;color:inherit}
 .ctrl-row>*{flex:1;min-width:0}
 @media(min-width:760px){.ctrl.wide{grid-template-columns:1fr 1fr;align-items:end}}
 .lbl{font-size:12px;color:var(--mu);font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 8px}
-.betctl .row{display:flex;gap:6px}
-.betctl button{height:44px;min-width:44px;padding:0 10px;border-radius:11px;background:var(--s3);font-weight:700;font-size:13px;color:var(--mu);transition:color .15s,background .15s}
+.betctl .row{display:flex;gap:6px;flex-wrap:wrap}
+.betctl button{flex:0 0 auto;height:44px;min-width:44px;padding:0 10px;border-radius:11px;background:var(--s3);font-weight:700;font-size:13px;color:var(--mu);transition:color .15s,background .15s}
 .betctl button:hover:not(:disabled){color:var(--tx);background:var(--s4)}
-.inp{flex:1;display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line2);border-radius:11px;padding:0 12px;min-width:0}
+.inp{flex:1 1 96px;min-width:78px;display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line2);border-radius:11px;padding:0 12px}
 .inp:focus-within{border-color:var(--gold)}
 .inp input{width:100%;min-width:0;background:none;border:0;color:var(--tx);font:700 16px var(--ff);height:42px;outline:none}
 .inp input:disabled{opacity:.6}
