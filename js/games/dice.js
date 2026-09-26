@@ -3,14 +3,15 @@
 reg({id:'dice',name:'Dice',cat:'originals',rtp:'96 %',vol:'Réglable',badge:null,pop:60,
   bg:'radial-gradient(circle at 50% 30%,#0a3a2a,#02120d)',glyph:ic('dice',64),
   init(stage){
-    stage.innerHTML=`<div class="dice-big num" id="res">00,00</div>
+    stage.innerHTML=`<div class="orig-stage" style="--orig-accent:#22C58B"><div class="orig-glow"></div>
+    <div class="dice-big num" id="res">00,00</div>
     <div class="dice-track"><div class="dmark" id="mark"><span id="markv"></span></div><div class="dice-bar" id="bar"></div><input type="range" id="tgt" min="0" max="100" step="0.01" value="47"></div>
     <div class="dscale"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
     <div class="ctrl wide" style="margin-top:18px">
       <div><div class="seg" style="max-width:260px"><button class="on" id="under">Au-dessous</button><button id="over">Au-dessus</button></div>
       <div class="stats" style="margin-top:10px"><div class="st"><b id="chance">47,00 %</b><span>Chance de gagner</span></div><div class="st"><b id="mult">2,04×</b><span>Multiplicateur</span></div></div></div>
       <div><div class="ctrl-row" id="betrow"></div><button class="btn btn-gold btn-big" id="go" style="margin-top:10px">Lancer</button></div>
-    </div>`;
+    </div></div>`;
     const bc=betCtl('dice',50);$('#betrow',stage).appendChild(bc.el);
     const tgt=$('#tgt',stage),bar=$('#bar',stage),res=$('#res',stage),mark=$('#mark',stage),markv=$('#markv',stage);
     const chance=$('#chance',stage),mult=$('#mult',stage),go=$('#go',stage),underB=$('#under',stage),overB=$('#over',stage);

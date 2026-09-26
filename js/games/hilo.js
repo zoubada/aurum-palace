@@ -3,14 +3,15 @@
 reg({id:'hilo',name:'Hi-Lo',cat:'originals',rtp:'94 %',vol:'Moyenne',badge:null,pop:44,
   bg:'radial-gradient(circle at 50% 30%,#1c2a3a,#080e15)',glyph:`<div class="gc-hero2">${cardEl({r:'7',s:'♦'})}${cardEl({r:'Q',s:'♠'})}</div>`,
   init(stage){
-    stage.innerHTML=`<div class="hl-row" id="row"></div>
+    stage.innerHTML=`<div class="orig-stage" style="--orig-accent:#F5D76E"><div class="orig-glow"></div>
+    <div class="hl-row" id="row"></div>
     <div class="chain" id="chain"></div>
     <div class="msg" id="msg">Mise, puis choisis Plus haut ou Plus bas.</div>
     <div class="ctrl wide">
       <div class="ctrl-row" id="betrow"></div>
       <div class="ctrl-row" id="acts"></div>
     </div>
-    <div class="stats" style="margin-top:12px"><div class="st"><b id="mult">1,00×</b><span>Multiplicateur cumulé</span></div><div class="st"><b id="pot">◈ 0</b><span>Gain potentiel</span></div></div>`;
+    <div class="stats" style="margin-top:12px"><div class="st"><b id="mult">1,00×</b><span>Multiplicateur cumulé</span></div><div class="st"><b id="pot">◈ 0</b><span>Gain potentiel</span></div></div></div>`;
     const bc=betCtl('hilo',50);$('#betrow',stage).appendChild(bc.el);
     const row=$('#row',stage),chain=$('#chain',stage),msg=$('#msg',stage),acts=$('#acts',stage),multE=$('#mult',stage),potE=$('#pot',stage);
     const RV={A:14,K:13,Q:12,J:11,'10':10,9:9,8:8,7:7,6:6,5:5,4:4,3:3,2:2};

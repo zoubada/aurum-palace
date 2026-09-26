@@ -3,14 +3,15 @@
 reg({id:'mines',name:'Mines',cat:'originals',rtp:'95 %',vol:'Haute',badge:null,pop:82,
   bg:'radial-gradient(circle at 50% 30%,#3a2a08,#120d02)',glyph:ic('bomb',64),
   init(stage){
-    stage.innerHTML=`<div class="infos"><div><b id="mmult">1,00×</b><span>Multiplicateur</span></div><div><b id="mpot">◈ 0</b><span>Gain potentiel</span></div><div><b id="mopen">0</b><span>Cases sûres</span></div></div>
+    stage.innerHTML=`<div class="orig-stage" style="--orig-accent:#EF4444"><div class="orig-glow"></div>
+    <div class="infos"><div><b id="mmult">1,00×</b><span>Multiplicateur</span></div><div><b id="mpot">◈ 0</b><span>Gain potentiel</span></div><div><b id="mopen">0</b><span>Cases sûres</span></div></div>
     <div class="mgrid" id="grid"></div>
     <div class="msg" id="msg">&nbsp;</div>
     <div class="ctrl wide">
       <div><div class="ctrl-row" id="betrow"></div>
       <label class="field" style="margin-top:10px">Nombre de mines<select class="sel" id="nmines" style="width:100%">${Array.from({length:24},(_,i)=>i+1).map(n=>`<option value="${n}" ${n===3?'selected':''}>${n} mine${n>1?'s':''}</option>`).join('')}</select></label></div>
       <button class="btn btn-gold btn-big" id="go" style="height:64px">Miser</button>
-    </div>`;
+    </div></div>`;
     const bc=betCtl('mines',100);$('#betrow',stage).appendChild(bc.el);
     const grid=$('#grid',stage),go=$('#go',stage),msg=$('#msg',stage),nsel=$('#nmines',stage);
     const mmult=$('#mmult',stage),mpot=$('#mpot',stage),mopen=$('#mopen',stage);

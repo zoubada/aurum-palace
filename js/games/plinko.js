@@ -7,13 +7,13 @@ const PLINKO_M={
 reg({id:'plinko',name:'Plinko',cat:'originals',rtp:'95 %',vol:'Réglable',badge:'new',pop:80,
   bg:'radial-gradient(circle at 50% 20%,#0a2540,#040e1a)',glyph:ic('plinko',64),
   init(stage){
-    stage.innerHTML=`<div class="pk-box"><canvas id="pk"></canvas><div class="pk-slots" id="slots"></div></div>
+    stage.innerHTML=`<div class="orig-stage" style="--orig-accent:#3B82F6"><div class="orig-glow"></div><div class="pk-box"><canvas id="pk"></canvas><div class="pk-slots" id="slots"></div></div>
     <div class="msg" id="msg">&nbsp;</div>
     <div class="ctrl wide">
       <div class="ctrl-row" id="betrow"></div>
       <div><div class="ctrl-row"><select class="sel" id="risk" style="flex:1"><option value="low">Risque faible</option><option value="med" selected>Risque moyen</option><option value="high">Risque élevé</option></select><select class="sel" id="rows" style="flex:1"><option>8</option><option>10</option><option selected>12</option><option>14</option><option>16</option></select></div>
       <button class="btn btn-gold btn-big" id="go" style="margin-top:10px">Lâcher la bille</button></div>
-    </div>`;
+    </div></div>`;
     const bc=betCtl('plinko',50);$('#betrow',stage).appendChild(bc.el);
     const cv=$('#pk',stage),ctx=cv.getContext('2d'),go=$('#go',stage),msg=$('#msg',stage),riskSel=$('#risk',stage),rowsSel=$('#rows',stage),slotsEl=$('#slots',stage);
     let rows=12,risk='med',balls=[],pegs=[];
