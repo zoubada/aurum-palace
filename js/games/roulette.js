@@ -8,13 +8,18 @@ reg({id:'roulette',name:'Roulette Européenne',cat:'table',rtp:'97,3 %',vol:'Moy
   glyph:`<svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(RN.map(n=>({l:'',c:n===0?'#047857':RED.has(n)?'#B4232A':'#1C2130'})),{r:140,inner:56,id:'rmini'})}<circle r="52" fill="#0B0D12" stroke="#D4AF37" stroke-width="3"/></svg>`,
   init(stage){
     stage.innerHTML=`<div class="rl">
-      <div><div class="wheel-box"><div class="wheel-ptr"></div><svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(RN.map(n=>({l:n,c:n===0?'#047857':RED.has(n)?'#B4232A':'#1C2130',fs:12})),{r:140,inner:30,id:'rwheel'})}<circle r="26" fill="#0B0D12" stroke="#D4AF37" stroke-width="3"/></svg><div class="rnum" id="rnum"></div></div>
+      <div><div class="wheel-box"><div class="wheel-ptr"></div><div class="rball" id="rball"></div><svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(RN.map(n=>({l:n,c:n===0?'#047857':RED.has(n)?'#B4232A':'#1C2130',fs:12})),{r:140,inner:30,id:'rwheel'})}<circle r="26" fill="#0B0D12" stroke="#D4AF37" stroke-width="3"/></svg><div class="rnum" id="rnum"></div></div>
       <div class="rstat" id="rstat"></div><div class="bead" id="bead" style="margin-top:10px"></div></div>
       <div><div class="chipsel" id="chips" style="margin-bottom:12px"></div>
       <div class="rt" id="grid"></div>
       <div class="rt-out2" id="outside2" style="margin-top:6px"></div>
       <div class="rt-out" id="outside" style="margin-top:4px"></div>
-      <div class="ctrl-row" style="margin-top:14px"><span class="lbl" style="margin:0;flex:1">Mise totale : <b class="gold num" id="tot">0</b> ◈</span><button class="btn btn-ghost btn-sm" id="clear">Effacer</button></div>
+      <div class="ctrl-row" style="margin-top:14px;gap:8px">
+        <span class="lbl" style="margin:0;flex:1">Mise totale : <b class="gold num" id="tot">0</b> ◈</span>
+        <button class="btn btn-ghost btn-sm" id="rebet">Rejouer</button>
+        <button class="btn btn-ghost btn-sm" id="dbl2">×2</button>
+        <button class="btn btn-ghost btn-sm" id="clear">Effacer</button>
+      </div>
       <button class="btn btn-gold btn-big" id="spin" style="margin-top:10px">Lancer la bille</button>
       <div class="msg" id="msg">&nbsp;</div></div></div>`;
     const chip=chipSel('roulette');$('#chips',stage).appendChild(chip.el);
@@ -53,6 +58,9 @@ reg({id:'roulette',name:'Roulette Européenne',cat:'table',rtp:'97,3 %',vol:'Moy
       bets[b.dataset.b]=r2((bets[b.dataset.b]||0)+v);snd('chip');redraw();
     }));
     $('#clear',stage).addEventListener('click',()=>{Object.keys(bets).forEach(k=>delete bets[k]);snd('click');redraw()});
+    let lastBets=null;
+    $('#rebet',stage).addEventListener('click',()=>{if(!lastBets)return;Object.assign(bets,lastBets);snd('chip');redraw()});
+    $('#dbl2',stage).addEventListener('click',()=>{const tot=Object.values(bets).reduce((a,b)=>a+b,0);if(tot<=0)return;if(!canBet(tot))return;for(const k in bets)bets[k]=r2(bets[k]*2);snd('chip');redraw()});
     const rnumEl=$('#rnum',stage);
     function paintHistory(){const bd=$('#bead',stage),st=$('#rstat',stage);
       if(!S.rh.length){bd.style.display='flex';bd.style.alignItems='center';bd.style.justifyContent='center';bd.innerHTML='<span class="mu2" style="font-size:12.5px">L’historique des numéros sortis apparaîtra ici</span>';st.innerHTML='';return}
@@ -62,19 +70,38 @@ reg({id:'roulette',name:'Roulette Européenne',cat:'table',rtp:'97,3 %',vol:'Moy
       st.innerHTML=`<span>12 derniers : <b class="pos">${rc}</b> rouges / <b>${bc}</b> noirs</span>`+(hot.length?`<span>Numéros chauds :${hot.map(([n,c])=>` <span class="n ${n==0?'grn':isRed(+n)?'red':'blk'}">${n}</span>`).join('')}</span>`:'');
     }
     paintHistory();
+    const ballEl=$('#rball',stage);
+    function spinBall(durationMs){
+      ballEl.style.opacity='1';
+      const R0=134,R1=104,turns=8;
+      return new Promise(resolve=>{
+        const t0=performance.now();
+        function frame(t){
+          const k=Math.min(1,(t-t0)/durationMs);
+          const ease=1-Math.pow(1-k,3);
+          const ang=-(turns*360)*ease;
+          const r=R0-(R0-R1)*ease;
+          const rad=ang*Math.PI/180;
+          ballEl.style.transform=`translate(${(r*Math.sin(rad)).toFixed(1)}px,${(-r*Math.cos(rad)).toFixed(1)}px)`;
+          if(k<1)requestAnimationFrame(frame);else resolve();
+        }
+        requestAnimationFrame(frame);
+      });
+    }
     let busy=false;
     spinBtn.addEventListener('click',async()=>{
       if(busy)return;const tot=r2(Object.values(bets).reduce((a,b)=>a+b,0));
       if(tot<=0){toast('Place au moins un jeton sur le tapis.','err');return}
       if(!canBet(tot))return;
       busy=true;spinBtn.disabled=true;msg.textContent='La bille tourne…';msg.className='msg';
+      lastBets={...bets};
       take(tot);
       rngStart();const idx=randInt(37);const n=RN[idx];
       const wheel=$('#rwheel',stage);const seg=360/37;const cur=(wheel._rot||0);
       const target=360*7-idx*seg-seg/2;const rot=cur - (cur%360) + target;wheel._rot=rot;
       wheel.style.transition='transform 4.2s cubic-bezier(.12,.7,.15,1)';wheel.style.transform=`rotate(${rot}deg)`;
       const tk=setInterval(()=>snd('tick'),110);
-      await sleep(4300);clearInterval(tk);
+      await Promise.all([sleep(4300),spinBall(4200)]);clearInterval(tk);
       rnumEl.innerHTML=`<span class="show" style="background:${n===0?'#047857':isRed(n)?'#B4232A':'#232838'}">${n}</span>`;
       let win=0;const hitKeys=[];
       for(const[k,amt] of Object.entries(bets)){const[type,val]=k.split(':');const m=payoutFor(type,val,n);if(m>0){win+=amt*(m+1);hitKeys.push(k)}}
