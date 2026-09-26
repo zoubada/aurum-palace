@@ -481,7 +481,7 @@ body.fs-lock{overflow:hidden}
 .sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:#fff7dc;padding:10px}
 .sc-cell{aspect-ratio:1;display:grid;place-items:center;font-size:clamp(30px,9vw,42px);background:#fff;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);transition:.3s}
 .sc-cell.w{background:#fff1b8;box-shadow:inset 0 0 0 3px #D4AF37}
-.sc-area canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.sc-area canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair;z-index:5}
 .sc-foot{text-align:center;color:#2a1d02;font-size:12px;font-weight:700;margin-top:8px}
 
 /* ---------- Overlays ---------- */
