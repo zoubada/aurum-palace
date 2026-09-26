@@ -5,9 +5,10 @@ reg({id:'wheel',name:'Roue de la Fortune',cat:'instant',rtp:'90 %',vol:'Haute',b
   bg:'radial-gradient(circle at 50% 30%,#3a1a08,#120802)',
   glyph:`<svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(WHEEL_SEGS.map(s=>({...s,l:''})),{r:140,inner:20,id:'fwmini'})}<circle r="18" fill="#0B0D12" stroke="#D4AF37" stroke-width="2"/></svg>`,
   init(stage){
-    stage.innerHTML=`<div class="wheel-box" style="margin-bottom:16px"><div class="wheel-ptr"></div><svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(WHEEL_SEGS,{r:140,inner:18,id:'fw'})}<circle r="16" fill="#0B0D12" stroke="#D4AF37" stroke-width="2"/></svg></div>
+    stage.innerHTML=`<div class="orig-stage" style="--orig-accent:#F59E0B"><div class="orig-glow"></div>
+    <div class="wheel-box" style="margin-bottom:16px"><div class="wheel-ptr"></div><svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(WHEEL_SEGS,{r:140,inner:18,id:'fw'})}<circle r="16" fill="#0B0D12" stroke="#D4AF37" stroke-width="2"/></svg></div>
     <div class="msg" id="msg">&nbsp;</div>
-    <div class="ctrl"><div class="ctrl-row" id="betrow"></div><button class="btn btn-gold btn-big" id="go">Tourner</button></div>`;
+    <div class="ctrl"><div class="ctrl-row" id="betrow"></div><button class="btn btn-gold btn-big" id="go">Tourner</button></div></div>`;
     const bc=betCtl('wheel',100);$('#betrow',stage).appendChild(bc.el);
     const go=$('#go',stage),msg=$('#msg',stage),wh=$('#fw',stage);let rot=0,busy=false;
     go.addEventListener('click',async()=>{

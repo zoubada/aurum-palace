@@ -4,11 +4,12 @@ const KENO_M={1:[0,3.6],2:[0,1.6,5],3:[0,0,4.7,21],4:[0,0,2.5,7,40],5:[0,0,1.7,3
 reg({id:'keno',name:'Keno',cat:'instant',rtp:'90 %',vol:'Réglable',badge:null,pop:66,
   bg:'radial-gradient(circle at 50% 30%,#1c0a3a,#080212)',glyph:ic('grid',64),
   init(stage){
-    stage.innerHTML=`<div class="kgrid" id="grid"></div>
+    stage.innerHTML=`<div class="orig-stage" style="--orig-accent:#7C3AED"><div class="orig-glow"></div>
+    <div class="kgrid" id="grid"></div>
     <div class="ctrl-row" style="margin-top:12px"><button class="btn btn-ghost btn-sm" id="clear">Effacer</button><button class="btn btn-ghost btn-sm" id="quick">10 au hasard</button><span class="mu" style="align-self:center;margin-left:auto;font-size:13px">Choisis 1 à 10 numéros</span></div>
     <div class="kpay" id="kpay"></div>
     <div class="msg" id="msg">&nbsp;</div>
-    <div class="ctrl"><div class="ctrl-row" id="betrow"></div><button class="btn btn-gold btn-big" id="go">Tirer</button></div>`;
+    <div class="ctrl"><div class="ctrl-row" id="betrow"></div><button class="btn btn-gold btn-big" id="go">Tirer</button></div></div>`;
     const bc=betCtl('keno',50);$('#betrow',stage).appendChild(bc.el);
     const grid=$('#grid',stage),msg=$('#msg',stage),go=$('#go',stage),kpay=$('#kpay',stage);
     let picked=new Set();
