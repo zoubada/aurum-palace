@@ -23,12 +23,15 @@ function vpRank(cards){
 reg({id:'videopoker',name:'Vidéo Poker',cat:'table',rtp:'99,5 %',vol:'Moyenne',badge:null,pop:52,
   bg:'radial-gradient(circle at 50% 30%,#1c1c3a,#08081a)',glyph:cardEl({r:'A',s:'♥'},{cls:'gc-hero'}),
   init(stage){
-    stage.innerHTML=`<div style="max-width:640px;margin:0 auto"><div class="vp-hand" id="vh"></div></div>
+    stage.innerHTML=`<div class="felt" style="min-height:220px"><div class="bj-banner" id="banner"><span class="bj-ic">${ic('cards',18)}</span><span class="bj-tx">Distribue pour commencer</span></div>
+    <div style="max-width:640px;margin:0 auto;width:100%"><div class="vp-hand" id="vh"></div></div></div>
     <div class="msg" id="msg">&nbsp;</div>
-    <table class="ptab" id="paytab" style="max-width:640px;margin:0 auto 14px"></table>
+    <table class="ptab pan" id="paytab" style="max-width:640px;margin:0 auto 14px"></table>
     <div class="ctrl"><div class="ctrl-row" id="betrow"></div><button class="btn btn-gold btn-big" id="go"></button></div>`;
     const bc=betCtl('videopoker',25,{label:'Mise par ligne (×5)'});$('#betrow',stage).appendChild(bc.el);
-    const vh=$('#vh',stage),msg=$('#msg',stage),go=$('#go',stage);
+    const vh=$('#vh',stage),msg=$('#msg',stage),go=$('#go',stage),banner=$('#banner',stage);
+    const setBanner=(icon,text,tone='')=>{banner.className='bj-banner '+tone;banner.innerHTML=`<span class="bj-ic">${ic(icon,18)}</span><span class="bj-tx">${text}</span>`};
+    vh.innerHTML=Array.from({length:5},()=>cardEl(null,{hidden:true})).join('');
     const order=Object.keys(VP_PAY);
     function paintPay(highlight){$('#paytab',stage).innerHTML=`<thead><tr><th>Main</th><th>Gain (× mise/ligne)</th></tr></thead><tbody>${order.map(k=>`<tr class="${k===highlight?'hit':''}"><td>${k}</td><td>${VP_PAY[k][0]}×</td></tr>`).join('')}</tbody></table>`}
     paintPay();
@@ -41,6 +44,7 @@ reg({id:'videopoker',name:'Vidéo Poker',cat:'table',rtp:'99,5 %',vol:'Moyenne',
         cards=deck(1).slice(0,5);held=[false,false,false,false,false];render();snd('card');
         const rk=vpRank(cards);paintPay(rk);
         msg.textContent='Choisis les cartes à garder, puis distribue.';msg.className='msg';
+        setBanner('arrow',rk?`${rk} — garde tes cartes ou distribue`:'Choisis les cartes à garder','');
         phase='hold';go.textContent='Tirer les cartes écartées';return;
       }
       const bet=S.bets['videopoker']||25;
@@ -53,6 +57,7 @@ reg({id:'videopoker',name:'Vidéo Poker',cat:'table',rtp:'99,5 %',vol:'Moyenne',
       const win=rk?r2(VP_PAY[rk][0]*bet):0;
       if(win>0){give(win);snd(win/bet>=15?'big':'win');if(rk==='Quinte flush royale')unlock('royal')}else snd('lose');
       msg.textContent=rk?`${rk} — Gagné ◈ ${fmt(win)}`:'Aucune combinaison — Perdu';msg.className='msg '+(win>0?'w':'l');
+      setBanner(win>0?'star':'cards',rk?`${rk} — Gagné ◈ ${fmt(win)}`:'Aucune combinaison',win>0?'win':'lose');
       record('videopoker',bet,win,rk||'');
       bc.lock(false);phase='deal';go.textContent='Distribuer';
     });
