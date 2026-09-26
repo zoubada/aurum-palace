@@ -29,7 +29,15 @@ split:'<path d="M6 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM6 15a3 3 0 1 0 0 6 3 3 0 0 0 0
 arrow:'<path d="M4 12h16M14 6l6 6-6 6"/>',
 gem:'<path d="M6 3h12l3 6-9 12L3 9z"/><path d="M3 9h18M9 3 6 9l6 12 6-12-3-6M9 3h6"/>',
 bomb:'<circle cx="11" cy="14" r="7"/><path d="M15.5 9.5 18 7m0 0-1-2.5L19.5 5 18 7l2.5 1-2.5.7"/>',
-close:'<path d="M6 6l12 12M18 6 6 18"/>'
+close:'<path d="M6 6l12 12M18 6 6 18"/>',
+expand:'<path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/>',
+compress:'<path d="M4 9h5V4M15 4v5h5M4 15h5v5M20 15h-5v5"/>',
+dice:'<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="16" cy="8" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="8" cy="16" r="1.2" fill="currentColor"/><circle cx="16" cy="16" r="1.2" fill="currentColor"/>',
+rocket:'<path d="M12 2c3 2 5 6 5 10 0 2-1 4-2 5l-1 3-4 0-1-3c-1-1-2-3-2-5 0-4 2-8 5-10z"/><circle cx="12" cy="10" r="1.6"/><path d="M8 16l-3 4M16 16l3 4"/>',
+chart:'<path d="M4 19h16M7 19v-6M12 19V7M17 19v-9"/>',
+target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6" fill="currentColor"/>',
+sunburst:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/>',
+refresh:'<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/>'
 };
 const ic=(n,s=20)=>`<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
 const LOGO=(s=34)=>`<svg width="${s}" height="${s}" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg${s}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F5D76E"/><stop offset=".5" stop-color="#D4AF37"/><stop offset="1" stop-color="#8B6508"/></linearGradient></defs><polygon points="20,2 35.6,11 35.6,29 20,38 4.4,29 4.4,11" fill="url(#lg${s})"/><polygon points="20,7 31.3,13.5 31.3,26.5 20,33 8.7,26.5 8.7,13.5" fill="#0B0D12"/><path d="M20 11.5 27 28h-3.6l-1.4-3.6h-4l-1.4 3.6H13zM20 17l-1.6 4.5h3.2z" fill="url(#lg${s})"/></svg>`;
