@@ -36,20 +36,20 @@ reg({id:'mines',name:'Mines',cat:'originals',rtp:'95 %',vol:'Haute',badge:null,p
       if(phase!=='play'||opened.has(i))return;
       opened.add(i);const cell=$(`.mc[data-i="${i}"]`,grid);
       if(mines.has(i)){
-        cell.classList.add('bomb');cell.textContent='💣';snd('boom');
-        for(let k=0;k<25;k++)if(mines.has(k)&&k!==i){const c=$(`.mc[data-i="${k}"]`,grid);c.textContent='💣';c.classList.add('ghost')}
+        cell.classList.add('bomb');cell.innerHTML=ic('bomb',22);snd('boom');
+        for(let k=0;k<25;k++)if(mines.has(k)&&k!==i){const c=$(`.mc[data-i="${k}"]`,grid);c.innerHTML=ic('bomb',22);c.classList.add('ghost')}
         phase='done';msg.textContent='Boum — Perdu';msg.className='msg l';
         record('mines',bet,0,`${nMines} mines, ${revealed} cases sûres`);
         endRound();return;
       }
-      cell.classList.add('gem');cell.textContent='💎';snd('gem');revealed++;updateHud();
+      cell.classList.add('gem');cell.innerHTML=ic('gem',22);snd('gem');revealed++;updateHud();
       if(revealed===20)unlock('m20');
       if(revealed===25-nMines){cashout();return}
     }
     function cashout(){
       if(phase!=='play')return;const win=r2(bet*multFor(revealed,nMines));give(win);snd(win/bet>=10?'big':'win');
       phase='done';msg.textContent=`Encaissé — Gagné ◈ ${fmt(win)}`;msg.className='msg w';
-      for(let k=0;k<25;k++)if(mines.has(k)){const c=$(`.mc[data-i="${k}"]`,grid);c.textContent='💣';c.classList.add('ghost')}
+      for(let k=0;k<25;k++)if(mines.has(k)){const c=$(`.mc[data-i="${k}"]`,grid);c.innerHTML=ic('bomb',22);c.classList.add('ghost')}
       record('mines',bet,win,`${nMines} mines, ${revealed} cases sûres`);endRound();
     }
     function endRound(){bc.lock(false);nsel.disabled=false;go.textContent='Miser';go.className='btn btn-gold btn-big';go.style.height='64px';}

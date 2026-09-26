@@ -10,6 +10,9 @@ paintSound();
 $('#btn-snd').addEventListener('click',()=>{S.sound=!S.sound;save();paintSound();if(S.sound)snd('click');toast(S.sound?'Son activé':'Son coupé')});
 $('#btn-gift').addEventListener('click',()=>{location.hash='#/promo'});
 $('#bal-v').textContent=fmt(S.balance);
+function paintEye(){$('#bal-eye').innerHTML=ic(S.hideBal?'eyeoff':'eye',15);$('#bal-eye').setAttribute('aria-label',S.hideBal?'Afficher le solde':'Masquer le solde')}
+paintEye();
+$('#bal-eye').addEventListener('click',()=>{S.hideBal=!S.hideBal;save();paintEye();renderBal();snd('click')});
 function doSearch(v){v=v.trim();if(!v)return;location.hash='#/games/'+encodeURIComponent(v)}
 $('#hsearch').addEventListener('keydown',e=>{if(e.key==='Enter'){doSearch(e.target.value);e.target.blur()}});
 

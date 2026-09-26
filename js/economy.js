@@ -1,7 +1,10 @@
 'use strict';
 /* ============ Solde et mises ============ */
 let shownBal=S.balance,balAnim;
-function renderBal(){const el=$('#bal-v');const from=shownBal,to=S.balance,t0=performance.now();cancelAnimationFrame(balAnim);const st=t=>{const k=Math.min(1,(t-t0)/550),e=1-Math.pow(1-k,3);shownBal=from+(to-from)*e;el.textContent=fmt(k<1?Math.round(shownBal):to);if(k<1)balAnim=requestAnimationFrame(st);else shownBal=to};balAnim=requestAnimationFrame(st);const p=$('#bal');p.classList.remove('up','down');void p.offsetWidth;if(to>from+.001)p.classList.add('up');else if(to<from-.001)p.classList.add('down');document.dispatchEvent(new Event('bal'))}
+function renderBal(){const el=$('#bal-v');const from=shownBal,to=S.balance,t0=performance.now();cancelAnimationFrame(balAnim);
+  const p=$('#bal');p.classList.toggle('hidden',!!S.hideBal);
+  if(S.hideBal){el.textContent='••••';shownBal=to;document.dispatchEvent(new Event('bal'));return}
+  const st=t=>{const k=Math.min(1,(t-t0)/550),e=1-Math.pow(1-k,3);shownBal=from+(to-from)*e;el.textContent=fmt(k<1?Math.round(shownBal):to);if(k<1)balAnim=requestAnimationFrame(st);else shownBal=to};balAnim=requestAnimationFrame(st);p.classList.remove('up','down');void p.offsetWidth;if(to>from+.001)p.classList.add('up');else if(to<from-.001)p.classList.add('down');document.dispatchEvent(new Event('bal'))}
 function limitOk(a){const L=S.lim;if(L.time>0&&(Date.now()-sess.start)/60000>=L.time){modalMsg('Limite de temps atteinte',`Ta session dure depuis plus de ${L.time} min, la limite que tu as fixée. Fais une pause, ou modifie la limite dans <a href="#/rg" class="gold">Jeu responsable</a>.`);return false}if(L.wager>0&&sess.wag+a>L.wager+1e-9){modalMsg('Limite de mises atteinte',`Cette mise ferait dépasser ta limite de session de ${fmt(L.wager)} ◈ (déjà misé : ${fmt(sess.wag)} ◈). Tu peux la modifier dans <a href="#/rg" class="gold">Jeu responsable</a>.`);return false}return true}
 function canBet(a){a=r2(a);if(!(a>0)){toast('Choisis une mise supérieure à 0.','err');return false}if(a>S.balance+1e-9){lowBal(a);return false}return limitOk(a)}
 function take(a){a=r2(a);S.balance=r2(S.balance-a);S.wagered=r2(S.wagered+a);sess.wag+=a;renderBal();save()}
