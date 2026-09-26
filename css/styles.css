@@ -184,10 +184,11 @@ input,select{font:inherit;color:inherit}
 .tk .g{color:var(--mu)}.tk .m{color:var(--win);font-weight:700}
 .cats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px}
 @media(min-width:760px){.cats{grid-template-columns:repeat(4,1fr)}}
-.cat{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:var(--s1);border:1px solid var(--line);text-decoration:none;transition:border-color .2s,background .2s}
+.cat{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:var(--s1);border:1px solid var(--line);text-decoration:none;transition:border-color .2s,background .2s;min-width:0}
 .cat:hover{border-color:rgba(212,175,55,.45);background:var(--s2)}
 .cat .ci{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:rgba(212,175,55,.12);color:var(--g1);flex:none}
-.cat b{display:block;font-size:14px}.cat span{font-size:12px;color:var(--mu)}
+.cat>div{min-width:0}
+.cat b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cat span{font-size:12px;color:var(--mu)}
 
 /* ---------- Game page ---------- */
 .gp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
@@ -573,3 +574,15 @@ body.fs-lock{overflow:hidden}
 .foot .disc{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:14px;background:var(--s1);border:1px solid var(--line);color:#C8CDD9}
 .age{flex:none;width:38px;height:38px;border-radius:50%;border:2px solid var(--lose);display:grid;place-items:center;font-weight:800;font-size:13px;color:#F87171}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.tick-in{animation:none}}
+
+/* ---- Très petits écrans (téléphones anciens/compacts, ~320-359px) ---- */
+@media(max-width:359px){
+  .logo-t{display:none}
+  .top-in{padding:0 10px;gap:6px}
+  .bal{padding:0 2px 0 9px;gap:0}
+  .bal .cur{font-size:12.5px}
+  .bal .v{font-size:13.5px;min-width:3ch}
+  .bal-eye{width:24px;height:24px}
+  .bal .add{width:28px;height:28px}
+  .av{width:34px;height:34px}
+}
