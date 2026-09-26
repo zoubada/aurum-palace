@@ -1,7 +1,7 @@
 :root{
   --bg:#08090D;--s1:#12141c;--s2:#181b26;--s3:#20242f;--s4:#2a2f3d;
   --line:rgba(255,255,255,.06);--line2:rgba(255,255,255,.12);
-  --tx:#F2F1EC;--mu:#8D93A6;--mu2:#5B6175;
+  --tx:#F2F1EC;--mu:#8D93A6;--mu2:#7F869C;
   --gold:#D4AF37;--g1:#F0D584;--g2:#9C7A22;
   --gg:linear-gradient(120deg,#E9C973 0%,#D4AF37 42%,#B8860B 78%,#8B6508 100%);
   --gg-soft:linear-gradient(120deg,rgba(240,213,132,.16),rgba(184,134,11,.05));
