@@ -1,7 +1,7 @@
 'use strict';
 /* ============ Hi-Lo ============ */
 reg({id:'hilo',name:'Hi-Lo',cat:'originals',rtp:'94 %',vol:'Moyenne',badge:null,pop:44,
-  bg:'radial-gradient(circle at 50% 30%,#1c2a3a,#080e15)',glyph:'🔀',
+  bg:'radial-gradient(circle at 50% 30%,#1c2a3a,#080e15)',glyph:`<div class="gc-hero2">${cardEl({r:'7',s:'♦'})}${cardEl({r:'Q',s:'♠'})}</div>`,
   init(stage){
     stage.innerHTML=`<div class="hl-row" id="row"></div>
     <div class="chain" id="chain"></div>

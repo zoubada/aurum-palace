@@ -2,7 +2,7 @@
 /* ============ Baccarat ============ */
 function bacVal(hand){let v=0;for(const c of hand){v+=c.r==='A'?1:['K','Q','J'].includes(c.r)?0:+c.r}return v%10}
 reg({id:'baccarat',name:'Baccarat',cat:'table',rtp:'98,9 %',vol:'Faible',badge:null,pop:58,
-  bg:'radial-gradient(circle at 50% 30%,#3a1c08,#150a02)',glyph:'♠️',
+  bg:'radial-gradient(circle at 50% 30%,#3a1c08,#150a02)',glyph:cardEl({r:'K',s:'♦'},{cls:'gc-hero'}),
   init(stage){
     stage.innerHTML=`<div class="felt"><div class="zone"><div class="zl">Banquier <span class="val" id="bv"></span></div><div class="hand" id="bh2"></div></div>
     <div class="felt-mid">Commission de 5 % sur le Banquier · Égalité payée 8:1</div>

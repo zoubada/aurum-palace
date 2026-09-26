@@ -1,7 +1,7 @@
 'use strict';
 /* ============ Dice ============ */
 reg({id:'dice',name:'Dice',cat:'originals',rtp:'96 %',vol:'Réglable',badge:null,pop:60,
-  bg:'radial-gradient(circle at 50% 30%,#0a3a2a,#02120d)',glyph:'🎲',
+  bg:'radial-gradient(circle at 50% 30%,#0a3a2a,#02120d)',glyph:ic('dice',64),
   init(stage){
     stage.innerHTML=`<div class="dice-big num" id="res">00,00</div>
     <div class="dice-track"><div class="dmark" id="mark"><span id="markv"></span></div><div class="dice-bar" id="bar"></div><input type="range" id="tgt" min="0" max="100" step="0.01" value="47"></div>

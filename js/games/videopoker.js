@@ -21,7 +21,7 @@ function vpRank(cards){
   return null;
 }
 reg({id:'videopoker',name:'Vidéo Poker',cat:'table',rtp:'99,5 %',vol:'Moyenne',badge:null,pop:52,
-  bg:'radial-gradient(circle at 50% 30%,#1c1c3a,#08081a)',glyph:'🂡',
+  bg:'radial-gradient(circle at 50% 30%,#1c1c3a,#08081a)',glyph:cardEl({r:'A',s:'♥'},{cls:'gc-hero'}),
   init(stage){
     stage.innerHTML=`<div style="max-width:640px;margin:0 auto"><div class="vp-hand" id="vh"></div></div>
     <div class="msg" id="msg">&nbsp;</div>

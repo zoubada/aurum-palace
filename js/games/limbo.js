@@ -1,7 +1,7 @@
 'use strict';
 /* ============ Limbo ============ */
 reg({id:'limbo',name:'Limbo',cat:'originals',rtp:'96 %',vol:'Haute',badge:null,pop:48,
-  bg:'radial-gradient(circle at 50% 30%,#2a0a3a,#0d0212)',glyph:'📉',
+  bg:'radial-gradient(circle at 50% 30%,#2a0a3a,#0d0212)',glyph:ic('chart',64),
   init(stage){
     stage.innerHTML=`<div class="cr-stage" style="height:220px"><div class="cr-m" id="cm">1.00×</div></div>
     <div class="ctrl wide">

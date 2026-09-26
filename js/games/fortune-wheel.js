@@ -2,7 +2,8 @@
 /* ============ Roue de la fortune ============ */
 const WHEEL_SEGS=[{l:'0×',m:0,w2:10,c:'#1C2130'},{l:'0,5×',m:0.5,w2:8.333,c:'#262C3F'},{l:'1×',m:1,w2:6.667,c:'#B8860B'},{l:'1,5×',m:1.5,w2:6,c:'#1C2130'},{l:'2×',m:2,w2:4,c:'#10B981'},{l:'0×',m:0,w2:10,c:'#1C2130'},{l:'0,5×',m:0.5,w2:8.333,c:'#262C3F'},{l:'1×',m:1,w2:6.667,c:'#B8860B'},{l:'3×',m:3,w2:3,c:'#7C3AED'},{l:'0×',m:0,w2:10,c:'#1C2130'},{l:'0,5×',m:0.5,w2:8.333,c:'#262C3F'},{l:'1×',m:1,w2:6.667,c:'#B8860B'},{l:'1,5×',m:1.5,w2:6,c:'#1C2130'},{l:'2×',m:2,w2:4,c:'#10B981'},{l:'5×',m:5,w2:1.2,c:'#E11D48'},{l:'10×',m:10,w2:0.3,c:'#3B82F6'},{l:'20×',m:20,w2:0.264,c:'#F5D76E',tc:'#231a02'}];
 reg({id:'wheel',name:'Roue de la Fortune',cat:'instant',rtp:'90 %',vol:'Haute',badge:null,pop:56,
-  bg:'radial-gradient(circle at 50% 30%,#3a1a08,#120802)',glyph:'🎡',
+  bg:'radial-gradient(circle at 50% 30%,#3a1a08,#120802)',
+  glyph:`<svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(WHEEL_SEGS.map(s=>({...s,l:''})),{r:140,inner:20,id:'fwmini'})}<circle r="18" fill="#0B0D12" stroke="#D4AF37" stroke-width="2"/></svg>`,
   init(stage){
     stage.innerHTML=`<div class="wheel-box" style="margin-bottom:16px"><div class="wheel-ptr"></div><svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(WHEEL_SEGS,{r:140,inner:18,id:'fw'})}<circle r="16" fill="#0B0D12" stroke="#D4AF37" stroke-width="2"/></svg></div>
     <div class="msg" id="msg">&nbsp;</div>

@@ -1,7 +1,7 @@
 'use strict';
 /* ============ Mines ============ */
 reg({id:'mines',name:'Mines',cat:'originals',rtp:'95 %',vol:'Haute',badge:null,pop:82,
-  bg:'radial-gradient(circle at 50% 30%,#3a2a08,#120d02)',glyph:'💣',
+  bg:'radial-gradient(circle at 50% 30%,#3a2a08,#120d02)',glyph:ic('bomb',64),
   init(stage){
     stage.innerHTML=`<div class="infos"><div><b id="mmult">1,00×</b><span>Multiplicateur</span></div><div><b id="mpot">◈ 0</b><span>Gain potentiel</span></div><div><b id="mopen">0</b><span>Cases sûres</span></div></div>
     <div class="mgrid" id="grid"></div>

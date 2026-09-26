@@ -33,7 +33,7 @@ function score5(cards){
 function cmpScore(a,b){for(let i=0;i<Math.max(a.length,b.length);i++){const x=a[i]||0,y=b[i]||0;if(x!==y)return x-y}return 0}
 const HAND_NAMES=['Carte haute','Paire','Double paire','Brelan','Suite','Couleur','Full','Carré','Quinte flush'];
 reg({id:'holdem',name:'Casino Hold’em',cat:'table',rtp:'97,8 %',vol:'Moyenne',badge:'new',pop:40,
-  bg:'radial-gradient(circle at 50% 30%,#0a2a3a,#020e12)',glyph:'♣️',
+  bg:'radial-gradient(circle at 50% 30%,#0a2a3a,#020e12)',glyph:cardEl({r:'K',s:'♣'},{cls:'gc-hero'}),
   init(stage){
     stage.innerHTML=`<div class="felt"><div class="zone"><div class="zl">Croupier</div><div class="hand" id="dh3"></div></div>
     <div class="felt-mid" id="board3-l">Cartes communes</div><div class="hand" id="board3"></div>

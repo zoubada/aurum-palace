@@ -4,7 +4,7 @@ function bjVal(hand){let v=0,aces=0;for(const c of hand){if(c.r==='A'){v+=11;ace
   while(v>21&&aces>0){v-=10;aces--}return v}
 const isBJ=h=>h.length===2&&bjVal(h)===21;
 reg({id:'blackjack',name:'Blackjack',cat:'table',rtp:'99,5 %',vol:'Faible',badge:'hot',pop:95,
-  bg:'radial-gradient(circle at 50% 30%,#0d3a26,#04140d)',glyph:'🃏',
+  bg:'radial-gradient(circle at 50% 30%,#0d3a26,#04140d)',glyph:cardEl({r:'A',s:'♠'},{cls:'gc-hero'}),
   init(stage){
     stage.innerHTML=`<div class="bj-banner" id="banner"><span class="bj-ic">${ic('cards',18)}</span><span class="bj-tx">Place ta mise pour commencer</span></div>
     <div class="felt"><div class="zone"><div class="zl">Croupier <span class="val" id="dv"></span></div><div class="hand" id="dh"></div></div>

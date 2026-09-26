@@ -37,7 +37,8 @@ rocket:'<path d="M12 2c3 2 5 6 5 10 0 2-1 4-2 5l-1 3-4 0-1-3c-1-1-2-3-2-5 0-4 2-
 chart:'<path d="M4 19h16M7 19v-6M12 19V7M17 19v-9"/>',
 target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6" fill="currentColor"/>',
 sunburst:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/>',
-refresh:'<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/>'
+refresh:'<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/>',
+plinko:'<circle cx="12" cy="4.5" r="1.4" fill="currentColor"/><circle cx="6" cy="11" r="1.4" fill="currentColor"/><circle cx="18" cy="11" r="1.4" fill="currentColor"/><circle cx="12" cy="11" r="1.4" fill="currentColor"/><circle cx="3" cy="17.5" r="1.4" fill="currentColor"/><circle cx="9" cy="17.5" r="1.4" fill="currentColor"/><circle cx="15" cy="17.5" r="1.4" fill="currentColor"/><circle cx="21" cy="17.5" r="1.4" fill="currentColor"/><path d="M9 21h6l-3 2z" fill="currentColor"/>'
 };
 const ic=(n,s=20)=>`<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
 const LOGO=(s=34)=>`<svg width="${s}" height="${s}" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg${s}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F5D76E"/><stop offset=".5" stop-color="#D4AF37"/><stop offset="1" stop-color="#8B6508"/></linearGradient></defs><polygon points="20,2 35.6,11 35.6,29 20,38 4.4,29 4.4,11" fill="url(#lg${s})"/><polygon points="20,7 31.3,13.5 31.3,26.5 20,33 8.7,26.5 8.7,13.5" fill="#0B0D12"/><path d="M20 11.5 27 28h-3.6l-1.4-3.6h-4l-1.4 3.6H13zM20 17l-1.6 4.5h3.2z" fill="url(#lg${s})"/></svg>`;

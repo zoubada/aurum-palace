@@ -7,7 +7,7 @@ const SCRATCH_THEMES=[
 const SCRATCH_W=[1,2,3,4,6,8,10,12,14,16,16,16];
 const SCRATCH_PAYT=[53.4,26.7,17.8,11.1,6.7,4,2.7,1.8,1.3,0.9,0.9,0.7];
 reg({id:'scratch',name:'Cartes à Gratter',cat:'instant',rtp:'90 %',vol:'Faible',badge:null,pop:38,
-  bg:'radial-gradient(circle at 50% 30%,#3a3008,#121002)',glyph:'🎟️',
+  bg:'radial-gradient(circle at 50% 30%,#3a3008,#121002)',glyph:ic('ticket',64),
   init(stage){
     let theme=SCRATCH_THEMES[0];
     stage.innerHTML=`<div class="chips" id="themes" style="margin-bottom:14px">${SCRATCH_THEMES.map((t,i)=>`<button class="chip ${i?'':'on'}" data-t="${t.id}">${t.name}</button>`).join('')}</div>

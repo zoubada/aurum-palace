@@ -4,7 +4,8 @@ const RN=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14
 const RED=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 const isRed=n=>n===0?null:RED.has(n);
 reg({id:'roulette',name:'Roulette Européenne',cat:'table',rtp:'97,3 %',vol:'Moyenne',badge:'hot',pop:92,
-  bg:'radial-gradient(circle at 50% 30%,#062a1c,#021109)',glyph:'🎡',
+  bg:'radial-gradient(circle at 50% 30%,#062a1c,#021109)',
+  glyph:`<svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(RN.map(n=>({l:'',c:n===0?'#047857':RED.has(n)?'#B4232A':'#1C2130'})),{r:140,inner:56,id:'rmini'})}<circle r="52" fill="#0B0D12" stroke="#D4AF37" stroke-width="3"/></svg>`,
   init(stage){
     stage.innerHTML=`<div class="rl">
       <div><div class="wheel-box"><div class="wheel-ptr"></div><svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(RN.map(n=>({l:n,c:n===0?'#047857':RED.has(n)?'#B4232A':'#1C2130',fs:12})),{r:140,inner:30,id:'rwheel'})}<circle r="26" fill="#0B0D12" stroke="#D4AF37" stroke-width="3"/></svg><div class="rnum" id="rnum"></div></div>

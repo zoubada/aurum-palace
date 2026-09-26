@@ -1,7 +1,7 @@
 'use strict';
 /* ============ Crash ============ */
 reg({id:'crash',name:'Crash',cat:'originals',rtp:'96 %',vol:'Haute',badge:'hot',pop:90,
-  bg:'radial-gradient(circle at 50% 70%,#3a0a0a,#120303)',glyph:'🚀',
+  bg:'radial-gradient(circle at 50% 70%,#3a0a0a,#120303)',glyph:ic('rocket',64),
   init(stage){
     stage.innerHTML=`<div class="cr-stage"><canvas id="cv"></canvas><div class="cr-m" id="cm">1.00×<small id="csub">Place ta mise avant le décollage</small></div></div>
     <div class="ctrl wide">

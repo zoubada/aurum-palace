@@ -134,6 +134,12 @@ input,select{font:inherit;color:inherit}
 .gc .glyph{font-size:clamp(48px,13vw,66px);line-height:1;transform:translateY(-14%);filter:drop-shadow(0 10px 18px rgba(0,0,0,.55));transition:transform var(--dur-3) var(--ease)}
 .gc:hover .glyph{transform:translateY(-20%) scale(1.1)}
 .gc .glyph svg{width:clamp(78px,22vw,110px);height:auto}
+.gc .glyph .card.gc-hero{width:clamp(50px,15vw,74px);animation:none;box-shadow:0 14px 28px rgba(0,0,0,.5);transform:translateY(-14%) rotate(-6deg);transition:transform var(--dur-3) var(--ease)}
+.gc:hover .glyph .card.gc-hero{transform:translateY(-20%) rotate(0deg) scale(1.06)}
+.gc .glyph .gc-hero2{display:flex}
+.gc .glyph .gc-hero2 .card{width:clamp(42px,12vw,58px);animation:none;box-shadow:0 12px 24px rgba(0,0,0,.5)}
+.gc .glyph .gc-hero2 .card:first-child{transform:translateY(-10%) rotate(-10deg) translateX(8px)}
+.gc .glyph .gc-hero2 .card:last-child{transform:translateY(-10%) rotate(10deg) translateX(-8px)}
 .gc .nm{position:absolute;left:0;right:0;bottom:0;padding:34px 13px 13px;background:linear-gradient(transparent,rgba(3,4,7,.92) 55%);transition:padding-bottom var(--dur-2) var(--ease-out)}
 .gc .gc-t{display:block;font-family:var(--fd);font-weight:700;font-size:16px;line-height:1.15}
 .gc .pv{display:block;font:500 11px var(--ff);color:rgba(255,255,255,.55);margin-top:3px;transition:opacity var(--dur-2)}

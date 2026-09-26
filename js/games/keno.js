@@ -2,7 +2,7 @@
 /* ============ Keno ============ */
 const KENO_M={1:[0,3.6],2:[0,1.6,5],3:[0,0,4.7,21],4:[0,0,2.5,7,40],5:[0,0,1.7,3.5,13,96],6:[0,0,0,3.9,11,53,488],7:[0,0,0,2.5,6,22,125,1454],8:[0,0,0,0,6.7,20,87,650,9380],9:[0,0,0,0,4.3,10,38,217,2098,9326],10:[0,0,0,0,2.9,6.4,20,91,666,8885,9353]};
 reg({id:'keno',name:'Keno',cat:'instant',rtp:'90 %',vol:'Réglable',badge:null,pop:66,
-  bg:'radial-gradient(circle at 50% 30%,#1c0a3a,#080212)',glyph:'🔢',
+  bg:'radial-gradient(circle at 50% 30%,#1c0a3a,#080212)',glyph:ic('grid',64),
   init(stage){
     stage.innerHTML=`<div class="kgrid" id="grid"></div>
     <div class="ctrl-row" style="margin-top:12px"><button class="btn btn-ghost btn-sm" id="clear">Effacer</button><button class="btn btn-ghost btn-sm" id="quick">10 au hasard</button><span class="mu" style="align-self:center;margin-left:auto;font-size:13px">Choisis 1 à 10 numéros</span></div>
