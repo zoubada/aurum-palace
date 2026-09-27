@@ -89,8 +89,8 @@ function slotMachine(cfg){
       <div class="slot-stage${cfg.bgImage?' has-bg':''}" id="slotStage" style="--slot-accent:${cfg.accent||'#D4AF37'}${cfg.bgImage?`;background-image:url(${cfg.bgImage})`:''}">
       <div class="slot-glow"></div><div class="slot-particles">${particles}</div>
       <div class="slot-cab">
-        ${cfg.trees?`<div class="palms" id="palms"></div>`:''}
         ${cfg.logo?`<div class="slot-logo" style="aspect-ratio:${cfg.logo.w}/${cfg.logo.h}"><img src="${cfg.logo.img}" alt=""><h1 style="left:${cfg.logo.l}%;right:${cfg.logo.r}%;top:${cfg.logo.t}%;bottom:${cfg.logo.b}%">${esc(cfg.title)}</h1></div>`:`<div class="slot-banner"><i class="orn">${orn}</i><h1>${esc(cfg.title)}</h1><i class="orn">${orn}</i></div>`}
+        ${cfg.trees?`<div class="palms" id="palms"></div>`:''}
         <div class="slot-frame">
           ${!cfg.frame?'<div class="slot-pillar l"></div>':''}
           <div class="slot-wrap${cfg.frame?' framed':''}"${cfg.frame?` style="aspect-ratio:${cfg.frame.w}/${cfg.frame.h}"`:''}>
