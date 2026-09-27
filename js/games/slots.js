@@ -31,14 +31,14 @@ const SYMS_PHARAON=[
   {k:'T',g:'10',w:12,name:'10',p:{3:8,4:32,5:117}},
 ];
 const SYMS_FRUIT=[
-  {k:'7',g:'7',w:2,name:'7 chanceux',p:{3:636}},
-  {k:'R',g:'🔔',w:3,name:'Cloche',p:{3:255},ic:'<path d="M12 3.2a5 5 0 0 0-5 5V11c0 1.2-.8 2.2-1.8 3h13.6c-1-.8-1.8-1.8-1.8-3V8.2a5 5 0 0 0-5-5z"/><path d="M9.3 19a2.7 2.7 0 0 0 5.4 0"/>',c1:'#FFD54A',c2:'#B4650A'},
-  {k:'X',g:'⭐',w:4,name:'Étoile',p:{3:128},ic:'<path d="m12 3 2.8 5.8 6.2.9-4.5 4.4 1 6.3L12 17.5 6.5 20.4l1-6.3L3 9.7l6.2-.9z"/>',c1:'#FFE28A',c2:'#C9982A'},
-  {k:'L',g:'🍋',w:5,name:'Citron',p:{3:80},ic:'<ellipse cx="12" cy="13" rx="6.6" ry="7.6"/><path d="M12.5 5.3c.8-1.7 2.6-2.6 3.7-2"/>',c1:'#F4E04D',c2:'#8C7A0E'},
-  {k:'G',g:'🍇',w:6,name:'Raisin',p:{3:48},ic:'<circle cx="9.2" cy="10.4" r="2.1"/><circle cx="14" cy="10.4" r="2.1"/><circle cx="7" cy="14.6" r="2.1"/><circle cx="11.6" cy="14.6" r="2.1"/><circle cx="16.4" cy="14.6" r="2.1"/><circle cx="9.7" cy="18.6" r="2.1"/><circle cx="14.3" cy="18.6" r="2.1"/><path d="M11.8 9.5V4.4M11.8 4.4c1.2-1.3 3.2-1.3 4-.2"/>',c1:'#9B6FD8',c2:'#402270'},
-  {k:'O',g:'🍊',w:7,name:'Orange',p:{3:32},ic:'<circle cx="12" cy="13.2" r="6.9"/><path d="M12 6.3V4M12 4c1.1-.9 2.7-.9 3.2.5"/>',c1:'#FF9D4D',c2:'#A4490A'},
-  {k:'M',g:'🍉',w:8,name:'Pastèque',p:{3:25},ic:'<path d="M3 15.5a9 9 0 0 1 18 0z"/><path d="M6.2 15.5a5.8 5.8 0 0 1 11.6 0"/><circle cx="9.6" cy="13.4" r=".6"/><circle cx="14.4" cy="13.4" r=".6"/><circle cx="12" cy="11" r=".6"/>',c1:'#6FD87F',c2:'#1E7A34'},
-  {k:'C',g:'🍒',w:9,name:'Cerise',p:{3:19},ic:'<circle cx="8.6" cy="17.3" r="2.9"/><circle cx="15.6" cy="17.3" r="2.9"/><path d="M8.6 14.6C8.6 8.6 11.6 6.4 14.6 4.4M15.6 14.6c0-2.8.9-4.8 2.8-5.9" fill="none"/>',c1:'#FF6B7A',c2:'#8C0F22'},
+  {k:'7',g:'7',w:2,name:'7 chanceux',p:{3:636},img:'assets/slots-symbols/seven.png'},
+  {k:'R',g:'🔔',w:3,name:'Cloche',p:{3:255},img:'assets/slots-symbols/bell.png'},
+  {k:'X',g:'⭐',w:4,name:'Diamant',p:{3:128},img:'assets/slots-symbols/diamond.png'},
+  {k:'L',g:'🍋',w:5,name:'Citron',p:{3:80},img:'assets/slots-symbols/lemon.png'},
+  {k:'G',g:'🍇',w:6,name:'Prune',p:{3:48},img:'assets/slots-symbols/plum.png'},
+  {k:'O',g:'🍊',w:7,name:'Orange',p:{3:32},img:'assets/slots-symbols/orange.png'},
+  {k:'M',g:'🍉',w:8,name:'Pastèque',p:{3:25},img:'assets/slots-symbols/watermelon.png'},
+  {k:'C',g:'🍒',w:9,name:'Cerise',p:{3:19},img:'assets/slots-symbols/cherry.png'},
 ];
 const SYMS_DRAGON=[
   {k:'W',g:'🐉',w:2,wild:true,name:'Wild (Dragon)',p:{3:76,4:304,5:1518},ic:'<path d="M3 17c1.6-3.6 2-6.6 5.4-7.4S11 13 13.6 12s1.6-4.6 4.6-3.8" fill="none"/><path d="M18.2 8.2l2-2-.8 2.8 2 .8-2.8.7z"/><circle cx="17.6" cy="7.6" r=".7"/>',c1:'#F5D76E',c2:'#8B6508'},
@@ -54,6 +54,7 @@ const SYMS_DRAGON=[
 ];
 
 const symBadge=(s,mini)=>{
+  if(s.img)return `<span class="symbadge photo${mini?' mini':''}"><img src="${s.img}" alt="${s.name}" draggable="false" loading="lazy"></span>`;
   if(s.ic)return `<span class="symbadge${s.wild?' wild':''}${mini?' mini':''}" style="--c1:${s.c1};--c2:${s.c2}"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${s.ic}</svg></span>`;
   if(/^[0-9A-Z]{1,2}$/.test(s.g))return `<span class="ltb"${mini?' style="width:28px;display:inline-flex;vertical-align:middle;margin-right:7px"':''} data-r="${s.k}"><i>${s.g}</i></span>`;
   return `<span class="sy">${s.g}</span>`;
@@ -206,7 +207,7 @@ reg({id:'pharaon',name:'Pharaon d’Or',cat:'slots',rtp:'94 %',vol:'Haute',badge
     syms:SYMS_PHARAON})});
 
 reg({id:'fruit',name:'Fruit Classic',cat:'slots',rtp:'92 %',vol:'Moyenne',badge:null,pop:70,
-  bg:'radial-gradient(circle at 50% 30%,#3a0a30,#12030f)',glyph:'🍒',
+  bg:'radial-gradient(circle at 50% 30%,#3a0a30,#12030f)',glyph:'<img src="assets/slots-symbols/cherry.png" alt="Cerise" style="width:clamp(56px,16vw,78px);height:auto;display:block">',
   init:slotMachine({id:'fruit',title:'Fruit Classic',def:50,cols:3,rows:3,lines:LINES5,skin:'fruit',accent:'#D946EF',
     syms:SYMS_FRUIT}),
   rules:slotRules({id:'fruit',title:'Fruit Classic',desc:'Le grand classique rétro à néons, 3 rouleaux et 5 lignes.',cols:3,rows:3,lines:LINES5,
