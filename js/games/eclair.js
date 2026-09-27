@@ -47,15 +47,16 @@ function pkWheelSVG(buyin){
 reg({id:'eclair',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge:'new',pop:99,
   bg:'radial-gradient(circle at 50% 30%,#7a0a12,#1a0204)',glyph:'⚡',
   init(stage){
-    let alive=true,T=S.pk,timers=[],pending=false,turnEnd=0,turnSeat=-1,pre=null,shown=new Set(),tab='log',buyin=S.bets.eclair&&PK_BUYINS.includes(S.bets.eclair)?S.bets.eclair:5;
+    let alive=true,rzOpen=false,T=S.pk,timers=[],pending=false,turnEnd=0,turnSeat=-1,pre=null,shown=new Set(),tab='log',buyin=S.bets.eclair&&PK_BUYINS.includes(S.bets.eclair)?S.bets.eclair:5;
     const later=(fn,ms)=>{const id=setTimeout(()=>{timers=timers.filter(x=>x!==id);if(alive)fn()},ms);timers.push(id);return id};
     const persist=()=>{S.pk=T;save()};
+    const lock=on=>document.documentElement.classList.toggle('pk-lock',on);
     const me=0;
     const nm=i=>T.seats[i].name;
 
     /* ---------------- Écran de mise ---------------- */
     function lobby(){
-      T=null;S.pk=null;save();
+      lock(false);T=null;S.pk=null;save();
       const st=pkS();
       const tot=PK_MULTS.reduce((a,x)=>a+x.w,0);
       stage.innerHTML=`<div class="pk-root"><div class="pkl">
@@ -85,7 +86,7 @@ reg({id:'eclair',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge
 
     /* ---------------- Roue de dotation ---------------- */
     function wheel(resume){
-      stage.innerHTML=`<div class="pk-root"><div class="pkw"><div class="pkw-k">${ic('zap',16)} La roue fixe la dotation</div>
+      lock(true);stage.innerHTML=`<div class="pk-root pk-imm"><div class="pkw"><div class="pkw-k">${ic('zap',16)} La roue fixe la dotation</div>
       <div class="pkw-box"><div class="pkw-ptr"></div>${pkWheelSVG(T.buyin)}</div>
       <div class="pkw-res" id="pkres"><span>Dotation</span><b class="num">${fmt(T.payouts.reduce((a,b)=>a+b,0))}<i>◈</i></b><em>×${fmt(T.mult)}</em>${T.payouts[1]?`<div class="pk-split"><span>1er <b>${fmt(T.payouts[0])}</b></span><span>2e <b>${fmt(T.payouts[1])}</b></span><span>3e <b>${fmt(T.payouts[2])}</b></span></div>`:'<div class="pk-split"><span>Le vainqueur remporte tout</span></div>'}</div>
       <button class="btn btn-gold btn-big" id="pkseat" disabled>Prendre place</button></div></div>`;
@@ -103,14 +104,15 @@ reg({id:'eclair',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge
 
     /* ---------------- Table ---------------- */
     function table(){
-      stage.innerHTML=`<div class="pk-root"><div class="pk">
-        <div class="pk-top"><span class="pk-clock">${ic('clock',15)} <b id="pkel">00:00</b></span><span class="pk-lv" id="pklv"></span></div>
+      lock(true);
+      stage.innerHTML=`<div class="pk-root pk-imm"><div class="pk">
+        <div class="pk-top"><button class="pk-ib" id="pkback" aria-label="Retour au lobby, la partie est mise en pause">${ic('back',18)}</button><span class="pk-clock">${ic('clock',14)} <b id="pkel">00:00</b></span><span class="pk-lv" id="pklv"></span><button class="pk-ib" id="pkinfo" aria-label="Historique des mains et statistiques">${ic('chart',18)}</button></div>
         <div class="pk-tab" id="pktab"></div>
         <div class="pk-act" id="pkact"></div>
-        <div class="pk-panel"><div class="tabs" role="tablist"><button class="tab ${tab==='log'?'on':''}" data-t="log">Historique des mains</button><button class="tab ${tab==='st'?'on':''}" data-t="st">Statistiques</button></div><div id="pkpan"></div></div>
       </div></div>`;
-      $$('.pk-panel .tab',stage).forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.t;$$('.pk-panel .tab',stage).forEach(x=>x.classList.toggle('on',x===b));panel()}));
-      draw();panel();
+      $('#pkback',stage).addEventListener('click',()=>{toast('Partie en pause : reviens au Poker Éclair pour la reprendre');location.hash='#/lobby'});
+      $('#pkinfo',stage).addEventListener('click',sheet);
+      draw();
     }
     function seatHTML(i){
       const s=T.seats[i],H=T.hand,p=H&&H.p[i],isMe=i===me;
@@ -168,20 +170,25 @@ reg({id:'eclair',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge
       if(!raiseTo||raiseTo<L.minTo||raiseTo>L.maxTo)raiseTo=L.minTo;
       const potTo=f=>Math.round(L.isBet?f*L.pot:H.curBet+f*(L.pot+L.toCall));
       const presets=L.isBet?[['½',.5],['¾',.75],['Pot',1]]:[['½ Pot',.5],['¾',.75],['Pot',1]];
-      el.innerHTML=`${L.raise?`<div class="pk-rz"><div class="pk-pres">${H.street===0&&H.curBet===H.bb?`<button data-to="${Math.min(L.maxTo,Math.max(L.minTo,H.bb*2))}">2 BB</button><button data-to="${Math.min(L.maxTo,Math.max(L.minTo,Math.round(H.bb*2.5)))}">2,5 BB</button>`:''}${presets.map(([t,f])=>`<button data-to="${Math.min(L.maxTo,Math.max(L.minTo,potTo(f)))}">${t}</button>`).join('')}<button data-to="${L.maxTo}" class="allin">Tapis</button></div>
-        <div class="pk-sl"><input type="range" id="pkr" min="${L.minTo}" max="${L.maxTo}" step="1" value="${raiseTo}" aria-label="Montant de la relance"><span class="num" id="pkrv">${fmt(raiseTo)}</span></div></div>`:''}
+      const onlyAllIn=L.raise&&L.minTo>=L.maxTo;
+      const rzLbl=()=>raiseTo>=L.maxTo?'Tapis':L.isBet?'Miser':'Relancer à';
+      el.innerHTML=`${L.raise&&rzOpen&&!onlyAllIn?`<div class="pk-rz"><div class="pk-pres">${H.street===0&&H.curBet===H.bb?`<button data-to="${Math.min(L.maxTo,Math.max(L.minTo,H.bb*2))}">2 BB</button><button data-to="${Math.min(L.maxTo,Math.max(L.minTo,Math.round(H.bb*2.5)))}">2,5 BB</button>`:''}${presets.map(([t,f])=>`<button data-to="${Math.min(L.maxTo,Math.max(L.minTo,potTo(f)))}">${t}</button>`).join('')}<button data-to="${L.maxTo}" class="allin">Tapis</button></div>
+        <div class="pk-sl"><button class="pk-x" id="pkx" aria-label="Fermer la relance">${ic('close',16)}</button><input type="range" id="pkr" min="${L.minTo}" max="${L.maxTo}" step="1" value="${raiseTo}" aria-label="Montant de la relance"><span class="num" id="pkrv">${fmt(raiseTo)}</span></div></div>`:''}
         <div class="pk-btns">${L.fold?`<button class="pkbtn fold" data-a="fold">Se coucher</button>`:''}
-        <button class="pkbtn call" data-a="${L.check?'check':'call'}">${L.check?'Parole':`Suivre <b class="num">${fmt(L.toCall)}</b>`}</button>
-        ${L.raise?`<button class="pkbtn raise" data-a="raise"><span id="pkrl">${raiseTo>=L.maxTo?'Tapis':L.isBet?'Miser':'Relancer à'}</span> <b class="num" id="pkrb">${fmt(raiseTo)}</b></button>`:''}</div>`;
+        <button class="pkbtn call" data-a="${L.check?'check':'call'}">${L.check?'Parole':`Suivre<b class="num">${fmt(L.toCall)}</b>`}</button>
+        ${L.raise?(rzOpen||onlyAllIn?`<button class="pkbtn raise" data-a="raise"><span id="pkrl">${onlyAllIn?'Tapis':rzLbl()}</span><b class="num" id="pkrb">${fmt(onlyAllIn?L.maxTo:raiseTo)}</b></button>`:`<button class="pkbtn raise" id="pkopen">${L.isBet?'Miser':'Relancer'}<b class="num">${ic('chev',12)}</b></button>`):''}</div>`;
+      if(onlyAllIn)raiseTo=L.maxTo;
       const sl=$('#pkr',el);
-      const setR=v=>{raiseTo=Math.max(L.minTo,Math.min(L.maxTo,Math.round(v)));if(sl)sl.value=raiseTo;const a=$('#pkrv',el),b=$('#pkrb',el),l=$('#pkrl',el);if(a)a.textContent=fmt(raiseTo);if(b)b.textContent=fmt(raiseTo);if(l)l.textContent=raiseTo>=L.maxTo?'Tapis':L.isBet?'Miser':'Relancer à'};
+      const setR=v=>{raiseTo=Math.max(L.minTo,Math.min(L.maxTo,Math.round(v)));if(sl)sl.value=raiseTo;const a=$('#pkrv',el),b=$('#pkrb',el),l=$('#pkrl',el);if(a)a.textContent=fmt(raiseTo);if(b)b.textContent=fmt(raiseTo);if(l)l.textContent=rzLbl()};
       if(sl)sl.addEventListener('input',()=>setR(+sl.value));
+      const op=$('#pkopen',el);if(op)op.addEventListener('click',()=>{rzOpen=true;snd('click');actions()});
+      const cx=$('#pkx',el);if(cx)cx.addEventListener('click',()=>{rzOpen=false;snd('click');actions()});
       $$('[data-to]',el).forEach(b=>b.addEventListener('click',()=>{setR(+b.dataset.to);snd('chip')}));
       $$('[data-a]',el).forEach(b=>b.addEventListener('click',()=>{const t=b.dataset.a;human(t==='raise'?{type:'raise',to:raiseTo}:{type:t})}));
     }
     function human(a){
       if(!T||!T.hand||T.hand.toAct!==me||pending)return;
-      turnSeat=-1;turnEnd=0;raiseTo=0;
+      turnSeat=-1;turnEnd=0;raiseTo=0;rzOpen=false;
       apply(me,a);
     }
     function apply(seat,a){
@@ -196,7 +203,7 @@ reg({id:'eclair',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge
     function nextHand(){
       if(!alive||T.over)return;
       const deckArr=shuffle([...Array(52).keys()]);
-      PKE.startHand(T,deckArr);pre=null;raiseTo=0;
+      PKE.startHand(T,deckArr);pre=null;raiseTo=0;rzOpen=false;
       T.st.hands++;pkS().hands++;
       snd('card');afterChange();
     }
@@ -227,7 +234,7 @@ reg({id:'eclair',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge
       snd(won?'win':H.result.type==='sd'?'lose':'click');
       T.logs.unshift(fmtLog(H));if(T.logs.length>12)T.logs.length=12;
       for(const b of H.busted||[])if(b!==me)toast(`${esc(T.seats[b].name)} est éliminé · ${T.seats[b].place}e place`);
-      persist();draw();panel();
+      persist();draw();
     }
     function fmtLog(H){
       const L=[`<b>Main n° ${H.no}</b> · Blindes ${fmt(H.sb)}/${fmt(H.bb)} · Bouton : ${esc(nm(H.btn))}`];
@@ -255,7 +262,7 @@ reg({id:'eclair',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge
       end(R);
     }
     function end(R){
-      T=null;
+      lock(false);T=null;
       stage.innerHTML=`<div class="pk-root"><div class="pke ${R.place===1?'first':''}"><div class="pke-medal">${R.place===1?ic('trophy',44):R.place}</div>
         <h2>${R.place===1?'Victoire !':R.place===2?'2e place':'3e place'}</h2>
         <p class="pke-p">${R.prize>0?`Tu remportes <b class="gold num">${fmt(R.prize)} ◈</b>`:'Éliminé sans gain cette fois'}</p>
@@ -266,13 +273,17 @@ reg({id:'eclair',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge
     }
 
     /* ---------------- Panneau : historique / statistiques ---------------- */
-    function panel(){
-      const el=$('#pkpan',stage);if(!el)return;
-      if(tab==='log'){el.innerHTML=T&&T.logs.length?T.logs.map(l=>`<div class="pk-log">${l}</div>`).join(''):'<div class="empty"><b>Aucune main terminée</b>L’historique détaillé de chaque main apparaîtra ici.</div>';return}
+    function panelHTML(t){
+      if(t==='log')return T&&T.logs.length?T.logs.map(l=>`<div class="pk-log">${l}</div>`).join(''):'<div class="empty"><b>Aucune main terminée</b>L’historique détaillé de chaque main apparaîtra ici.</div>';
       const s=pkS();
-      el.innerHTML=`<div class="stats pk-stats"><div class="st"><b>${s.t}</b><span>Tournois joués</span></div><div class="st"><b>${s.p1} · ${pct(s.p1,s.t)}</b><span>Victoires</span></div><div class="st"><b>${s.p2} / ${s.p3}</b><span>2es / 3es places</span></div><div class="st"><b class="${s.prize-s.buy>=0?'pos':'neg'}">${s.prize-s.buy>=0?'+':''}${fmt(r2(s.prize-s.buy))} ◈</b><span>Résultat net</span></div>
+      return `<div class="stats pk-stats"><div class="st"><b>${s.t}</b><span>Tournois joués</span></div><div class="st"><b>${s.p1} · ${pct(s.p1,s.t)}</b><span>Victoires</span></div><div class="st"><b>${s.p2} / ${s.p3}</b><span>2es / 3es places</span></div><div class="st"><b class="${s.prize-s.buy>=0?'pos':'neg'}">${s.prize-s.buy>=0?'+':''}${fmt(r2(s.prize-s.buy))} ◈</b><span>Résultat net</span></div>
       <div class="st"><b>${fmt(s.best)} ◈</b><span>Plus gros gain</span></div><div class="st"><b>${s.bestM?'×'+fmt(s.bestM):'—'}</b><span>Meilleure roue</span></div><div class="st"><b>${s.hands}</b><span>Mains jouées</span></div><div class="st"><b>${pct(s.hw,s.hands)}</b><span>Mains gagnées</span></div>
       <div class="st"><b>${pct(s.vpip,s.hands)}</b><span>VPIP (mise volontaire)</span></div><div class="st"><b>${pct(s.pfr,s.hands)}</b><span>PFR (relance préflop)</span></div><div class="st"><b>${pct(s.sd,s.hands)}</b><span>Abattages atteints</span></div><div class="st"><b>${pct(s.sdw,s.sd)}</b><span>Abattages gagnés</span></div></div>`;
+    }
+    function sheet(){
+      snd('click');
+      const md=modal(`<div class="pk-sheet"><div class="tabs" role="tablist"><button class="tab ${tab==='log'?'on':''}" data-t="log">Historique des mains</button><button class="tab ${tab==='st'?'on':''}" data-t="st">Statistiques</button></div><div id="pkpan">${panelHTML(tab)}</div><button class="btn btn-gold btn-big" data-close style="margin-top:12px">Retour à la table</button></div>`);
+      $$('.tab',md.el).forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.t;$$('.tab',md.el).forEach(x=>x.classList.toggle('on',x===b));$('#pkpan',md.el).innerHTML=panelHTML(tab)}));
     }
 
     /* ---------------- Minuteries ---------------- */
@@ -302,7 +313,7 @@ reg({id:'eclair',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge
     else if(T&&T.v===1&&T.phase==='play'){table();if(T.over||T.seats[me].out)finishT();else step()}
     else lobby();
 
-    return()=>{alive=false;clearInterval(iv);timers.forEach(clearTimeout);timers=[];if(T&&T.phase!=='done'){S.pk=T;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}};
+    return()=>{alive=false;lock(false);clearInterval(iv);timers.forEach(clearTimeout);timers=[];if(T&&T.phase!=='done'){S.pk=T;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}};
   },
   rules:()=>`<h4>Poker Éclair</h4><p>Un tournoi Sit & Go de Texas Hold’em No Limit à 3 joueurs. Chacun commence avec 500 jetons de tournoi ; le dernier joueur en lice gagne. Les jetons de tournoi n’ont aucune valeur : seule la dotation en ◈ est versée à la fin.</p>
   <h4>La roue</h4><p>Après ta mise, la roue tire le multiplicateur de la dotation. Le tirage est fait avant l’animation, avec le générateur cryptographique du navigateur.</p>
