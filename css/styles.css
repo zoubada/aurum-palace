@@ -1255,3 +1255,25 @@ html.gx-lock,html.gx-lock body{overflow:hidden;overscroll-behavior:none}
   .pyr-title.has-plq>small,.pyr-title.has-plq>b{display:none}
   .pyr-plq.hd{display:block}
 }
+
+/* ============ Pharaon : palmiers sacrés (arbres à scarabées) ============ */
+.palms{display:flex;justify-content:center;gap:clamp(10px,4vw,28px);width:100%;max-width:640px;margin:0 auto 4px;flex-wrap:nowrap}
+.palm{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1 1 0;min-width:0;max-width:150px}
+.palm-jp{--pc:#FFD54A}.palm-bonus{--pc:#5B9CF6}.palm-mini{--pc:#FF6B6B}
+.palm-ic{width:clamp(26px,7vw,38px);color:var(--pc);display:block;filter:drop-shadow(0 0 calc(3px + var(--fill,0) * 12px) var(--pc));transition:filter .5s}
+.palm-ic svg{width:100%;height:auto;display:block;transform:scale(calc(.8 + var(--fill,0) * .45));transform-origin:50% 100%;transition:transform .5s var(--ease)}
+.palm-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;max-width:100%}
+.palm-dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.16);transition:background .3s,box-shadow .3s;flex:none}
+.palm-dots i.on{background:var(--pc);box-shadow:0 0 5px var(--pc)}
+.palm b{font-size:8.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:rgba(255,255,255,.62);text-align:center;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.palm.burst .palm-ic{animation:palmBurst .9s ease-out}
+@keyframes palmBurst{0%{filter:drop-shadow(0 0 3px var(--pc))}30%{transform:scale(1.35);filter:drop-shadow(0 0 22px var(--pc))}100%{transform:scale(1)}}
+@media(min-width:760px){.palm b{font-size:10px}}
+
+/* ============ Petit bonus « Les Faveurs du Sphinx » ============ */
+.pyr.sph .pyr-top{justify-content:center}
+.sph-main{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;width:100%;max-width:640px;margin:0 auto;padding:0 6px}
+.sph-msg{text-align:center;font-size:clamp(13px,3.6vw,16px);line-height:1.4;text-shadow:0 2px 6px rgba(0,0,0,.8)}
+.sph-jars{width:100%;height:clamp(170px,38vh,280px)}
+.sph-close{opacity:0;transform:translateY(10px);transition:opacity .35s,transform .35s}
+.sph-close.in{opacity:1;transform:none}

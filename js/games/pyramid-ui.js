@@ -132,7 +132,7 @@ function runPyramid({ host, gameId, fresh }) {
       return new Promise(done => {
         const box = h(`<div class="pyr-card pyr-intro"><i class="pyr-halo"></i>
           <div class="pyr-emb">${symBadge(SYMS_PHARAON.find(x => x.k === 'P'), false)}</div>
-          <small>${fresh ? `${s.count} symboles Pyramide` : 'Reprise du bonus'}</small>
+          <small>${fresh ? (s.viaTree ? 'Palmier de Lapis embrasé' : `${s.count} symboles Pyramide`) : 'Reprise du bonus'}</small>
           ${PYR_IMG.plaque ? pyrPlaque('incard') : '<h2>La Marche<br>du Pharaon</h2>'}
           <ul><li>${pyrTorch()}<span>Tu commences avec <b>${s.torches} torches</b></span></li>
           <li>${PYR_IMG.prize ? `<img src="${PYR_IMG.prize}" alt="">` : PYR_ICON.coin}<span>À chaque étage, choisis une porte : <b>trésor</b> ou <b>piège</b></span></li>

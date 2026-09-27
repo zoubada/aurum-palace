@@ -17,10 +17,16 @@ function evalLine(seq,pays,wildK,scK){
    emojis. Les lettres A/K/Q/J/10 gardent le badge « carte à jouer » déjà utilisé
    ailleurs. Rien dans les poids (w), payables (p) ou drapeaux wild/scatter ne change
    ici : seule la couche visuelle est nouvelle. ---- */
+/* Scarabée trait, identique sur les 3 arbres : seule la couleur (c1/c2) change,
+   pour que le joueur reconnaisse d'un coup d'œil quel palmier vient de se remplir. */
+const SCARAB_IC='<path d="M12 6.4c-2.1 0-3.6 2-3.6 2s1.5 1.3 3.6 1.3 3.6-1.3 3.6-1.3-1.5-2-3.6-2z"/><ellipse cx="12" cy="14.1" rx="7.4" ry="6.3"/><path d="M12 9.9v10.6M5.4 14.1h13.2M7 11.3l10 5.6M17 11.3l-10 5.6"/>';
 const SYMS_PHARAON=[
   {k:'W',img:'assets/symbols/pharaon/W.png',g:'👑',w:2,wild:true,name:'Wild (Couronne)',p:{3:195,4:782,5:3910},ic:'<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>',c1:'#F5D76E',c2:'#8B6508'},
   {k:'S',img:'assets/symbols/pharaon/S.png',g:'☀️',w:2,name:'Scatter (Soleil)',ic:'<circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.4M12 18.6V21M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M3 12h2.4M18.6 12H21M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>',c1:'#FFD98A',c2:'#C97A1A'},
   {k:'P',img:'assets/symbols/pharaon/P.png',g:'△',w:2,bonus:true,name:'Pyramide (Bonus)',ic:'<path d="M12 3 3 20h18z"/><path d="M12 3v17M7.5 11.5h9"/>',c1:'#FFE08A',c2:'#B8841E'},
+  {k:'CG',g:'△',w:0.04,tree:'jp',name:'Scarabée d’Or',ic:SCARAB_IC,c1:'#FFE9A3',c2:'#8A5A0B'},
+  {k:'CB',g:'△',w:0.04,tree:'bonus',name:'Scarabée de Lapis',ic:SCARAB_IC,c1:'#8FC1FF',c2:'#0F2A6B'},
+  {k:'CR',g:'△',w:0.15,tree:'mini',name:'Scarabée de Rubis',ic:SCARAB_IC,c1:'#FF9C9C',c2:'#7A1414'},
   {k:'E',img:'assets/symbols/pharaon/E.png',g:'𓁹',w:3,name:'Œil d’Horus',p:{3:117,4:489,5:2444},ic:'<path d="M2.5 12S6.5 7 12 7s9.5 5 9.5 5-4 5-9.5 5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M12 14.6v3.4M9.5 17l-1.2 2"/>',c1:'#2E8FB0',c2:'#0F2F40'},
   {k:'N',img:'assets/symbols/pharaon/N.png',g:'🐫',w:4,name:'Chameau',p:{3:78,4:323,5:1173},ic:'<path d="M2 18c1.6-.8 2.4-3.2 4-3.2s1.6 2.4 3.2 2.4 1-4 2.8-4 1.8 3.4 3.6 3.4 1.4-1.6 2.8-1.6" fill="none"/><path d="M2 20.5h20"/>',c1:'#C79A5C',c2:'#5C3E17'},
   {k:'B',img:'assets/symbols/pharaon/B.png',g:'🏺',w:5,name:'Vase',p:{3:64,4:195,5:782},ic:'<path d="M9.5 3h5M10.5 3v2.6c0 1.3-2 2.4-2 5.4v7a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7c0-3-2-4.1-2-5.4V3"/>',c1:'#4FAE8A',c2:'#0F4A38'},
@@ -61,6 +67,14 @@ const symBadge=(s,mini)=>{
   return `<span class="sy">${s.g}</span>`;
 };
 
+/* ---- Palmiers sacrés (arbres à scarabées) : ordre de résolution des embrasements
+   dans un même tour, et silhouette de palmier partagée par les 3 arbres (seule la
+   couleur --pc, posée par la classe .palm-jp/.palm-bonus/.palm-mini, change). ---- */
+const TREE_ORDER=['jp','bonus','mini'];
+const PALM_SVG=`<svg viewBox="0 0 48 64" aria-hidden="true" fill="currentColor"><path d="M21.4 64V33h5.2v31z"/>
+  <path d="M24 30C15 26 10 18 4 19c3-9 13-10 20-3-3-6-2-14 2-18-2 7 0 14 4 18 7-7 17-6 20 3-6-1-11 7-20 11 4 2 7 6 8 11-6-3-11-4-14-2-3-2-8-1-14 2 1-5 4-9 8-11-9-4-14 1-20-1z"/>
+  <ellipse cx="24" cy="30" rx="4.4" ry="3.2" opacity=".9"/></svg>`;
+
 function slotMachine(cfg){
   return function init(stage){
     const cols=cfg.cols,rows=cfg.rows;
@@ -72,6 +86,7 @@ function slotMachine(cfg){
       <div class="slot-stage${cfg.bgImage?' has-bg':''}" id="slotStage" style="--slot-accent:${cfg.accent||'#D4AF37'}${cfg.bgImage?`;background-image:url(${cfg.bgImage})`:''}">
       <div class="slot-glow"></div><div class="slot-particles">${particles}</div>
       <div class="slot-cab">
+        ${cfg.trees?`<div class="palms" id="palms"></div>`:''}
         ${cfg.logo?`<div class="slot-logo" style="aspect-ratio:${cfg.logo.w}/${cfg.logo.h}"><img src="${cfg.logo.img}" alt=""><h1 style="left:${cfg.logo.l}%;right:${cfg.logo.r}%;top:${cfg.logo.t}%;bottom:${cfg.logo.b}%">${esc(cfg.title)}</h1></div>`:`<div class="slot-banner"><i class="orn">${orn}</i><h1>${esc(cfg.title)}</h1><i class="orn">${orn}</i></div>`}
         <div class="slot-frame">
           ${!cfg.frame?'<div class="slot-pillar l"></div>':''}
@@ -104,6 +119,24 @@ function slotMachine(cfg){
     paint(restGrid());
     let freeSpins=0,fsTotal=0,fsWin=0,busy=false,auto=0;
     const setFS=()=>{fsb.style.display=freeSpins>0?'':'none';fsb.textContent=freeSpins>0?`TOURS GRATUITS — ${fsTotal-freeSpins+1} / ${fsTotal}`:''};
+
+    /* ---- Palmiers sacrés : un arbre par couleur de scarabée. Chaque scarabée
+       ramassé fait grandir son palmier ; à chaque nouvelle récolte, une chance
+       croissante de le voir s'embraser (garantie une fois plein) déclenche sa
+       récompense — le Jackpot Aurum, La Marche du Pharaon ou un petit bonus
+       instantané — puis le palmier repart de zéro. ---- */
+    const palmsEl=cfg.trees?$('#palms',stage):null;
+    if(cfg.trees){S.trees=S.trees||{};S.trees[cfg.id]=S.trees[cfg.id]||{jp:0,bonus:0,mini:0}}
+    function paintPalms(){
+      if(!cfg.trees)return;
+      const st=S.trees[cfg.id];
+      palmsEl.innerHTML=TREE_ORDER.map(t=>{
+        const tc=cfg.trees[t],n=st[t],pct=Math.min(1,n/tc.vcap);
+        const dots=Array.from({length:tc.vcap},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('');
+        return `<div class="palm palm-${t}" style="--fill:${pct}"><i class="palm-ic">${PALM_SVG}</i><span class="palm-dots">${dots}</span><b>${tc.sub}</b></div>`;
+      }).join('');
+    }
+    paintPalms();
 
     /* ---- Mode plein écran immersif (machines à cadre illustré) ----
        Le décor couvre tout l'écran, le cadre et les symboles sont agrandis au maximum
@@ -149,9 +182,10 @@ function slotMachine(cfg){
     }
 
     /* ---- Bonus : déclenchement et reprise après rechargement ---- */
-    async function startBonus(betUnit,count){
+    async function startBonus(betUnit,count,viaTree){
       rngStart();
-      S.pyr={g:cfg.id,st:PYR.start(betUnit,count,rand)};save();
+      const st=PYR.start(betUnit,count,rand);if(viaTree)st.viaTree=true;
+      S.pyr={g:cfg.id,st};save();
       slotStage.classList.add('bonus-hit');snd('bonus');
       await sleep(1500);slotStage.classList.remove('bonus-hit');
       await runPyramid({host:stage.closest('.gx')||stage,gameId:cfg.id,fresh:true});
@@ -160,6 +194,30 @@ function slotMachine(cfg){
       busy=true;spinBtn.disabled=true;autoBtn.disabled=true;bc.lock(true);
       await runPyramid({host:stage.closest('.gx')||stage,gameId:cfg.id,fresh:false});
       busy=false;spinBtn.disabled=false;autoBtn.disabled=false;bc.lock(false);
+    }
+    async function startSphinx(betUnit){
+      slotStage.classList.add('bonus-hit');snd('bonus');
+      await sleep(1200);slotStage.classList.remove('bonus-hit');
+      await runSphinx({host:stage.closest('.gx')||stage,gameId:cfg.id,bet:betUnit});
+    }
+    /* Un ou plusieurs palmiers peuvent s'embraser le même tour : on les résout
+       l'un après l'autre (petit bonus, jackpot, puis le plus long — la Marche
+       du Pharaon — en dernier), chacun remettant son palmier à zéro. */
+    async function burstTrees(list,betUnit){
+      const st=S.trees[cfg.id];
+      for(const t of list){
+        st[t]=0;save();
+        const el=$('.palm-'+t,palmsEl);
+        if(el){el.classList.add('burst');el.style.setProperty('--fill',0)}
+        snd(t==='mini'?'coin':'bonus');
+        await sleep(900);
+        if(el)el.classList.remove('burst');
+        paintPalms();
+        if(t==='mini')await startSphinx(betUnit);
+        else if(t==='bonus')await startBonus(betUnit,5,true);
+        else if(t==='jp'&&!REDUCED)confetti(110,true);
+        await sleep(t==='jp'?250:0);
+      }
     }
 
     async function spinOnce(){
@@ -208,6 +266,20 @@ function slotMachine(cfg){
       const bonusCount=cfg.bonus?flat.filter(s=>s.k===cfg.bonus.sym).length:0;
       const trigBonus=!!cfg.bonus&&bonusCount>=cfg.bonus.need;
       if(trigBonus)for(let c=0;c<cols;c++)for(let r=0;r<rows;r++)if(grid[c][r].k===cfg.bonus.sym)winCells.push([c,r]);
+      /* Palmiers : chaque scarabée ramassé fait grandir son arbre ; une chance
+         croissante (garantie une fois plein) l'embrase aussitôt. */
+      const treeBursts=[];
+      if(cfg.trees){
+        const ts=S.trees[cfg.id];
+        for(const t of TREE_ORDER){
+          const tc=cfg.trees[t],n=flat.filter(s=>s.k===tc.sym).length;
+          if(n<=0)continue;
+          ts[t]=Math.min(tc.cap,ts[t]+n);
+          const chance=ts[t]>=tc.cap?1:Math.min(1,tc.base+(ts[t]-1)*tc.inc);
+          if(rand()<chance)treeBursts.push(t);
+        }
+        treeBursts.sort((a,b)=>(a==='bonus')-(b==='bonus'));
+      }
       let scWin=0;
       if(cfg.scatterPay&&scatterCount>=3)scWin=cfg.scatterPay[scatterCount]*bet_unit()||0;
       win=r2(win+scWin);
@@ -219,15 +291,20 @@ function slotMachine(cfg){
       }
       let jpWin=0;
       if(cfg.jackpot&&bestType&&bestType.count>=cfg.cols&&bestType.type===cfg.jackpot.sym){jpWin=S.jackpot;S.jackpot=cfg.jackpot.reset;unlock('jp')}
-      const totalWin=r2(win+jpWin);
+      let treeJpWin=0;
+      if(treeBursts.includes('jp')){treeJpWin=S.jackpot;S.jackpot=cfg.jackpot.reset;unlock('jp')}
+      const totalWin=r2(win+jpWin+treeJpWin);
       if(freeSpins>0&&!triggeredFS){fsWin=r2(fsWin+totalWin);freeSpins--}
       if(totalWin>0){give(totalWin);snd(totalWin/Math.max(1,bet_unit())>=10?'big':'win')}
       else if(!triggeredFS)snd('lose');
       if(triggeredFS){snd('gem');toast(`${cfg.freeSpins.need} symboles Scatter : ${cfg.freeSpins.count} tours gratuits !`,'win')}
       setFS();
-      const label=jpWin?`JACKPOT ◈ ${fmt(jpWin)} !`:trigBonus?'Bonus Pyramide !':totalWin>0?`Gagné ◈ ${fmt(totalWin)}`:triggeredFS?'Tours gratuits déclenchés !':'Perdu, réessaie';
-      msg.textContent=label;msg.className='msg '+(totalWin>0||triggeredFS||trigBonus?'w':'l');
-      record(cfg.id,bet,totalWin,[triggeredFS?'Tours gratuits déclenchés':scatterCount>=3?`${scatterCount} Scatters`:'',trigBonus?`Bonus Pyramide (${bonusCount})`:''].filter(Boolean).join(' · '));
+      if(cfg.trees)paintPalms();
+      const treeLabels={jp:'Le Palmier d’Or s’embrase !',bonus:'Le Palmier de Lapis s’embrase !',mini:'Le Palmier de Rubis s’embrase !'};
+      const label=(jpWin||treeJpWin)?`JACKPOT ◈ ${fmt(jpWin||treeJpWin)} !`:trigBonus?'Bonus Pyramide !':treeBursts.length?treeLabels[treeBursts[0]]:totalWin>0?`Gagné ◈ ${fmt(totalWin)}`:triggeredFS?'Tours gratuits déclenchés !':'Perdu, réessaie';
+      msg.textContent=label;msg.className='msg '+(totalWin>0||triggeredFS||trigBonus||treeBursts.length?'w':'l');
+      record(cfg.id,bet,totalWin,[triggeredFS?'Tours gratuits déclenchés':scatterCount>=3?`${scatterCount} Scatters`:'',trigBonus?`Bonus Pyramide (${bonusCount})`:'',treeBursts.map(t=>cfg.trees[t].label+' embrasé').join(' · ')].filter(Boolean).join(' · '));
+      if(treeBursts.length){auto=0;await burstTrees(treeBursts,bet_unit())}
       if(trigBonus){auto=0;await startBonus(bet_unit(),bonusCount)}
       busy=false;spinBtn.disabled=false;autoBtn.disabled=false;spinBtn.classList.remove('spinning');bc.lock(false);
       return true;
@@ -246,9 +323,10 @@ function slotRules(cfg){
   ${cfg.freeSpins?`<p><b>Symbole Wild</b> : remplace tous les symboles sauf le Scatter. <b>Symbole Scatter</b> : ${cfg.freeSpins.need} symboles ou plus, n’importe où sur la grille, déclenchent ${cfg.freeSpins.count} tours gratuits.</p>`:''}
   ${cfg.bonus?`<p><b>Symbole Pyramide (Bonus)</b> : 3, 4 ou 5 symboles n’importe où sur la grille lancent <b>La Marche du Pharaon</b>, avec autant de torches au départ. Une pyramide de ${PYR.LEVELS} étages : à chaque étage, choisis une porte parmi trois. Derrière, un trésor (multiple de la mise), parfois une torche en plus, ou un piège qui éteint une torche (deux portes piégées sur trois aux ${PYR.TRAPS.filter(t=>t>1).length} derniers étages). Plus de torche : l’ascension s’arrête et tout le trésor accumulé est gagné (minimum garanti : ${PYR.MIN_WIN}× la mise). Au sommet, un sarcophage parmi trois multiplie le trésor par ×2, ×3 ou ×5. Le contenu des portes est tiré au hasard avant ton choix.</p>`:''}
   ${cfg.jackpot?`<p><b>Jackpot progressif</b> : 5 symboles Couronne sur une ligne remportent le Jackpot Aurum affiché dans le lobby.</p>`:''}
+  ${cfg.trees?`<p><b>Les 3 palmiers sacrés</b> : trois scarabées — d’or, de lapis et de rubis — peuvent tomber n’importe où sur la grille, à raison de 0, 1 ou plusieurs par tour. Chacun fait grandir son palmier ; plus il est chargé, plus il a de chances de s’embraser à la prochaine récolte (garanti une fois plein). <b>Palmier d’Or</b> : remporte le Jackpot Aurum. <b>Palmier de Lapis</b> : lance La Marche du Pharaon avec 5 torches. <b>Palmier de Rubis</b> : le petit bonus <b>Les Faveurs du Sphinx</b>, un tirage instantané et sans risque — choisis une urne canope parmi trois, son trésor (${SPHINX.TABLE[0][0]}× à ${SPHINX.TABLE[SPHINX.TABLE.length-1][0]}× la mise) est à toi aussitôt.</p>`:''}
   <table class="ptab"><thead><tr><th>Symbole</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody>
   ${cfg.syms.filter(s=>s.p).map(s=>`<tr><td>${symBadge(s,true)}${s.name}</td><td>${s.p[3]||'—'}×</td><td>${s.p[4]||'—'}×</td><td>${s.p[5]||'—'}×</td></tr>`).join('')}
-  </tbody></table><p class="mu2" style="font-size:12px">Multiplicateurs appliqués à la mise totale, divisés sur le nombre de lignes actives (comme dans une vraie machine à sous). RTP théorique ${cfg.id==='pharaon'?'≈ 94 % (bonus compris, hors jackpot ; bonus en moyenne tous les 130 tours environ)':cfg.id==='fruit'?'≈ 92 %':'≈ 94 %'} sur un grand nombre de tours.</p>`;
+  </tbody></table><p class="mu2" style="font-size:12px">Multiplicateurs appliqués à la mise totale, divisés sur le nombre de lignes actives (comme dans une vraie machine à sous). RTP théorique ${cfg.id==='pharaon'?'≈ 97 % (bonus et palmiers compris, hors jackpot)':cfg.id==='fruit'?'≈ 92 %':'≈ 94 %'} sur un grand nombre de tours.</p>`;
 }
 
 reg({id:'pharaon',name:'Pharaon d’Or',cat:'slots',rtp:'94 %',vol:'Haute',badge:'jp',pop:98,
@@ -259,8 +337,13 @@ reg({id:'pharaon',name:'Pharaon d’Or',cat:'slots',rtp:'94 %',vol:'Haute',badge
     frame:{img:'assets/frames/pharaon-frame.png',w:1576,h:998,l:15.86,r:15.93,t:21.14,b:21.44},
     logo:{img:'assets/logos/pharaon-logo.png',w:1576,h:998,l:21.25,r:21.32,t:64.9,b:20.5},
     bonus:{sym:'P',need:3},
+    trees:{
+      jp:{sym:'CG',cap:40,vcap:8,base:.035,inc:.006,label:'Palmier d’Or',sub:'Jackpot'},
+      bonus:{sym:'CB',cap:30,vcap:8,base:.045,inc:.008,label:'Palmier de Lapis',sub:'Bonus Pyramide'},
+      mini:{sym:'CR',cap:10,vcap:5,base:.1,inc:.02,label:'Palmier de Rubis',sub:'Faveurs du Sphinx'},
+    },
     syms:SYMS_PHARAON}),
-  rules:slotRules({id:'pharaon',title:'Pharaon d’Or',desc:'5 rouleaux, 20 lignes, dans les sables de l’Égypte ancienne.',cols:5,rows:3,lines:LINES20,freeSpins:{need:3,count:10},jackpot:{sym:'W'},bonus:{sym:'P',need:3},
+  rules:slotRules({id:'pharaon',title:'Pharaon d’Or',desc:'5 rouleaux, 20 lignes, dans les sables de l’Égypte ancienne.',cols:5,rows:3,lines:LINES20,freeSpins:{need:3,count:10},jackpot:{sym:'W'},bonus:{sym:'P',need:3},trees:true,
     syms:SYMS_PHARAON})});
 
 reg({id:'fruit',name:'Fruit Classic',cat:'slots',rtp:'92 %',vol:'Moyenne',badge:null,pop:70,
