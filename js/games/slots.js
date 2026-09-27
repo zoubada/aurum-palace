@@ -18,17 +18,17 @@ function evalLine(seq,pays,wildK,scK){
    ailleurs. Rien dans les poids (w), payables (p) ou drapeaux wild/scatter ne change
    ici : seule la couche visuelle est nouvelle. ---- */
 const SYMS_PHARAON=[
-  {k:'W',g:'👑',w:2,wild:true,name:'Wild (Couronne)',p:{3:195,4:782,5:3910},ic:'<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>',c1:'#F5D76E',c2:'#8B6508'},
-  {k:'S',g:'☀️',w:2,name:'Scatter (Soleil)',ic:'<circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.4M12 18.6V21M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M3 12h2.4M18.6 12H21M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>',c1:'#FFD98A',c2:'#C97A1A'},
-  {k:'E',g:'𓁹',w:3,name:'Œil d’Horus',p:{3:117,4:489,5:2444},ic:'<path d="M2.5 12S6.5 7 12 7s9.5 5 9.5 5-4 5-9.5 5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M12 14.6v3.4M9.5 17l-1.2 2"/>',c1:'#2E8FB0',c2:'#0F2F40'},
-  {k:'N',g:'🐫',w:4,name:'Chameau',p:{3:78,4:323,5:1173},ic:'<path d="M2 18c1.6-.8 2.4-3.2 4-3.2s1.6 2.4 3.2 2.4 1-4 2.8-4 1.8 3.4 3.6 3.4 1.4-1.6 2.8-1.6" fill="none"/><path d="M2 20.5h20"/>',c1:'#C79A5C',c2:'#5C3E17'},
-  {k:'B',g:'🏺',w:5,name:'Vase',p:{3:64,4:195,5:782},ic:'<path d="M9.5 3h5M10.5 3v2.6c0 1.3-2 2.4-2 5.4v7a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7c0-3-2-4.1-2-5.4V3"/>',c1:'#4FAE8A',c2:'#0F4A38'},
-  {k:'V',g:'🐍',w:6,name:'Cobra',p:{3:39,4:117,5:489},ic:'<path d="M6 20c0-5.5 2.6-5.8 2.6-9.2S6.8 4.6 8.8 3.6s3.8 1.8 2.8 4.6 2.6 3.8 2.6 7.4"/><circle cx="13.4" cy="6" r="1.3"/>',c1:'#5FAE4F',c2:'#1B4A15'},
-  {k:'A',g:'A',w:8,name:'A',p:{3:24,4:78,5:323}},
-  {k:'K',g:'K',w:9,name:'K',p:{3:24,4:64,5:244}},
-  {k:'Q',g:'Q',w:10,name:'Q',p:{3:16,4:49,5:195}},
-  {k:'J',g:'J',w:11,name:'J',p:{3:16,4:39,5:156}},
-  {k:'T',g:'10',w:12,name:'10',p:{3:8,4:32,5:117}},
+  {k:'W',img:'assets/symbols/pharaon/W.svg',g:'👑',w:2,wild:true,name:'Wild (Couronne)',p:{3:195,4:782,5:3910},ic:'<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>',c1:'#F5D76E',c2:'#8B6508'},
+  {k:'S',img:'assets/symbols/pharaon/S.svg',g:'☀️',w:2,name:'Scatter (Soleil)',ic:'<circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.4M12 18.6V21M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M3 12h2.4M18.6 12H21M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>',c1:'#FFD98A',c2:'#C97A1A'},
+  {k:'E',img:'assets/symbols/pharaon/E.svg',g:'𓁹',w:3,name:'Œil d’Horus',p:{3:117,4:489,5:2444},ic:'<path d="M2.5 12S6.5 7 12 7s9.5 5 9.5 5-4 5-9.5 5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M12 14.6v3.4M9.5 17l-1.2 2"/>',c1:'#2E8FB0',c2:'#0F2F40'},
+  {k:'N',img:'assets/symbols/pharaon/N.svg',g:'🐫',w:4,name:'Chameau',p:{3:78,4:323,5:1173},ic:'<path d="M2 18c1.6-.8 2.4-3.2 4-3.2s1.6 2.4 3.2 2.4 1-4 2.8-4 1.8 3.4 3.6 3.4 1.4-1.6 2.8-1.6" fill="none"/><path d="M2 20.5h20"/>',c1:'#C79A5C',c2:'#5C3E17'},
+  {k:'B',img:'assets/symbols/pharaon/B.svg',g:'🏺',w:5,name:'Vase',p:{3:64,4:195,5:782},ic:'<path d="M9.5 3h5M10.5 3v2.6c0 1.3-2 2.4-2 5.4v7a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7c0-3-2-4.1-2-5.4V3"/>',c1:'#4FAE8A',c2:'#0F4A38'},
+  {k:'V',img:'assets/symbols/pharaon/V.svg',g:'🐍',w:6,name:'Cobra',p:{3:39,4:117,5:489},ic:'<path d="M6 20c0-5.5 2.6-5.8 2.6-9.2S6.8 4.6 8.8 3.6s3.8 1.8 2.8 4.6 2.6 3.8 2.6 7.4"/><circle cx="13.4" cy="6" r="1.3"/>',c1:'#5FAE4F',c2:'#1B4A15'},
+  {k:'A',img:'assets/symbols/pharaon/A.svg',g:'A',w:8,name:'A',p:{3:24,4:78,5:323}},
+  {k:'K',img:'assets/symbols/pharaon/K.svg',g:'K',w:9,name:'K',p:{3:24,4:64,5:244}},
+  {k:'Q',img:'assets/symbols/pharaon/Q.svg',g:'Q',w:10,name:'Q',p:{3:16,4:49,5:195}},
+  {k:'J',img:'assets/symbols/pharaon/J.svg',g:'J',w:11,name:'J',p:{3:16,4:39,5:156}},
+  {k:'T',img:'assets/symbols/pharaon/T.svg',g:'10',w:12,name:'10',p:{3:8,4:32,5:117}},
 ];
 const SYMS_FRUIT=[
   {k:'7',g:'7',w:2,name:'7 chanceux',p:{3:636},img:'assets/slots-symbols/seven.png'},
@@ -41,20 +41,20 @@ const SYMS_FRUIT=[
   {k:'C',g:'🍒',w:9,name:'Cerise',p:{3:19},img:'assets/slots-symbols/cherry.png'},
 ];
 const SYMS_DRAGON=[
-  {k:'W',g:'🐉',w:2,wild:true,name:'Wild (Dragon)',p:{3:76,4:304,5:1518},ic:'<path d="M3 17c1.6-3.6 2-6.6 5.4-7.4S11 13 13.6 12s1.6-4.6 4.6-3.8" fill="none"/><path d="M18.2 8.2l2-2-.8 2.8 2 .8-2.8.7z"/><circle cx="17.6" cy="7.6" r=".7"/>',c1:'#F5D76E',c2:'#8B6508'},
-  {k:'S',g:'💠',w:3,name:'Scatter (Perle)',ic:'<circle cx="12" cy="12" r="6.6"/><path d="M8.7 8.2c1.3-1.2 3.3-1.7 5-1.1" fill="none"/>',c1:'#7FD9D4',c2:'#0E6E68'},
-  {k:'E',g:'⛩️',w:4,name:'Temple',p:{3:30,4:121,5:607},ic:'<path d="M3 8h18M4.6 8l-1.3 2.4M19.4 8l1.3 2.4M3.6 11.8h16.8M8 11.8v9M16 11.8v9"/>',c1:'#E1544B',c2:'#6E1913'},
-  {k:'N',g:'🏮',w:5,name:'Lanterne',p:{3:18,4:67,5:273},ic:'<path d="M9.5 3h5M8 6.4h8a2 2 0 0 1 2 2v7.2a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8.4a2 2 0 0 1 2-2z"/><path d="M12 3v3.4M12 17.6V21M8 10.2h8M8 13.8h8"/>',c1:'#FFB24D',c2:'#A85A06'},
-  {k:'B',g:'🥢',w:6,name:'Baguettes',p:{3:12,4:42,5:167},ic:'<path d="M6.5 20 16 4M10 20.5 19.5 4.5"/>',c1:'#C9A227',c2:'#63500D'},
-  {k:'V',g:'🀄',w:6,name:'Mahjong',p:{3:11,4:33,5:137},ic:'<rect x="5" y="4" width="14" height="16" rx="2.4"/><path d="M8.6 9.8h6.8M8.6 14.2h6.8M12 7.6v8.8"/>',c1:'#3E4A5C',c2:'#141B26'},
-  {k:'A',g:'A',w:9,name:'A',p:{3:6,4:21,5:85}},
-  {k:'K',g:'K',w:10,name:'K',p:{3:5,4:17,5:67}},
-  {k:'Q',g:'Q',w:11,name:'Q',p:{3:4,4:14,5:55}},
-  {k:'J',g:'J',w:12,name:'J',p:{3:4,4:11,5:42}},
+  {k:'W',img:'assets/symbols/dragon/W.svg',g:'🐉',w:2,wild:true,name:'Wild (Dragon)',p:{3:76,4:304,5:1518},ic:'<path d="M3 17c1.6-3.6 2-6.6 5.4-7.4S11 13 13.6 12s1.6-4.6 4.6-3.8" fill="none"/><path d="M18.2 8.2l2-2-.8 2.8 2 .8-2.8.7z"/><circle cx="17.6" cy="7.6" r=".7"/>',c1:'#F5D76E',c2:'#8B6508'},
+  {k:'S',img:'assets/symbols/dragon/S.svg',g:'💠',w:3,name:'Scatter (Perle)',ic:'<circle cx="12" cy="12" r="6.6"/><path d="M8.7 8.2c1.3-1.2 3.3-1.7 5-1.1" fill="none"/>',c1:'#7FD9D4',c2:'#0E6E68'},
+  {k:'E',img:'assets/symbols/dragon/E.svg',g:'⛩️',w:4,name:'Temple',p:{3:30,4:121,5:607},ic:'<path d="M3 8h18M4.6 8l-1.3 2.4M19.4 8l1.3 2.4M3.6 11.8h16.8M8 11.8v9M16 11.8v9"/>',c1:'#E1544B',c2:'#6E1913'},
+  {k:'N',img:'assets/symbols/dragon/N.svg',g:'🏮',w:5,name:'Lanterne',p:{3:18,4:67,5:273},ic:'<path d="M9.5 3h5M8 6.4h8a2 2 0 0 1 2 2v7.2a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8.4a2 2 0 0 1 2-2z"/><path d="M12 3v3.4M12 17.6V21M8 10.2h8M8 13.8h8"/>',c1:'#FFB24D',c2:'#A85A06'},
+  {k:'B',img:'assets/symbols/dragon/B.svg',g:'🥢',w:6,name:'Baguettes',p:{3:12,4:42,5:167},ic:'<path d="M6.5 20 16 4M10 20.5 19.5 4.5"/>',c1:'#C9A227',c2:'#63500D'},
+  {k:'V',img:'assets/symbols/dragon/V.svg',g:'🀄',w:6,name:'Mahjong',p:{3:11,4:33,5:137},ic:'<rect x="5" y="4" width="14" height="16" rx="2.4"/><path d="M8.6 9.8h6.8M8.6 14.2h6.8M12 7.6v8.8"/>',c1:'#3E4A5C',c2:'#141B26'},
+  {k:'A',img:'assets/symbols/dragon/A.svg',g:'A',w:9,name:'A',p:{3:6,4:21,5:85}},
+  {k:'K',img:'assets/symbols/dragon/K.svg',g:'K',w:10,name:'K',p:{3:5,4:17,5:67}},
+  {k:'Q',img:'assets/symbols/dragon/Q.svg',g:'Q',w:11,name:'Q',p:{3:4,4:14,5:55}},
+  {k:'J',img:'assets/symbols/dragon/J.svg',g:'J',w:12,name:'J',p:{3:4,4:11,5:42}},
 ];
 
 const symBadge=(s,mini)=>{
-  if(s.img)return `<span class="symbadge photo${mini?' mini':''}"><img src="${s.img}" alt="${s.name}" draggable="false" loading="lazy"></span>`;
+  if(s.img)return `<span class="symbadge photo${mini?' mini':''}"><img src="${s.img}" alt="${s.name}" draggable="false"></span>`;
   if(s.ic)return `<span class="symbadge${s.wild?' wild':''}${mini?' mini':''}" style="--c1:${s.c1};--c2:${s.c2}"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${s.ic}</svg></span>`;
   if(/^[0-9A-Z]{1,2}$/.test(s.g))return `<span class="ltb"${mini?' style="width:28px;display:inline-flex;vertical-align:middle;margin-right:7px"':''} data-r="${s.k}"><i>${s.g}</i></span>`;
   return `<span class="sy">${s.g}</span>`;

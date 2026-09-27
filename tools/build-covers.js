@@ -560,11 +560,7 @@ S.scratch = () => {
 };
 
 /* ---------- Écriture ---------- */
-fs.mkdirSync(OUT, { recursive: true });
-const only = process.argv[2];
-for (const [id, fn] of Object.entries(S)) {
-  if (only && only !== id) continue;
-  const { defs, body } = fn();
+function writeSvg(file, defs, body, w = W, h = H) {
   const textsFor = fam => {
     let chars = '';
     const re = new RegExp(`<text[^>]*font-family="${fam}"[^>]*>([\\s\\S]*?)</text>`, 'g');
@@ -575,7 +571,20 @@ for (const [id, fn] of Object.entries(S)) {
   let style = '';
   if (cz) style += `@font-face{font-family:Cinzel;src:url(data:font/woff2;base64,${subsetFont(FONTS.cinzel, cz)}) format('woff2');font-weight:100 900}`;
   if (it) style += `@font-face{font-family:Inter;src:url(data:font/woff2;base64,${subsetFont(FONTS.inter, it)}) format('woff2');font-weight:100 900}`;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><defs>${style ? `<style>${style}</style>` : ''}${COMMON_DEFS}${defs}</defs>${body}</svg>`;
-  fs.writeFileSync(path.join(OUT, id + '.svg'), svg);
-  console.log(id.padEnd(11), (svg.length / 1024).toFixed(1) + ' KB');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><defs>${style ? `<style>${style}</style>` : ''}${COMMON_DEFS}${defs}</defs>${body}</svg>`;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, svg);
+  return svg.length;
+}
+
+module.exports = { f, rnd, setSeed: v => { seed = v; }, png, rays, glowBlob, sparkle, sparkles, dust, bokeh, suit, crown, card, chip, stack, gem, coin, writeSvg };
+
+if (require.main === module) {
+  const only = process.argv[2];
+  for (const [id, fn] of Object.entries(S)) {
+    if (only && only !== id) continue;
+    const { defs, body } = fn();
+    const n = writeSvg(path.join(OUT, id + '.svg'), defs, body);
+    console.log(id.padEnd(11), (n / 1024).toFixed(1) + ' KB');
+  }
 }
