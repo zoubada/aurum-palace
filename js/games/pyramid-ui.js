@@ -3,7 +3,8 @@
    L'état vit dans S.pyr = {g, st} (voir js/pyramid-bonus.js) et est sauvegardé
    à chaque porte ouverte : un rechargement reprend le bonus là où il en était.
    Le gain est versé au moment même où la dernière porte est ouverte. */
-const PYR_IMG = { bg: null, door: null, sarco: null, prize: null, trap: null, torch: null, climber: null };
+const PYR_DIR = 'assets/bonus/pyramid/';
+const PYR_IMG = { bg: PYR_DIR + 'bg.jpg', door: PYR_DIR + 'door.jpg', sarco: PYR_DIR + 'sarco.png', prize: PYR_DIR + 'treasure.png', trap: null, torch: null, climber: null };
 
 const PYR_ICON = {
   torch: `<svg viewBox="0 0 32 48" aria-hidden="true"><defs><radialGradient id="pyrFl" cx=".5" cy=".7" r=".6"><stop offset="0" stop-color="#FFF7C2"/><stop offset=".45" stop-color="#FFB42A"/><stop offset="1" stop-color="#E4401A"/></radialGradient></defs><path class="fl" d="M16 2c3 7 10 10 10 18a10 10 0 0 1-20 0c0-5 3-7 4-10 1 3 2 5 4 5-1-5 0-9 2-13z" fill="url(#pyrFl)"/><path d="M9 27h14l-3 19h-8z" fill="#8A5A0B"/><path d="M8 26h16v4H8z" fill="#E2B13F"/></svg>`,
@@ -21,7 +22,7 @@ function runPyramid({ host, gameId, fresh }) {
     const money = v => fmt(r2(v * bet));
     const img = (k, cls = '') => PYR_IMG[k] ? `<img class="${cls}" src="${PYR_IMG[k]}" alt="" draggable="false">` : '';
     const ov = h(`<div class="pyr" role="dialog" aria-modal="true" aria-label="Bonus La Marche du Pharaon">
-      <div class="pyr-bg"${PYR_IMG.bg ? ` style="background-image:url(${PYR_IMG.bg})"` : ''}></div><i class="pyr-rays"></i><div class="pyr-dust"></div>
+      <div class="pyr-bg${PYR_IMG.bg ? ' has-img' : ''}"${PYR_IMG.bg ? ` style="background-image:url(${PYR_IMG.bg})"` : ''}></div><i class="pyr-rays"></i><div class="pyr-dust"></div>
       <header class="pyr-top"><div class="pyr-title"><small>Bonus</small><b>La Marche <span>du Pharaon</span></b></div>
         <div class="pyr-hud"><div class="pyr-torches" aria-label="Torches"></div><div class="pyr-total"><span>Trésor</span><b class="num">◈ 0</b></div></div></header>
       <div class="pyr-main"><div class="pyr-tower" aria-hidden="true"></div>
@@ -59,8 +60,8 @@ function runPyramid({ host, gameId, fresh }) {
     }
     /* ---------- Portes ---------- */
     const faceHTML = (i, summit) => summit
-      ? `<span class="pd-face sarco">${PYR_IMG.sarco ? img('sarco', 'pd-img') : `<i class="sc-lid"></i><i class="sc-face"></i><i class="sc-band"></i>`}<b class="pd-n">${['I', 'II', 'III'][i]}</b></span>`
-      : `<span class="pd-face">${PYR_IMG.door ? img('door', 'pd-img') : `<i class="pd-lintel">${PYR_ICON.sun}</i><i class="pd-leaf l"></i><i class="pd-leaf r"></i>`}<b class="pd-n">${['I', 'II', 'III'][i]}</b></span>`;
+      ? `<span class="pd-face sarco">${PYR_IMG.sarco ? img('sarco', 'pd-img') : `<i class="sc-lid"></i><i class="sc-face"></i><i class="sc-band"></i>`}${PYR_IMG.sarco ? '' : `<b class="pd-n">${['I', 'II', 'III'][i]}</b>`}</span>`
+      : `<span class="pd-face">${PYR_IMG.door ? img('door', 'pd-img') : `<i class="pd-lintel">${PYR_ICON.sun}</i><i class="pd-leaf l"></i><i class="pd-leaf r"></i><b class="pd-n">${['I', 'II', 'III'][i]}</b>`}</span>`;
     const backHTML = it => {
       if (it.t === 'prize') return `<span class="pd-back prize">${PYR_IMG.prize ? img('prize', 'pd-ico') : PYR_ICON.coin}<b>◈ ${money(it.v)}</b><small>×${String(it.v).replace('.', ',')}</small></span>`;
       if (it.t === 'trap') return `<span class="pd-back trap">${PYR_IMG.trap ? img('trap', 'pd-ico') : PYR_ICON.trap}<b>Piège !</b><small>−1 torche</small></span>`;
