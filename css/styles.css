@@ -1273,16 +1273,23 @@ html.gx-lock,html.gx-lock body{overflow:hidden;overscroll-behavior:none}
 .palms{display:flex;justify-content:center;gap:clamp(10px,4vw,28px);width:100%;max-width:640px;margin:0 auto 4px;flex-wrap:nowrap}
 .palm{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1 1 0;min-width:0;max-width:150px}
 .palm-jp{--pc:#FFD54A}.palm-bonus{--pc:#5B9CF6}.palm-mini{--pc:#FF6B6B}
-.palm-ic{position:relative;width:clamp(30px,8vw,44px);height:calc(clamp(30px,8vw,44px) * 64 / 48);color:var(--pc);
+.palm-ic{position:relative;width:clamp(34px,9vw,50px);height:calc(clamp(34px,9vw,50px) * 1.455);color:var(--pc);
   filter:brightness(calc(.86 + var(--fill,0) * .3)) drop-shadow(0 0 calc(3px + var(--fill,0) * 14px) var(--pc));transition:filter .5s}
-.palm-ic svg{position:absolute;inset:0;width:100%;height:100%;display:block;transform:scale(calc(.74 + var(--fill,0) * .5));transform-origin:50% 100%;transition:transform .5s var(--ease)}
+.palm-ic img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain;
+  transform:scale(calc(.74 + var(--fill,0) * .5));transform-origin:50% 100%;transition:transform .5s var(--ease)}
+.palm-bonus .palm-ic img{filter:hue-rotate(150deg) saturate(1.15)}
+.palm-mini .palm-ic img{filter:hue-rotate(-42deg) saturate(1.2)}
 .palm-ic .pf{position:absolute;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--pc);box-shadow:0 0 6px var(--pc);
-  transform:scale(clamp(0,calc((var(--fill,0) - var(--i) * .2) * 30),1));transition:transform .5s var(--ease)}
+  transform:scale(clamp(0,calc((var(--fill,0) - var(--i) * .2) * 30),1));transition:transform .5s var(--ease);z-index:1}
+.palm-burstfx{position:absolute;inset:-70%;background-size:contain;background-position:center;background-repeat:no-repeat;
+  mix-blend-mode:screen;opacity:0;pointer-events:none}
 .palm.ready .palm-ic{animation:palmReady 1.6s ease-in-out infinite}
 @keyframes palmReady{50%{filter:brightness(1.15) drop-shadow(0 0 20px var(--pc))}}
 .palm b{font-size:8.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:rgba(255,255,255,.62);text-align:center;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .palm.burst .palm-ic{animation:palmBurst .9s ease-out}
+.palm.burst .palm-burstfx{animation:palmBurstFx .9s ease-out}
 @keyframes palmBurst{0%{filter:brightness(1) drop-shadow(0 0 3px var(--pc))}30%{transform:scale(1.35);filter:brightness(1.6) drop-shadow(0 0 26px var(--pc))}100%{transform:scale(1)}}
+@keyframes palmBurstFx{0%{opacity:0;transform:scale(.3) rotate(0deg)}30%{opacity:1}100%{opacity:0;transform:scale(1.7) rotate(8deg)}}
 @media(min-width:760px){.palm b{font-size:10px}}
 /* Scarabée sacré : rare, embrase son palmier à n'importe quel niveau */
 .cell.sacred{position:relative;z-index:1}

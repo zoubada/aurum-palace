@@ -24,9 +24,9 @@ const SYMS_PHARAON=[
   {k:'W',img:'assets/symbols/pharaon/W.png',g:'👑',w:2,wild:true,name:'Wild (Couronne)',p:{3:213,4:852,5:4262},ic:'<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>',c1:'#F5D76E',c2:'#8B6508'},
   {k:'S',img:'assets/symbols/pharaon/S.png',g:'☀️',w:2,name:'Scatter (Soleil)',ic:'<circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.4M12 18.6V21M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M3 12h2.4M18.6 12H21M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>',c1:'#FFD98A',c2:'#C97A1A'},
   {k:'P',img:'assets/symbols/pharaon/P.png',g:'△',w:2,bonus:true,name:'Pyramide (Bonus)',ic:'<path d="M12 3 3 20h18z"/><path d="M12 3v17M7.5 11.5h9"/>',c1:'#FFE08A',c2:'#B8841E'},
-  {k:'CG',g:'△',w:0.35,tree:'jp',name:'Scarabée d’Or',ic:SCARAB_IC,c1:'#FFE9A3',c2:'#8A5A0B'},
-  {k:'CB',g:'△',w:0.45,tree:'bonus',name:'Scarabée de Lapis',ic:SCARAB_IC,c1:'#8FC1FF',c2:'#0F2A6B'},
-  {k:'CR',g:'△',w:0.9,tree:'mini',name:'Scarabée de Rubis',ic:SCARAB_IC,c1:'#FF9C9C',c2:'#7A1414'},
+  {k:'CG',img:'assets/symbols/pharaon/CG.png',g:'△',w:0.35,tree:'jp',name:'Scarabée d’Or',ic:SCARAB_IC,c1:'#FFE9A3',c2:'#8A5A0B'},
+  {k:'CB',img:'assets/symbols/pharaon/CB.png',g:'△',w:0.45,tree:'bonus',name:'Scarabée de Lapis',ic:SCARAB_IC,c1:'#8FC1FF',c2:'#0F2A6B'},
+  {k:'CR',img:'assets/symbols/pharaon/CR.png',g:'△',w:0.9,tree:'mini',name:'Scarabée de Rubis',ic:SCARAB_IC,c1:'#FF9C9C',c2:'#7A1414'},
   {k:'E',img:'assets/symbols/pharaon/E.png',g:'𓁹',w:3,name:'Œil d’Horus',p:{3:128,4:533,5:2664},ic:'<path d="M2.5 12S6.5 7 12 7s9.5 5 9.5 5-4 5-9.5 5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M12 14.6v3.4M9.5 17l-1.2 2"/>',c1:'#2E8FB0',c2:'#0F2F40'},
   {k:'N',img:'assets/symbols/pharaon/N.png',g:'🐫',w:4,name:'Chameau',p:{3:85,4:352,5:1279},ic:'<path d="M2 18c1.6-.8 2.4-3.2 4-3.2s1.6 2.4 3.2 2.4 1-4 2.8-4 1.8 3.4 3.6 3.4 1.4-1.6 2.8-1.6" fill="none"/><path d="M2 20.5h20"/>',c1:'#C79A5C',c2:'#5C3E17'},
   {k:'B',img:'assets/symbols/pharaon/B.png',g:'🏺',w:5,name:'Vase',p:{3:70,4:213,5:852},ic:'<path d="M9.5 3h5M10.5 3v2.6c0 1.3-2 2.4-2 5.4v7a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7c0-3-2-4.1-2-5.4V3"/>',c1:'#4FAE8A',c2:'#0F4A38'},
@@ -77,6 +77,9 @@ const PALM_SVG=`<svg viewBox="0 0 48 64" aria-hidden="true" fill="currentColor">
 /* Positions (haut %, gauche %) des 5 fruits qui apparaissent progressivement
    autour de la couronne du palmier à mesure qu'il se charge. */
 const PALM_FRUIT=[[8,50],[19,27],[19,73],[33,15],[33,85]];
+/* Vrai visuel du palmier (fourni), et effet d'embrasement partagé par les 3 arbres. */
+const PALM_IMG='assets/bonus/palms/palm.png';
+const PALM_BURST_IMG='assets/bonus/palms/burst.jpg';
 
 function slotMachine(cfg){
   return function init(stage){
@@ -161,7 +164,7 @@ function slotMachine(cfg){
       palmsEl.innerHTML=TREE_ORDER.map(t=>{
         const tc=cfg.trees[t],n=st[t],pct=Math.min(1,n/tc.vcap);
         const fruit=PALM_FRUIT.map((p,i)=>`<i class="pf" style="--i:${i};top:${p[0]}%;left:${p[1]}%"></i>`).join('');
-        return `<div class="palm palm-${t}${pct>=1?' ready':''}" style="--fill:${pct}"><i class="palm-ic">${PALM_SVG}${fruit}</i><b>${tc.sub}</b></div>`;
+        return `<div class="palm palm-${t}${pct>=1?' ready':''}" style="--fill:${pct}"><i class="palm-ic"><img src="${PALM_IMG}" alt="" draggable="false">${fruit}<i class="palm-burstfx" style="background-image:url(${PALM_BURST_IMG})"></i></i><b>${tc.sub}</b></div>`;
       }).join('');
     }
     paintPalms();
