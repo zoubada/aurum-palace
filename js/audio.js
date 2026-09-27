@@ -23,6 +23,7 @@ function snd(type){
       case'door':tone(70,.5,'sawtooth',.05,0,45);tone(110,.35,'triangle',.04,.05,60);break;
       case'torch':tone(300,.25,'sine',.05,0,900);tone(600,.3,'triangle',.04,.08,1400);break;
       case'bonus':[392,523,659,784,1047].forEach((f,i)=>tone(f,.5,'triangle',.07,i*.12));tone(196,1.2,'sine',.06,0);tone(98,1.4,'sawtooth',.03,.05,90);break;
+      case'suck':tone(260,.32,'sine',.045,0,1100);break;
     }
   }catch(e){}
 }

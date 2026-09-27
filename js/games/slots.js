@@ -168,6 +168,46 @@ function slotMachine(cfg){
       }).join('');
     }
     paintPalms();
+    /* Aspiration : chaque scarabée ramassé s'envole de sa case et va se faire
+       « aspirer » par son palmier, avant que la barre ne se mette à jour —
+       pour bien montrer que c'est CE tirage qui vient de le charger. */
+    function flyToTree(cell,tree){
+      return new Promise(resolve=>{
+        const palmIc=$('.palm-'+tree+' .palm-ic',palmsEl);
+        const img=cell&&cell.querySelector('img,svg');
+        if(!cell||!palmIc||!img){resolve();return}
+        const a=cell.getBoundingClientRect(),b=palmIc.getBoundingClientRect();
+        const clone=img.cloneNode(true);
+        clone.className='';clone.removeAttribute('style');
+        clone.style.cssText=`position:fixed;left:${a.left+a.width*.22}px;top:${a.top+a.height*.22}px;width:${a.width*.56}px;height:${a.height*.56}px;object-fit:contain;z-index:400;pointer-events:none`;
+        document.body.appendChild(clone);
+        const dx=(b.left+b.width/2)-(a.left+a.width*.5), dy=(b.top+b.height*.35)-(a.top+a.height*.5);
+        const anim=clone.animate([
+          {transform:'translate(0,0) scale(1) rotate(0deg)',opacity:1,offset:0},
+          {transform:`translate(${dx*.42}px,${dy*.42-38}px) scale(.9) rotate(20deg)`,opacity:1,offset:.4},
+          {transform:`translate(${dx*.86}px,${dy*.86}px) scale(.4) rotate(70deg)`,opacity:.9,offset:.82},
+          {transform:`translate(${dx}px,${dy}px) scale(.05) rotate(110deg)`,opacity:0,offset:1},
+        ],{duration:640,easing:'cubic-bezier(.32,.6,.4,1)'});
+        snd('suck');
+        anim.onfinish=()=>{clone.remove();resolve()};
+      });
+    }
+    async function flyScarabsToTrees(landed){
+      const jobs=[];
+      for(const t of TREE_ORDER){
+        const cells=landed[t];if(!cells)continue;
+        cells.forEach(([c,r],i)=>jobs.push({t,c,r,delay:jobs.length*120}));
+      }
+      if(!jobs.length)return;
+      await Promise.all(jobs.map(j=>sleep(j.delay).then(()=>flyToTree(reelsEl.children[j.c]?.children[j.r],j.t))));
+      paintPalms();
+      for(const t of TREE_ORDER){
+        if(!landed[t])continue;
+        const el=$('.palm-'+t,palmsEl);
+        if(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');snd('coin')}
+      }
+      await sleep(150);
+    }
 
     /* ---- Mode plein écran immersif (machines à cadre illustré) ----
        Le décor couvre tout l'écran, le cadre et les symboles sont agrandis au maximum
@@ -304,15 +344,16 @@ function slotMachine(cfg){
       if(trigBonus)for(let c=0;c<cols;c++)for(let r=0;r<rows;r++)if(grid[c][r].k===cfg.bonus.sym)winCells.push([c,r]);
       /* Palmiers : chaque scarabée ramassé fait grandir son arbre ; une chance
          croissante (garantie une fois plein) l'embrase aussitôt. */
-      const treeBursts=[];
+      const treeBursts=[];const treeLanded={};
       if(cfg.trees){
         const ts=S.trees[cfg.id];
         for(const t of TREE_ORDER){
-          const tc=cfg.trees[t],n=flat.filter(s=>s.k===tc.sym).length;
-          if(n<=0)continue;
-          ts[t]=Math.min(tc.cap,ts[t]+n);
-          let sacredHit=false;
-          for(let c=0;c<cols&&!sacredHit;c++)for(let r=0;r<rows;r++)if(grid[c][r].k===tc.sym&&sacredCells.has(c+'_'+r)){sacredHit=true;break}
+          const tc=cfg.trees[t],cells=[];
+          for(let c=0;c<cols;c++)for(let r=0;r<rows;r++)if(grid[c][r].k===tc.sym)cells.push([c,r]);
+          if(!cells.length)continue;
+          treeLanded[t]=cells;
+          ts[t]=Math.min(tc.cap,ts[t]+cells.length);
+          const sacredHit=cells.some(([c,r])=>sacredCells.has(c+'_'+r));
           const chance=ts[t]>=tc.cap?1:Math.min(1,tc.base+(ts[t]-1)*tc.inc);
           if(sacredHit||rand()<chance)treeBursts.push(t);
         }
@@ -323,6 +364,7 @@ function slotMachine(cfg){
       win=r2(win+scWin);
       if(winCells.length)paint(grid,winCells);
       paintLines(winLines);
+      if(cfg.trees)await flyScarabsToTrees(treeLanded);
       let triggeredFS=false;
       if(cfg.freeSpins&&scatterCount>=cfg.freeSpins.need){
         if(freeSpins===0){freeSpins=cfg.freeSpins.count;fsTotal=cfg.freeSpins.count;fsWin=0;fsBetRef=bet;triggeredFS=true}
@@ -338,7 +380,6 @@ function slotMachine(cfg){
       else if(!triggeredFS)snd('lose');
       if(triggeredFS){snd('gem');toast(`${cfg.freeSpins.need} symboles Scatter : ${cfg.freeSpins.count} tours gratuits !`,'win')}
       setFS();
-      if(cfg.trees)paintPalms();
       const treeLabels={jp:'Le Palmier d’Or s’embrase !',bonus:'Le Palmier de Lapis s’embrase !',mini:'Le Palmier de Rubis s’embrase !'};
       const label=(jpWin||treeJpWin)?`JACKPOT ◈ ${fmt(jpWin||treeJpWin)} !`:trigBonus?'Bonus Pyramide !':treeBursts.length?treeLabels[treeBursts[0]]:totalWin>0?`Gagné ◈ ${fmt(totalWin)}`:triggeredFS?'Tours gratuits déclenchés !':'Perdu, réessaie';
       msg.textContent=label;msg.className='msg '+(totalWin>0||triggeredFS||trigBonus||treeBursts.length?'w':'l');
@@ -368,7 +409,24 @@ function slotMachine(cfg){
       const inp=$('#autoCustom',md.el);
       inp.addEventListener('change',()=>{const v=Math.max(2,Math.min(2000,parseInt(inp.value)||S.autoSpins));S.autoSpins=v;save();paintAutoN();md.close()});
     });
-    autoBtn.addEventListener('click',async()=>{if(busy)return;if(auto>0){auto=0;autoBtn.textContent='Auto';autoBtn.classList.remove('on');autoNBtn.disabled=false;return}auto=S.autoSpins;autoBtn.textContent='Arrêter';autoBtn.classList.add('on');autoNBtn.disabled=true;while(auto>0&&!busy){auto--;const ok=await spinOnce();if(!ok){auto=0;break}await sleep(280)}autoBtn.textContent='Auto';autoBtn.classList.remove('on');autoNBtn.disabled=false});
+    /* Le clic « Arrêter » doit toujours marcher, même pendant l'animation d'un
+       tour (busy=true la plupart du temps) : on ne bloque que le DÉMARRAGE
+       d'un enchaînement, jamais son arrêt. */
+    async function runAuto(){
+      autoBtn.textContent='Arrêter';autoBtn.classList.add('on');autoNBtn.disabled=true;
+      while(auto>0){
+        auto--;
+        const ok=await spinOnce();
+        if(!ok){auto=0;break}
+        if(auto>0)await sleep(280);
+      }
+      auto=0;autoBtn.textContent='Auto';autoBtn.classList.remove('on');autoNBtn.disabled=false;
+    }
+    autoBtn.addEventListener('click',()=>{
+      if(auto>0){auto=0;return}
+      if(busy)return;
+      auto=S.autoSpins;runAuto();
+    });
     return()=>{auto=0;document.removeEventListener('fullscreenchange',onFsChange);if(immRO)immRO.disconnect();if(imm&&document.fullscreenElement)document.exitFullscreen?.().catch(()=>{})};
   };
 }
