@@ -20,9 +20,9 @@ const SYMS = ctx.SYMS, LINES = ctx.LINES, evalLine = ctx.evalLine;
 const payMap = Object.fromEntries(SYMS.filter(s => s.p).map(s => [s.k, s.p]));
 const scatterPay = { 3: 2, 4: 10, 5: 49 };
 const TREES = {
-  jp: { sym: 'CG', cap: 40, base: .035, inc: .006 },
-  bonus: { sym: 'CB', cap: 30, base: .045, inc: .008 },
-  mini: { sym: 'CR', cap: 10, base: .1, inc: .02 },
+  jp: { sym: 'CG', cap: 2000, base: .0074, inc: 0, sacred: .002 },
+  bonus: { sym: 'CB', cap: 1600, base: .0058, inc: 0, sacred: .003 },
+  mini: { sym: 'CR', cap: 250, base: .0103, inc: 0, sacred: .02 },
 };
 const tot = SYMS.reduce((a, s) => a + s.w, 0);
 const R = Math.random;
@@ -42,8 +42,9 @@ function spin(betUnit, stats) {
     const tc = TREES[t], n = flat.filter(s => s.k === tc.sym).length;
     if (n <= 0) continue;
     trees[t] = Math.min(tc.cap, trees[t] + n);
+    let sacred = false; for (let i = 0; i < n; i++) if (R() < tc.sacred) sacred = true;
     const chance = trees[t] >= tc.cap ? 1 : Math.min(1, tc.base + (trees[t] - 1) * tc.inc);
-    if (R() < chance) {
+    if (sacred || R() < chance) {
       trees[t] = 0;
       if (t === 'jp') { stats.treeJp++; treeJp = 1; /* valeur variable, exclue du RTP */ }
       else if (t === 'bonus') { stats.treeBonus++; treeBonus = PYR.simulate(betUnit, R, 5, stats); }

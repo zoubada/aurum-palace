@@ -21,21 +21,21 @@ function evalLine(seq,pays,wildK,scK){
    pour que le joueur reconnaisse d'un coup d'œil quel palmier vient de se remplir. */
 const SCARAB_IC='<path d="M12 6.4c-2.1 0-3.6 2-3.6 2s1.5 1.3 3.6 1.3 3.6-1.3 3.6-1.3-1.5-2-3.6-2z"/><ellipse cx="12" cy="14.1" rx="7.4" ry="6.3"/><path d="M12 9.9v10.6M5.4 14.1h13.2M7 11.3l10 5.6M17 11.3l-10 5.6"/>';
 const SYMS_PHARAON=[
-  {k:'W',img:'assets/symbols/pharaon/W.png',g:'👑',w:2,wild:true,name:'Wild (Couronne)',p:{3:195,4:782,5:3910},ic:'<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>',c1:'#F5D76E',c2:'#8B6508'},
+  {k:'W',img:'assets/symbols/pharaon/W.png',g:'👑',w:2,wild:true,name:'Wild (Couronne)',p:{3:213,4:852,5:4262},ic:'<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>',c1:'#F5D76E',c2:'#8B6508'},
   {k:'S',img:'assets/symbols/pharaon/S.png',g:'☀️',w:2,name:'Scatter (Soleil)',ic:'<circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.4M12 18.6V21M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M3 12h2.4M18.6 12H21M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>',c1:'#FFD98A',c2:'#C97A1A'},
   {k:'P',img:'assets/symbols/pharaon/P.png',g:'△',w:2,bonus:true,name:'Pyramide (Bonus)',ic:'<path d="M12 3 3 20h18z"/><path d="M12 3v17M7.5 11.5h9"/>',c1:'#FFE08A',c2:'#B8841E'},
-  {k:'CG',g:'△',w:0.04,tree:'jp',name:'Scarabée d’Or',ic:SCARAB_IC,c1:'#FFE9A3',c2:'#8A5A0B'},
-  {k:'CB',g:'△',w:0.04,tree:'bonus',name:'Scarabée de Lapis',ic:SCARAB_IC,c1:'#8FC1FF',c2:'#0F2A6B'},
-  {k:'CR',g:'△',w:0.15,tree:'mini',name:'Scarabée de Rubis',ic:SCARAB_IC,c1:'#FF9C9C',c2:'#7A1414'},
-  {k:'E',img:'assets/symbols/pharaon/E.png',g:'𓁹',w:3,name:'Œil d’Horus',p:{3:117,4:489,5:2444},ic:'<path d="M2.5 12S6.5 7 12 7s9.5 5 9.5 5-4 5-9.5 5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M12 14.6v3.4M9.5 17l-1.2 2"/>',c1:'#2E8FB0',c2:'#0F2F40'},
-  {k:'N',img:'assets/symbols/pharaon/N.png',g:'🐫',w:4,name:'Chameau',p:{3:78,4:323,5:1173},ic:'<path d="M2 18c1.6-.8 2.4-3.2 4-3.2s1.6 2.4 3.2 2.4 1-4 2.8-4 1.8 3.4 3.6 3.4 1.4-1.6 2.8-1.6" fill="none"/><path d="M2 20.5h20"/>',c1:'#C79A5C',c2:'#5C3E17'},
-  {k:'B',img:'assets/symbols/pharaon/B.png',g:'🏺',w:5,name:'Vase',p:{3:64,4:195,5:782},ic:'<path d="M9.5 3h5M10.5 3v2.6c0 1.3-2 2.4-2 5.4v7a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7c0-3-2-4.1-2-5.4V3"/>',c1:'#4FAE8A',c2:'#0F4A38'},
-  {k:'V',img:'assets/symbols/pharaon/V.png',g:'🐍',w:6,name:'Cobra',p:{3:39,4:117,5:489},ic:'<path d="M6 20c0-5.5 2.6-5.8 2.6-9.2S6.8 4.6 8.8 3.6s3.8 1.8 2.8 4.6 2.6 3.8 2.6 7.4"/><circle cx="13.4" cy="6" r="1.3"/>',c1:'#5FAE4F',c2:'#1B4A15'},
-  {k:'A',img:'assets/symbols/pharaon/A.png',g:'A',w:8,name:'A',p:{3:24,4:78,5:323}},
-  {k:'K',img:'assets/symbols/pharaon/K.png',g:'K',w:9,name:'K',p:{3:24,4:64,5:244}},
-  {k:'Q',img:'assets/symbols/pharaon/Q.png',g:'Q',w:10,name:'Q',p:{3:16,4:49,5:195}},
-  {k:'J',img:'assets/symbols/pharaon/J.png',g:'J',w:11,name:'J',p:{3:16,4:39,5:156}},
-  {k:'T',img:'assets/symbols/pharaon/T.png',g:'10',w:12,name:'10',p:{3:8,4:32,5:117}},
+  {k:'CG',g:'△',w:0.35,tree:'jp',name:'Scarabée d’Or',ic:SCARAB_IC,c1:'#FFE9A3',c2:'#8A5A0B'},
+  {k:'CB',g:'△',w:0.45,tree:'bonus',name:'Scarabée de Lapis',ic:SCARAB_IC,c1:'#8FC1FF',c2:'#0F2A6B'},
+  {k:'CR',g:'△',w:0.9,tree:'mini',name:'Scarabée de Rubis',ic:SCARAB_IC,c1:'#FF9C9C',c2:'#7A1414'},
+  {k:'E',img:'assets/symbols/pharaon/E.png',g:'𓁹',w:3,name:'Œil d’Horus',p:{3:128,4:533,5:2664},ic:'<path d="M2.5 12S6.5 7 12 7s9.5 5 9.5 5-4 5-9.5 5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M12 14.6v3.4M9.5 17l-1.2 2"/>',c1:'#2E8FB0',c2:'#0F2F40'},
+  {k:'N',img:'assets/symbols/pharaon/N.png',g:'🐫',w:4,name:'Chameau',p:{3:85,4:352,5:1279},ic:'<path d="M2 18c1.6-.8 2.4-3.2 4-3.2s1.6 2.4 3.2 2.4 1-4 2.8-4 1.8 3.4 3.6 3.4 1.4-1.6 2.8-1.6" fill="none"/><path d="M2 20.5h20"/>',c1:'#C79A5C',c2:'#5C3E17'},
+  {k:'B',img:'assets/symbols/pharaon/B.png',g:'🏺',w:5,name:'Vase',p:{3:70,4:213,5:852},ic:'<path d="M9.5 3h5M10.5 3v2.6c0 1.3-2 2.4-2 5.4v7a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7c0-3-2-4.1-2-5.4V3"/>',c1:'#4FAE8A',c2:'#0F4A38'},
+  {k:'V',img:'assets/symbols/pharaon/V.png',g:'🐍',w:6,name:'Cobra',p:{3:43,4:128,5:533},ic:'<path d="M6 20c0-5.5 2.6-5.8 2.6-9.2S6.8 4.6 8.8 3.6s3.8 1.8 2.8 4.6 2.6 3.8 2.6 7.4"/><circle cx="13.4" cy="6" r="1.3"/>',c1:'#5FAE4F',c2:'#1B4A15'},
+  {k:'A',img:'assets/symbols/pharaon/A.png',g:'A',w:8,name:'A',p:{3:26,4:85,5:352}},
+  {k:'K',img:'assets/symbols/pharaon/K.png',g:'K',w:9,name:'K',p:{3:26,4:70,5:266}},
+  {k:'Q',img:'assets/symbols/pharaon/Q.png',g:'Q',w:10,name:'Q',p:{3:17,4:53,5:213}},
+  {k:'J',img:'assets/symbols/pharaon/J.png',g:'J',w:11,name:'J',p:{3:17,4:43,5:170}},
+  {k:'T',img:'assets/symbols/pharaon/T.png',g:'10',w:12,name:'10',p:{3:9,4:35,5:128}},
 ];
 const SYMS_FRUIT=[
   {k:'7',g:'7',w:2,name:'7 chanceux',p:{3:636},img:'assets/slots-symbols/seven.png'},
@@ -74,6 +74,9 @@ const TREE_ORDER=['jp','bonus','mini'];
 const PALM_SVG=`<svg viewBox="0 0 48 64" aria-hidden="true" fill="currentColor"><path d="M21.4 64V33h5.2v31z"/>
   <path d="M24 30C15 26 10 18 4 19c3-9 13-10 20-3-3-6-2-14 2-18-2 7 0 14 4 18 7-7 17-6 20 3-6-1-11 7-20 11 4 2 7 6 8 11-6-3-11-4-14-2-3-2-8-1-14 2 1-5 4-9 8-11-9-4-14 1-20-1z"/>
   <ellipse cx="24" cy="30" rx="4.4" ry="3.2" opacity=".9"/></svg>`;
+/* Positions (haut %, gauche %) des 5 fruits qui apparaissent progressivement
+   autour de la couronne du palmier à mesure qu'il se charge. */
+const PALM_FRUIT=[[8,50],[19,27],[19,73],[33,15],[33,85]];
 
 function slotMachine(cfg){
   return function init(stage){
@@ -101,7 +104,10 @@ function slotMachine(cfg){
       <div class="ctrl">
         <div class="ctrl-row" id="betrow"></div>
         <div class="slot-ctrlrow">
-          <button class="slot-auto" id="auto" type="button">Auto ×10</button>
+          <div class="auto-wrap">
+            <button class="slot-auto" id="auto" type="button">Auto</button>
+            <button class="auto-n" id="autoN" type="button" aria-label="Choisir le nombre de tours automatiques"></button>
+          </div>
           <button class="spin-fab" id="spin" type="button" aria-label="Lancer">${ic('refresh',28)}</button>
           <span style="width:78px" aria-hidden="true"></span>
         </div>
@@ -109,6 +115,7 @@ function slotMachine(cfg){
     const slotStage=$('#slotStage',stage);
     const reelsEl=$('#reels',stage);
     for(let c=0;c<cols;c++){const r=h(`<div class="reel"></div>`);for(let k=0;k<rows;k++)r.appendChild(h(`<div class="cell"></div>`));reelsEl.appendChild(r)}
+    const linesSvg=h('<svg class="win-lines" aria-hidden="true"></svg>');reelsEl.appendChild(linesSvg);
     const bc=betCtl(cfg.id,cfg.def,{});$('#betrow',stage).appendChild(bc.el);
     const spinBtn=$('#spin',stage),autoBtn=$('#auto',stage),msg=$('#msg',stage),fsb=$('#fsb',stage);
     const cellHTML=s=>symBadge(s,false);
@@ -116,6 +123,27 @@ function slotMachine(cfg){
     const restGrid=()=>Array.from({length:cols},()=>Array.from({length:rows},()=>pickW(cfg.syms)));
     const paint=(grid,winCells=[])=>{for(let c=0;c<cols;c++){const cells=reelsEl.children[c].children;for(let r=0;r<rows;r++){const s=grid[c][r];const cell=cells[r];cell.innerHTML=cellHTML(s);cell.classList.remove('dim');const isWin=winCells.some(w=>w[0]===c&&w[1]===r);cell.classList.toggle('w',isWin);cell.style.animationDelay=isWin?(c*70)+'ms':''}}
       if(winCells.length)for(let c=0;c<cols;c++)for(let r=0;r<rows;r++)if(!winCells.some(w=>w[0]===c&&w[1]===r))reelsEl.children[c].children[r].classList.add('dim')};
+    /* Trait lumineux qui relie, un court instant, les symboles d'une combinaison
+       gagnante — pour montrer d'un coup d'œil quelle ligne a payé. */
+    function paintLines(winLines){
+      linesSvg.innerHTML='';
+      if(!winLines.length)return;
+      const pb=reelsEl.getBoundingClientRect();
+      linesSvg.setAttribute('viewBox',`0 0 ${pb.width} ${pb.height}`);
+      winLines.forEach(cells=>{
+        const pts=cells.map(([c,r])=>{const cb=reelsEl.children[c].children[r].getBoundingClientRect();return[cb.left-pb.left+cb.width/2,cb.top-pb.top+cb.height/2]});
+        const d='M'+pts.map(p=>p.join(',')).join(' L');
+        // les éléments SVG doivent être créés avec le bon espace de noms — un
+        // <path> injecté via innerHTML hors d'un <svg> devient un élément HTML
+        // générique, sans getTotalLength() ni les autres méthodes SVG.
+        const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('class','wline');path.setAttribute('d',d);
+        linesSvg.appendChild(path);
+      });
+      const paths=$$('.wline',linesSvg);
+      paths.forEach(p=>{const len=p.getTotalLength();p.style.strokeDasharray=len;p.style.strokeDashoffset=len;p.style.opacity=0});
+      requestAnimationFrame(()=>paths.forEach((p,i)=>{p.style.transition=`stroke-dashoffset .5s var(--ease) ${i*90}ms,opacity .2s ${i*90}ms`;p.style.opacity=.95;p.style.strokeDashoffset=0}));
+    }
     paint(restGrid());
     let freeSpins=0,fsTotal=0,fsWin=0,busy=false,auto=0;
     const setFS=()=>{fsb.style.display=freeSpins>0?'':'none';fsb.textContent=freeSpins>0?`TOURS GRATUITS — ${fsTotal-freeSpins+1} / ${fsTotal}`:''};
@@ -132,8 +160,8 @@ function slotMachine(cfg){
       const st=S.trees[cfg.id];
       palmsEl.innerHTML=TREE_ORDER.map(t=>{
         const tc=cfg.trees[t],n=st[t],pct=Math.min(1,n/tc.vcap);
-        const dots=Array.from({length:tc.vcap},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('');
-        return `<div class="palm palm-${t}" style="--fill:${pct}"><i class="palm-ic">${PALM_SVG}</i><span class="palm-dots">${dots}</span><b>${tc.sub}</b></div>`;
+        const fruit=PALM_FRUIT.map((p,i)=>`<i class="pf" style="--i:${i};top:${p[0]}%;left:${p[1]}%"></i>`).join('');
+        return `<div class="palm palm-${t}${pct>=1?' ready':''}" style="--fill:${pct}"><i class="palm-ic">${PALM_SVG}${fruit}</i><b>${tc.sub}</b></div>`;
       }).join('');
     }
     paintPalms();
@@ -152,7 +180,8 @@ function slotMachine(cfg){
       const portrait=H>W*1.05,noLogo=!portrait&&H<520,lk=cfg.logo&&!noLogo?(portrait?.72:.56):0;
       gxRoot.classList.toggle('imm-nologo',noLogo);
       const fr=cfg.frame.h/cfg.frame.w,lr=cfg.logo?cfg.logo.h/cfg.logo.w:0;
-      const avail=H-tH-dH-(portrait?40:34);
+      const palmsH=cfg.trees&&!noLogo?(palmsEl?palmsEl.getBoundingClientRect().height||58:58)+8:0;
+      const avail=H-tH-dH-palmsH-(portrait?40:34);
       const fw=Math.max(160,Math.min(W*(portrait?1.24:.96),avail/(fr+lk*lr*.93)));
       slotStage.style.setProperty('--imm-fw',Math.round(fw)+'px');
       slotStage.style.setProperty('--imm-lw',Math.round(fw*lk)+'px');
@@ -225,9 +254,13 @@ function slotMachine(cfg){
       if(freeSpins===0&&!canBet(bet))return false;
       busy=true;spinBtn.disabled=true;autoBtn.disabled=true;spinBtn.classList.add('spinning');bc.lock(true);msg.textContent=' ';msg.className='msg';
       if(freeSpins===0){take(bet);freeSpins===0&&0}
-      $$('.reel',reelsEl).forEach(r=>{r.classList.add('spin');r.classList.remove('stop');$$('.cell',r).forEach(c=>c.classList.remove('w','dim','bland'))});
+      $$('.reel',reelsEl).forEach(r=>{r.classList.add('spin');r.classList.remove('stop');$$('.cell',r).forEach(c=>c.classList.remove('w','dim','bland','sacred'))});
+      linesSvg.innerHTML='';
       rngStart();
-      const grid=[];for(let c=0;c<cols;c++){const col=[];for(let r=0;r<rows;r++)col.push(pickW(cfg.syms));grid.push(col)}
+      /* Un scarabée « sacré » (rare) embrase aussitôt son palmier, quel que soit
+         son niveau de charge : tiré au moment même où il atterrit sur la grille. */
+      const sacredCells=new Set();
+      const grid=[];for(let c=0;c<cols;c++){const col=[];for(let r=0;r<rows;r++){const s=pickW(cfg.syms);if(cfg.trees&&s.tree){const tc=cfg.trees[s.tree];if(tc.sacred&&rand()<tc.sacred)sacredCells.add(c+'_'+r)}col.push(s)}grid.push(col)}
       snd('click');
       // Anticipation : le tirage est déjà figé (RNG ci-dessus) — on regarde juste si le
       // dernier rouleau s'apprête à compléter une ligne payante, pour ralentir sa chute
@@ -249,17 +282,17 @@ function slotMachine(cfg){
           r0.classList.remove('anticip','tease');
         }
         const r=reelsEl.children[c];r.classList.remove('spin');r.classList.add('stop');
-        for(let k=0;k<rows;k++){r.children[k].innerHTML=cellHTML(grid[c][k]);r.children[k].classList.toggle('bland',!!(cfg.bonus&&grid[c][k].k===cfg.bonus.sym))}
+        for(let k=0;k<rows;k++){r.children[k].innerHTML=cellHTML(grid[c][k]);r.children[k].classList.toggle('bland',!!(cfg.bonus&&grid[c][k].k===cfg.bonus.sym));r.children[k].classList.toggle('sacred',sacredCells.has(c+'_'+k))}
         const hereB=cfg.bonus?grid[c].filter(x=>x.k===cfg.bonus.sym).length:0;
         bonusSoFar+=hereB;
         snd(hereB?'gem':'stop');
       }
       await sleep(140);
-      let win=0;const winCells=[];let scatterCount=0;let bestType=null;
+      let win=0;const winCells=[];const winLines=[];let scatterCount=0;let bestType=null;
       for(const ln of cfg.lines){
         const seq=ln.map((row,c)=>grid[c][row].k);
         const res=evalLine(seq,payMap,'W','S');
-        if(res.amt>0){win+=res.amt*bet_unit()/cfg.lines.length;for(let c=0;c<res.count;c++)winCells.push([c,ln[c]]);if(!bestType||res.amt>bestType.amt)bestType=res}
+        if(res.amt>0){win+=res.amt*bet_unit()/cfg.lines.length;const cells=[];for(let c=0;c<res.count;c++){winCells.push([c,ln[c]]);cells.push([c,ln[c]])}winLines.push(cells);if(!bestType||res.amt>bestType.amt)bestType=res}
       }
       function bet_unit(){return freeSpins>0?fsBetRef:bet}
       const flat=grid.flat();scatterCount=flat.filter(s=>s.k==='S').length;
@@ -275,8 +308,10 @@ function slotMachine(cfg){
           const tc=cfg.trees[t],n=flat.filter(s=>s.k===tc.sym).length;
           if(n<=0)continue;
           ts[t]=Math.min(tc.cap,ts[t]+n);
+          let sacredHit=false;
+          for(let c=0;c<cols&&!sacredHit;c++)for(let r=0;r<rows;r++)if(grid[c][r].k===tc.sym&&sacredCells.has(c+'_'+r)){sacredHit=true;break}
           const chance=ts[t]>=tc.cap?1:Math.min(1,tc.base+(ts[t]-1)*tc.inc);
-          if(rand()<chance)treeBursts.push(t);
+          if(sacredHit||rand()<chance)treeBursts.push(t);
         }
         treeBursts.sort((a,b)=>(a==='bonus')-(b==='bonus'));
       }
@@ -284,6 +319,7 @@ function slotMachine(cfg){
       if(cfg.scatterPay&&scatterCount>=3)scWin=cfg.scatterPay[scatterCount]*bet_unit()||0;
       win=r2(win+scWin);
       if(winCells.length)paint(grid,winCells);
+      paintLines(winLines);
       let triggeredFS=false;
       if(cfg.freeSpins&&scatterCount>=cfg.freeSpins.need){
         if(freeSpins===0){freeSpins=cfg.freeSpins.count;fsTotal=cfg.freeSpins.count;fsWin=0;fsBetRef=bet;triggeredFS=true}
@@ -312,7 +348,24 @@ function slotMachine(cfg){
     let fsBetRef=0;
     spinBtn.addEventListener('click',async()=>{if(busy)return;await spinOnce()});
     if(cfg.bonus&&S.pyr&&S.pyr.g===cfg.id&&S.pyr.st&&S.pyr.st.phase!=='done')setTimeout(resumeBonus,350);
-    autoBtn.addEventListener('click',async()=>{if(busy)return;if(auto>0){auto=0;autoBtn.textContent='Auto ×10';autoBtn.classList.remove('on');return}auto=10;autoBtn.textContent='Arrêter';autoBtn.classList.add('on');while(auto>0&&!busy){auto--;const ok=await spinOnce();if(!ok){auto=0;break}await sleep(280)}autoBtn.textContent='Auto ×10';autoBtn.classList.remove('on')});
+    /* ---- Nombre de tours automatiques : réglage partagé par toutes les
+       machines à sous, choisi via un petit menu (préréglages + nombre libre). ---- */
+    const autoNBtn=$('#autoN',stage);
+    const paintAutoN=()=>{autoNBtn.textContent='×'+S.autoSpins};
+    paintAutoN();
+    autoNBtn.addEventListener('click',()=>{
+      if(busy||auto>0)return;
+      snd('click');
+      const presets=[10,25,50,100,200,500];
+      const md=modal(`<h3 class="mt">Tours automatiques</h3><p class="mp">Choisis combien de tours enchaîner d’un coup. L’auto s’arrête plus tôt si le solde ne suit plus ou si un bonus se déclenche.</p>
+        <div class="auto-opts">${presets.map(n=>`<button type="button" class="chip auto-opt${n===S.autoSpins?' on':''}" data-n="${n}">${n}</button>`).join('')}</div>
+        <div class="auto-custom"><input type="text" inputmode="numeric" placeholder="Nombre personnalisé" id="autoCustom" value="${presets.includes(S.autoSpins)?'':S.autoSpins}"></div>
+        <button class="btn btn-gold btn-big" data-close style="margin-top:14px">Fermer</button>`);
+      $$('.auto-opt',md.el).forEach(b=>b.addEventListener('click',()=>{snd('click');S.autoSpins=+b.dataset.n;save();paintAutoN();md.close()}));
+      const inp=$('#autoCustom',md.el);
+      inp.addEventListener('change',()=>{const v=Math.max(2,Math.min(2000,parseInt(inp.value)||S.autoSpins));S.autoSpins=v;save();paintAutoN();md.close()});
+    });
+    autoBtn.addEventListener('click',async()=>{if(busy)return;if(auto>0){auto=0;autoBtn.textContent='Auto';autoBtn.classList.remove('on');autoNBtn.disabled=false;return}auto=S.autoSpins;autoBtn.textContent='Arrêter';autoBtn.classList.add('on');autoNBtn.disabled=true;while(auto>0&&!busy){auto--;const ok=await spinOnce();if(!ok){auto=0;break}await sleep(280)}autoBtn.textContent='Auto';autoBtn.classList.remove('on');autoNBtn.disabled=false});
     return()=>{auto=0;document.removeEventListener('fullscreenchange',onFsChange);if(immRO)immRO.disconnect();if(imm&&document.fullscreenElement)document.exitFullscreen?.().catch(()=>{})};
   };
 }
@@ -323,7 +376,7 @@ function slotRules(cfg){
   ${cfg.freeSpins?`<p><b>Symbole Wild</b> : remplace tous les symboles sauf le Scatter. <b>Symbole Scatter</b> : ${cfg.freeSpins.need} symboles ou plus, n’importe où sur la grille, déclenchent ${cfg.freeSpins.count} tours gratuits.</p>`:''}
   ${cfg.bonus?`<p><b>Symbole Pyramide (Bonus)</b> : 3, 4 ou 5 symboles n’importe où sur la grille lancent <b>La Marche du Pharaon</b>, avec autant de torches au départ. Une pyramide de ${PYR.LEVELS} étages : à chaque étage, choisis une porte parmi trois. Derrière, un trésor (multiple de la mise), parfois une torche en plus, ou un piège qui éteint une torche (deux portes piégées sur trois aux ${PYR.TRAPS.filter(t=>t>1).length} derniers étages). Plus de torche : l’ascension s’arrête et tout le trésor accumulé est gagné (minimum garanti : ${PYR.MIN_WIN}× la mise). Au sommet, un sarcophage parmi trois multiplie le trésor par ×2, ×3 ou ×5. Le contenu des portes est tiré au hasard avant ton choix.</p>`:''}
   ${cfg.jackpot?`<p><b>Jackpot progressif</b> : 5 symboles Couronne sur une ligne remportent le Jackpot Aurum affiché dans le lobby.</p>`:''}
-  ${cfg.trees?`<p><b>Les 3 palmiers sacrés</b> : trois scarabées — d’or, de lapis et de rubis — peuvent tomber n’importe où sur la grille, à raison de 0, 1 ou plusieurs par tour. Chacun fait grandir son palmier ; plus il est chargé, plus il a de chances de s’embraser à la prochaine récolte (garanti une fois plein). <b>Palmier d’Or</b> : remporte le Jackpot Aurum. <b>Palmier de Lapis</b> : lance La Marche du Pharaon avec 5 torches. <b>Palmier de Rubis</b> : le petit bonus <b>Les Faveurs du Sphinx</b>, un tirage instantané et sans risque — choisis une urne canope parmi trois, son trésor (${SPHINX.TABLE[0][0]}× à ${SPHINX.TABLE[SPHINX.TABLE.length-1][0]}× la mise) est à toi aussitôt.</p>`:''}
+  ${cfg.trees?`<p><b>Les 3 palmiers sacrés</b> : trois scarabées — d’or, de lapis et de rubis — peuvent tomber n’importe où sur la grille, à raison de 0, 1 ou plusieurs par tour. Chacun fait grandir et gonfler son palmier, qui finit par s’embraser. Rarement, un <b>scarabée sacré</b> embrase son palmier sur-le-champ, quel que soit son niveau de charge. <b>Palmier d’Or</b> : remporte le Jackpot Aurum. <b>Palmier de Lapis</b> : lance La Marche du Pharaon avec 5 torches. <b>Palmier de Rubis</b> : le petit bonus <b>Les Faveurs du Sphinx</b>, un tirage instantané et sans risque — choisis une urne canope parmi trois, son trésor (${SPHINX.TABLE[0][0]}× à ${SPHINX.TABLE[SPHINX.TABLE.length-1][0]}× la mise) est à toi aussitôt.</p>`:''}
   <table class="ptab"><thead><tr><th>Symbole</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody>
   ${cfg.syms.filter(s=>s.p).map(s=>`<tr><td>${symBadge(s,true)}${s.name}</td><td>${s.p[3]||'—'}×</td><td>${s.p[4]||'—'}×</td><td>${s.p[5]||'—'}×</td></tr>`).join('')}
   </tbody></table><p class="mu2" style="font-size:12px">Multiplicateurs appliqués à la mise totale, divisés sur le nombre de lignes actives (comme dans une vraie machine à sous). RTP théorique ${cfg.id==='pharaon'?'≈ 97 % (bonus et palmiers compris, hors jackpot)':cfg.id==='fruit'?'≈ 92 %':'≈ 94 %'} sur un grand nombre de tours.</p>`;
@@ -338,9 +391,9 @@ reg({id:'pharaon',name:'Pharaon d’Or',cat:'slots',rtp:'94 %',vol:'Haute',badge
     logo:{img:'assets/logos/pharaon-logo.png',w:1576,h:998,l:21.25,r:21.32,t:64.9,b:20.5},
     bonus:{sym:'P',need:3},
     trees:{
-      jp:{sym:'CG',cap:40,vcap:8,base:.035,inc:.006,label:'Palmier d’Or',sub:'Jackpot'},
-      bonus:{sym:'CB',cap:30,vcap:8,base:.045,inc:.008,label:'Palmier de Lapis',sub:'Bonus Pyramide'},
-      mini:{sym:'CR',cap:10,vcap:5,base:.1,inc:.02,label:'Palmier de Rubis',sub:'Faveurs du Sphinx'},
+      jp:{sym:'CG',cap:2000,vcap:6,base:.0074,inc:0,sacred:.002,label:'Palmier d’Or',sub:'Jackpot'},
+      bonus:{sym:'CB',cap:1600,vcap:6,base:.0058,inc:0,sacred:.003,label:'Palmier de Lapis',sub:'Bonus Pyramide'},
+      mini:{sym:'CR',cap:250,vcap:5,base:.0103,inc:0,sacred:.02,label:'Palmier de Rubis',sub:'Faveurs du Sphinx'},
     },
     syms:SYMS_PHARAON}),
   rules:slotRules({id:'pharaon',title:'Pharaon d’Or',desc:'5 rouleaux, 20 lignes, dans les sables de l’Égypte ancienne.',cols:5,rows:3,lines:LINES20,freeSpins:{need:3,count:10},jackpot:{sym:'W'},bonus:{sym:'P',need:3},trees:true,

@@ -472,7 +472,10 @@ input,select{font:inherit;color:inherit}
 .slot-frame-img{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;filter:drop-shadow(0 16px 32px rgba(0,0,0,.6))}
 .slot-wrap.framed .slot{border:0;box-shadow:inset 0 0 30px rgba(0,0,0,.35);background:rgba(8,9,15,.22);border-radius:4px}
 .slot-wrap.framed .cell{aspect-ratio:auto;background:rgba(10,12,20,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
-.slot{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:6px;padding:10px;border-radius:18px;background:linear-gradient(#0c0e15,#161a26);border:2px solid rgba(212,175,55,.5);box-shadow:inset 0 0 40px rgba(0,0,0,.65),0 0 34px rgba(212,175,55,.12)}
+.slot{position:relative;display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:6px;padding:10px;border-radius:18px;background:linear-gradient(#0c0e15,#161a26);border:2px solid rgba(212,175,55,.5);box-shadow:inset 0 0 40px rgba(0,0,0,.65),0 0 34px rgba(212,175,55,.12)}
+/* Trait qui relie les symboles d'une combinaison gagnante */
+.win-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible}
+.wline{fill:none;stroke:#FFF6D8;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 7px #FFD54A) drop-shadow(0 0 3px #FFF3C4)}
 .slot.fruit{border-color:rgba(217,70,239,.6);box-shadow:inset 0 0 40px rgba(0,0,0,.65),0 0 34px rgba(217,70,239,.25),0 0 0 4px rgba(217,70,239,.08)}
 .slot.dragon{border-color:rgba(225,84,75,.6);box-shadow:inset 0 0 40px rgba(0,0,0,.65),0 0 34px rgba(225,84,75,.25),0 0 0 4px rgba(212,175,55,.12)}
 .reel{display:grid;grid-template-rows:repeat(var(--rows),1fr);gap:6px;border-radius:10px;overflow:hidden}
@@ -489,9 +492,17 @@ input,select{font:inherit;color:inherit}
 .spin-fab:disabled{opacity:.5}
 .spin-fab.spinning svg{animation:spinIcon .7s linear infinite}
 @keyframes spinIcon{to{transform:rotate(360deg)}}
-.slot-auto{flex:none;height:44px;padding:0 16px;border-radius:999px;background:var(--s2);border:1px solid var(--line2);color:var(--mu);font-weight:700;font-size:13px;transition:color .15s,background .15s}
+.auto-wrap{display:flex;align-items:center;gap:6px}
+.slot-auto{flex:none;height:44px;padding:0 13px;border-radius:999px 0 0 999px;background:var(--s2);border:1px solid var(--line2);color:var(--mu);font-weight:700;font-size:12.5px;transition:color .15s,background .15s}
 .slot-auto:hover:not(:disabled){color:var(--tx);background:var(--s3)}
 .slot-auto.on{background:rgba(212,175,55,.16);border-color:rgba(212,175,55,.55);color:var(--g1)}
+.auto-n{flex:none;height:44px;min-width:36px;padding:0 8px;margin-left:-1px;border-radius:0 999px 999px 0;background:var(--s2);border:1px solid var(--line2);border-left:1px solid var(--line2);color:var(--mu);font-weight:800;font-size:11px;transition:color .15s,background .15s}
+.auto-n:hover:not(:disabled){color:var(--tx);background:var(--s3)}
+.auto-n:disabled{opacity:.55}
+.auto-opts{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 10px}
+.auto-opts .chip{padding:0 16px}
+.auto-custom input{width:100%;height:46px;border-radius:12px;background:var(--s2);border:1px solid var(--line2);color:var(--tx);padding:0 14px;font-size:14.5px}
+.auto-custom input:focus{outline:none;border-color:rgba(212,175,55,.6)}
 .cell{aspect-ratio:1;display:grid;place-items:center;border-radius:10px;position:relative;background:radial-gradient(circle at 50% 32%,#283047,#151923);transition:opacity .2s,box-shadow .2s}
 .cell .sy{font-size:clamp(24px,8.4vw,48px);line-height:1}
 .fruit .cell .sy{font-size:clamp(34px,13vw,64px)}
@@ -1233,7 +1244,7 @@ html.gx-lock,html.gx-lock body{overflow:hidden;overscroll-behavior:none}
   .gx-imm .gx-dock .slot-auto{padding:0 9px;font-size:11px}
   .gx-imm .gx-dock .spin-fab{width:54px;height:54px}
 }
-.gx-imm.imm-nologo .slot-logo{display:none}
+.gx-imm.imm-nologo .slot-logo,.gx-imm.imm-nologo #palms{display:none}
 @media(max-height:520px){
   .gx-imm .gx-top{padding-top:4px;padding-bottom:2px}
   .gx-imm .gx-dock{padding:5px 8px;margin-bottom:5px!important}
@@ -1256,19 +1267,29 @@ html.gx-lock,html.gx-lock body{overflow:hidden;overscroll-behavior:none}
   .pyr-plq.hd{display:block}
 }
 
-/* ============ Pharaon : palmiers sacrés (arbres à scarabées) ============ */
+/* ============ Pharaon : palmiers sacrés (arbres à scarabées) ============
+   Pas de compteur à côté : le palmier grandit et se couvre de fruits en
+   direct à mesure qu'il se charge, jusqu'à l'embrasement. */
 .palms{display:flex;justify-content:center;gap:clamp(10px,4vw,28px);width:100%;max-width:640px;margin:0 auto 4px;flex-wrap:nowrap}
 .palm{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1 1 0;min-width:0;max-width:150px}
 .palm-jp{--pc:#FFD54A}.palm-bonus{--pc:#5B9CF6}.palm-mini{--pc:#FF6B6B}
-.palm-ic{width:clamp(26px,7vw,38px);color:var(--pc);display:block;filter:drop-shadow(0 0 calc(3px + var(--fill,0) * 12px) var(--pc));transition:filter .5s}
-.palm-ic svg{width:100%;height:auto;display:block;transform:scale(calc(.8 + var(--fill,0) * .45));transform-origin:50% 100%;transition:transform .5s var(--ease)}
-.palm-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;max-width:100%}
-.palm-dots i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.16);transition:background .3s,box-shadow .3s;flex:none}
-.palm-dots i.on{background:var(--pc);box-shadow:0 0 5px var(--pc)}
+.palm-ic{position:relative;width:clamp(30px,8vw,44px);height:calc(clamp(30px,8vw,44px) * 64 / 48);color:var(--pc);
+  filter:brightness(calc(.86 + var(--fill,0) * .3)) drop-shadow(0 0 calc(3px + var(--fill,0) * 14px) var(--pc));transition:filter .5s}
+.palm-ic svg{position:absolute;inset:0;width:100%;height:100%;display:block;transform:scale(calc(.74 + var(--fill,0) * .5));transform-origin:50% 100%;transition:transform .5s var(--ease)}
+.palm-ic .pf{position:absolute;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--pc);box-shadow:0 0 6px var(--pc);
+  transform:scale(clamp(0,calc((var(--fill,0) - var(--i) * .2) * 30),1));transition:transform .5s var(--ease)}
+.palm.ready .palm-ic{animation:palmReady 1.6s ease-in-out infinite}
+@keyframes palmReady{50%{filter:brightness(1.15) drop-shadow(0 0 20px var(--pc))}}
 .palm b{font-size:8.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:rgba(255,255,255,.62);text-align:center;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .palm.burst .palm-ic{animation:palmBurst .9s ease-out}
-@keyframes palmBurst{0%{filter:drop-shadow(0 0 3px var(--pc))}30%{transform:scale(1.35);filter:drop-shadow(0 0 22px var(--pc))}100%{transform:scale(1)}}
+@keyframes palmBurst{0%{filter:brightness(1) drop-shadow(0 0 3px var(--pc))}30%{transform:scale(1.35);filter:brightness(1.6) drop-shadow(0 0 26px var(--pc))}100%{transform:scale(1)}}
 @media(min-width:760px){.palm b{font-size:10px}}
+/* Scarabée sacré : rare, embrase son palmier à n'importe quel niveau */
+.cell.sacred{position:relative;z-index:1}
+.cell.sacred .symbadge{animation:sacredPulse 1s ease-in-out infinite}
+.cell.sacred::after{content:"✦";position:absolute;top:-2px;right:2px;font-size:11px;color:#FFF3C4;text-shadow:0 0 6px #FFD54A;animation:sacredSpark 1s ease-in-out infinite}
+@keyframes sacredPulse{50%{filter:drop-shadow(0 0 12px #FFF3C4) drop-shadow(0 0 22px #FFD54A)}}
+@keyframes sacredSpark{50%{transform:scale(1.4) rotate(20deg);opacity:.7}}
 
 /* ============ Petit bonus « Les Faveurs du Sphinx » ============ */
 .pyr.sph .pyr-top{justify-content:center}
