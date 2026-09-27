@@ -26,9 +26,9 @@ const SYMS_PHARAON=[
   {k:'V',img:'assets/symbols/pharaon/V.png',g:'🐍',w:6,name:'Cobra',p:{3:39,4:117,5:489},ic:'<path d="M6 20c0-5.5 2.6-5.8 2.6-9.2S6.8 4.6 8.8 3.6s3.8 1.8 2.8 4.6 2.6 3.8 2.6 7.4"/><circle cx="13.4" cy="6" r="1.3"/>',c1:'#5FAE4F',c2:'#1B4A15'},
   {k:'A',img:'assets/symbols/pharaon/A.png',g:'A',w:8,name:'A',p:{3:24,4:78,5:323}},
   {k:'K',img:'assets/symbols/pharaon/K.png',g:'K',w:9,name:'K',p:{3:24,4:64,5:244}},
-  {k:'Q',img:'assets/symbols/pharaon/Q.svg',g:'Q',w:10,name:'Q',p:{3:16,4:49,5:195}},
-  {k:'J',img:'assets/symbols/pharaon/J.svg',g:'J',w:11,name:'J',p:{3:16,4:39,5:156}},
-  {k:'T',img:'assets/symbols/pharaon/T.svg',g:'10',w:12,name:'10',p:{3:8,4:32,5:117}},
+  {k:'Q',img:'assets/symbols/pharaon/Q.png',g:'Q',w:10,name:'Q',p:{3:16,4:49,5:195}},
+  {k:'J',img:'assets/symbols/pharaon/J.png',g:'J',w:11,name:'J',p:{3:16,4:39,5:156}},
+  {k:'T',img:'assets/symbols/pharaon/T.png',g:'10',w:12,name:'10',p:{3:8,4:32,5:117}},
 ];
 const SYMS_FRUIT=[
   {k:'7',g:'7',w:2,name:'7 chanceux',p:{3:636},img:'assets/slots-symbols/seven.png'},
