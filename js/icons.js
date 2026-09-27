@@ -1,6 +1,13 @@
 'use strict';
 /* ============ Icônes ============ */
 const P={
+play:'<path d="M8 5.2v13.6L19 12z" fill="currentColor" stroke="none"/>',
+chev:'<path d="m9 5 7 7-7 7"/>',
+chevl:'<path d="m15 5-7 7 7 7"/>',
+fire:'<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.2 1-3.6 2-4.6.3 1.6 1 2.6 2 3.1C10.5 8.8 11 5.8 12 3z"/>',
+sparkle:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
 home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
 slots:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M9 5v14M15 5v14"/>',
 cards:'<path d="M12 3C9.5 6.5 5 9 5 12.8a3.4 3.4 0 0 0 6 2.2L10.2 21h3.6L13 15a3.4 3.4 0 0 0 6-2.2C19 9 14.5 6.5 12 3z"/>',
@@ -41,4 +48,3 @@ refresh:'<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4
 plinko:'<circle cx="12" cy="4.5" r="1.4" fill="currentColor"/><circle cx="6" cy="11" r="1.4" fill="currentColor"/><circle cx="18" cy="11" r="1.4" fill="currentColor"/><circle cx="12" cy="11" r="1.4" fill="currentColor"/><circle cx="3" cy="17.5" r="1.4" fill="currentColor"/><circle cx="9" cy="17.5" r="1.4" fill="currentColor"/><circle cx="15" cy="17.5" r="1.4" fill="currentColor"/><circle cx="21" cy="17.5" r="1.4" fill="currentColor"/><path d="M9 21h6l-3 2z" fill="currentColor"/>'
 };
 const ic=(n,s=20)=>`<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
-const LOGO=(s=34)=>`<svg width="${s}" height="${s}" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg${s}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F5D76E"/><stop offset=".5" stop-color="#D4AF37"/><stop offset="1" stop-color="#8B6508"/></linearGradient></defs><polygon points="20,2 35.6,11 35.6,29 20,38 4.4,29 4.4,11" fill="url(#lg${s})"/><polygon points="20,7 31.3,13.5 31.3,26.5 20,33 8.7,26.5 8.7,13.5" fill="#0B0D12"/><path d="M20 11.5 27 28h-3.6l-1.4-3.6h-4l-1.4 3.6H13zM20 17l-1.6 4.5h3.2z" fill="url(#lg${s})"/></svg>`;

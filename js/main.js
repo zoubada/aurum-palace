@@ -1,6 +1,7 @@
 'use strict';
 /* ============ En-tête : icônes et interactions ============ */
-$('#logo-mark').innerHTML=LOGO(30);
+$('#logo-mark').innerHTML=LOGO(34);
+$('#lmark').innerHTML=LOGO(76);
 $('#hs-ic').innerHTML=ic('search',16);
 $('#bal-add').innerHTML=ic('plus',16);
 $('#btn-gift').innerHTML=ic('gift');
@@ -17,7 +18,7 @@ function doSearch(v){v=v.trim();if(!v)return;location.hash='#/games/'+encodeURIC
 $('#hsearch').addEventListener('keydown',e=>{if(e.key==='Enter'){doSearch(e.target.value);e.target.blur()}});
 
 /* ============ Jackpot progressif (décor global, croît en continu) ============ */
-setInterval(()=>{S.jackpot=r2(S.jackpot+ (5+Math.random()*35));save();$$('[data-jp]').forEach(el=>el.textContent='◈ '+fmt(S.jackpot))},2600);
+setInterval(()=>{S.jackpot=r2(S.jackpot+ (5+Math.random()*35));save();$$('[data-jp]').forEach(el=>el.textContent='◈ '+fmt(S.jackpot));$$('[data-jp-odo]').forEach(paintOdo)},2600);
 
 /* ============ Raccourci clavier : Espace = action principale ============ */
 addEventListener('keydown',e=>{

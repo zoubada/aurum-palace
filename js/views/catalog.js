@@ -1,8 +1,8 @@
 'use strict';
 /* ============ Listes de jeux ============ */
-function listView(m,{title,sub,list,filters=true,search=false,empty,q:q0=''}){
-  m.innerHTML=`<h1 class="ph">${title}</h1><p class="psub">${sub}</p>
-  ${search?`<label class="hsearch" style="display:flex;margin:0 0 14px;max-width:none">${ic('search',18)}<input id="lsearch" type="search" placeholder="Rechercher un jeu" autocomplete="off"></label>`:''}
+function listView(m,{title,sub,list,filters=true,search=false,empty,q:q0='',kicker,art,accent}){
+  m.innerHTML=`${pageHead({kicker,title,sub,art,accent})}
+  ${search?`<label class="hsearch lsearch">${ic('search',18)}<input id="lsearch" type="search" placeholder="Rechercher un jeu" autocomplete="off"></label>`:''}
   ${filters?`<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px"><div class="chips" id="fv">${['Toutes','Faible','Moyenne','Haute','Réglable'].map((v,i)=>`<button class="chip ${i?'':'on'}" data-v="${v}">${i?'Volatilité '+v.toLowerCase():'Toutes volatilités'}</button>`).join('')}</div><select class="sel" id="fs" aria-label="Trier"><option value="pop">Populaires</option><option value="az">A à Z</option><option value="new">Nouveautés</option><option value="rtp">RTP le plus haut</option></select></div>`:''}
   <div class="ggrid" id="gg"></div>`;
   let vol='Toutes',sort='pop',q=q0;
@@ -14,17 +14,19 @@ function listView(m,{title,sub,list,filters=true,search=false,empty,q:q0=''}){
   if(search){const i=$('#lsearch',m);i.value=q;i.addEventListener('input',()=>{q=i.value;draw()});if(q)i.focus()}
   draw();
 }
-V.games=(m,arg)=>listView(m,{title:'Tous les jeux',sub:`${GL.length} jeux jouables avec tes jetons ◈.`,list:GL,search:true,q:arg?decodeURIComponent(arg):''});
-V.cat=(m,k)=>{const c=CATS[k]||CATS.slots;listView(m,{title:c.n,sub:c.d+'.',list:GL.filter(g=>g.cat===(CATS[k]?k:'slots'))})};
-V.fav=m=>listView(m,{title:'Favoris',sub:'Touche le cœur d’un jeu pour le retrouver ici.',list:S.fav.map(id=>GAMES[id]).filter(Boolean),filters:false,empty:'<b>Aucun favori pour l’instant</b>Ajoute un jeu avec le cœur en haut à droite de sa vignette.'});
-V.recent=m=>listView(m,{title:'Récemment joués',sub:'Tes derniers jeux, du plus récent au plus ancien.',list:S.recent.map(id=>GAMES[id]).filter(Boolean),filters:false,empty:'<b>Tu n’as encore rien joué</b><a class="gold" href="#/lobby">Choisis un jeu dans le lobby</a>.'});
+V.games=(m,arg)=>listView(m,{kicker:'Catalogue',title:'Tous les jeux',sub:`${GL.length} jeux jouables avec tes jetons ◈ : machines à sous, tables, Originals et jeux instantanés.`,list:GL,search:true,q:arg?decodeURIComponent(arg):'',art:fan(['roulette','pharaon','crash'],'fan-ph')});
+const CAT_ART={slots:['fruit','pharaon','dragon'],table:['blackjack','roulette','baccarat'],originals:['mines','crash','plinko'],instant:['scratch','wheel','keno']};
+const CAT_AC={slots:'#F2B340',table:'#22C58B',originals:'#8B5CF6',instant:'#34D399'};
+V.cat=(m,k)=>{if(!CATS[k])k='slots';const c=CATS[k];const L=GL.filter(g=>g.cat===k);listView(m,{kicker:L.length+' jeux',title:c.n,sub:c.d+'.',list:L,art:fan(CAT_ART[k],'fan-ph'),accent:CAT_AC[k]})};
+V.fav=m=>listView(m,{kicker:'Mes jeux',accent:'#F4526E',art:`<div class="phd-ic" style="--ac:#F4526E">${ic('heart',64)}</div>`,title:'Favoris',sub:'Touche le cœur d’un jeu pour le retrouver ici.',list:S.fav.map(id=>GAMES[id]).filter(Boolean),filters:false,empty:'<b>Aucun favori pour l’instant</b>Ajoute un jeu avec le cœur en haut à droite de sa vignette.'});
+V.recent=m=>listView(m,{kicker:'Mes jeux',accent:'#5B9CF6',art:`<div class="phd-ic" style="--ac:#5B9CF6">${ic('clock',64)}</div>`,title:'Récemment joués',sub:'Tes derniers jeux, du plus récent au plus ancien.',list:S.recent.map(id=>GAMES[id]).filter(Boolean),filters:false,empty:'<b>Tu n’as encore rien joué</b><a class="gold" href="#/lobby">Choisis un jeu dans le lobby</a>.'});
 
 /* ============ Page de jeu ============ */
 const when=t=>{const d=new Date(t);return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})};
 V.game=(m,id)=>{
   const g=GAMES[id];if(!g){location.hash='#/lobby';return}
   S.recent=[id,...S.recent.filter(x=>x!==id)].slice(0,12);save();
-  m.innerHTML=`<div class="gp-head"><a class="hbtn" href="#/lobby" aria-label="Retour au lobby">${ic('back')}</a><div class="gp-t"><h1>${g.name}</h1><span>${CATS[g.cat].n} · RTP ${g.rtp} · Volatilité ${g.vol.toLowerCase()}</span></div><button class="hbtn fav ${isFav(id)?'on':''}" id="gfav" aria-label="Favori">${ic('heart')}</button></div>
+  m.innerHTML=`<div class="gp-head" style="--ac:${ACCENT[id]||'#D4AF37'}"><a class="hbtn" href="#/lobby" aria-label="Retour au lobby">${ic('back')}</a><img class="gp-cov" src="${COVER(id)}" alt="" width="300" height="400"><div class="gp-t"><h1>${g.name}</h1><div class="gp-tags"><span>${ic(CATS[g.cat].i,13)} ${CATS[g.cat].n}</span><span>RTP <b>${g.rtp}</b></span><span>Volatilité <b>${g.vol.toLowerCase()}</b></span></div></div><button class="hbtn fav ${isFav(id)?'on':''}" id="gfav" aria-label="Favori">${ic('heart')}</button></div>
   <div class="gp"><section class="stage" id="stage"></section><aside class="gside pan"><div class="tabs" role="tablist"><button class="tab on" data-t="h" role="tab">Historique</button><button class="tab" data-t="s" role="tab">Session</button><button class="tab" data-t="r" role="tab">Règles</button></div><div id="gtab"></div></aside></div>`;
   $('#gfav',m).addEventListener('click',e=>{const on=toggleFav(id);e.currentTarget.classList.toggle('on',on);toast(on?'Ajouté à tes favoris':'Retiré de tes favoris')});
   let tab='h';

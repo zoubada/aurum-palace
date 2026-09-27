@@ -35,7 +35,7 @@ const SYMS_FRUIT=[
   {k:'R',g:'🔔',w:3,name:'Cloche',p:{3:255},img:'assets/slots-symbols/bell.png'},
   {k:'X',g:'⭐',w:4,name:'Diamant',p:{3:128},img:'assets/slots-symbols/diamond.png'},
   {k:'L',g:'🍋',w:5,name:'Citron',p:{3:80},img:'assets/slots-symbols/lemon.png'},
-  {k:'G',g:'🍇',w:6,name:'Prune',p:{3:48},img:'assets/slots-symbols/plum.png'},
+  {k:'G',g:'🍇',w:6,name:'Raisin',p:{3:48},img:'assets/slots-symbols/grapefruit.png'},
   {k:'O',g:'🍊',w:7,name:'Orange',p:{3:32},img:'assets/slots-symbols/orange.png'},
   {k:'M',g:'🍉',w:8,name:'Pastèque',p:{3:25},img:'assets/slots-symbols/watermelon.png'},
   {k:'C',g:'🍒',w:9,name:'Cerise',p:{3:19},img:'assets/slots-symbols/cherry.png'},

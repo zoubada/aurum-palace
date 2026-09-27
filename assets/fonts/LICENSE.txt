@@ -1,0 +1,4 @@
+Cinzel — Copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel)
+Inter  — Copyright 2020 The Inter Project Authors (https://github.com/rsms/inter)
+Both fonts are licensed under the SIL Open Font License, Version 1.1 (https://openfontlicense.org).
+Files are the Latin subsets served by Google Fonts, self-hosted unmodified.
