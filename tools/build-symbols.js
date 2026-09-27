@@ -50,6 +50,17 @@ P.W = () => `${halo('#F5C04E', .5)}${cRays('#FFD27A', .2)}
   <path d="M64,72C58,66 58,56 64,48C70,56 70,66 64,72Z" fill="url(#goldV)" stroke="#6E4506" stroke-width="1.2"/><circle cx="64" cy="54" r="1.8" fill="#D62828"/>
   </g>${ribbon('WILD', '#D62828', '#6E0A0A', 99)}${sparkle(100, 22, 7)}${sparkle(24, 66, 4, .8)}`;
 
+P.P = () => `<linearGradient id="pyrL2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFF3BF"/><stop offset=".5" stop-color="#F0C75E"/><stop offset="1" stop-color="#C98E26"/></linearGradient>
+  <linearGradient id="pyrR2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9A6410"/><stop offset="1" stop-color="#5A3606"/></linearGradient>
+  ${halo('#FFD27A', .6)}${cRays('#FFF3C4', .28)}
+  <g filter="url(#ds)">
+  <path d="M64,10L112,94H16Z" fill="url(#pyrL2)"/><path d="M64,10L112,94H64Z" fill="url(#pyrR2)"/>
+  ${[26, 42, 58, 74].map((y, i) => { const hw = (y - 10) * 48 / 84; return `<path d="M${(64 - hw).toFixed(1)},${y}H${(64 + hw).toFixed(1)}" stroke="#7A4E08" stroke-width="1.2" opacity=".55"/>`; }).join('')}
+  <path d="M64,10L78,34H50Z" fill="#FFFBE6"/><path d="M64,10L78,34H64Z" fill="#F5D76E"/>
+  <path d="M46,58Q64,44 82,58Q64,72 46,58Z" fill="#0D1C4A" stroke="#FFF3C4" stroke-width="2"/><circle cx="64" cy="58" r="6.5" fill="url(#lapis)"/><circle cx="62" cy="56" r="2" fill="#fff"/>
+  <path d="M64,10L112,94H16Z" fill="none" stroke="#6E4506" stroke-width="1.6"/></g>
+  ${ribbon('BONUS', '#1E3C8F', '#0D1C4A', 99)}${sparkle(98, 20, 8)}${sparkle(26, 40, 5, .9)}`;
+
 P.S = () => {
   const wing = side => {
     const bands = [['url(#gold)', 0], ['url(#lapis)', 1], ['url(#turq)', 2]].map(([c, k]) => {

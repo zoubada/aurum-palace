@@ -62,6 +62,7 @@ V.game=(m,id)=>{
   }
   function refit(){
     const play=stage.querySelector(':scope>.gx-play');if(!play)return;const fit=play.firstChild;
+    if(stage.parentNode.classList.contains('gx-imm')){fit.style.transform='';fit.style.width='';play.classList.remove('scroll');lastKey='';return}
     const A=play.clientHeight,W=play.clientWidth;if(!A||!W)return;
     const prevW=fit.style.width;let best=null;
     for(const k of [1,1/.9,1/.8,1/.7,1/.6,1/.5]){

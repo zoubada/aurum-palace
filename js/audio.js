@@ -20,6 +20,9 @@ function snd(type){
       case'boom':tone(140,.6,'sawtooth',.09,0,40);tone(90,.7,'square',.05,.05,30);break;
       case'gem':tone(1200,.12,'sine',.06,0,1800);break;
       case'coin':tone(1800,.06,'square',.03);tone(2600,.12,'triangle',.04,.05);break;
+      case'door':tone(70,.5,'sawtooth',.05,0,45);tone(110,.35,'triangle',.04,.05,60);break;
+      case'torch':tone(300,.25,'sine',.05,0,900);tone(600,.3,'triangle',.04,.08,1400);break;
+      case'bonus':[392,523,659,784,1047].forEach((f,i)=>tone(f,.5,'triangle',.07,i*.12));tone(196,1.2,'sine',.06,0);tone(98,1.4,'sawtooth',.03,.05,90);break;
     }
   }catch(e){}
 }

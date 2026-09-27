@@ -20,6 +20,7 @@ function evalLine(seq,pays,wildK,scK){
 const SYMS_PHARAON=[
   {k:'W',img:'assets/symbols/pharaon/W.png',g:'👑',w:2,wild:true,name:'Wild (Couronne)',p:{3:195,4:782,5:3910},ic:'<path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>',c1:'#F5D76E',c2:'#8B6508'},
   {k:'S',img:'assets/symbols/pharaon/S.png',g:'☀️',w:2,name:'Scatter (Soleil)',ic:'<circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.4M12 18.6V21M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M3 12h2.4M18.6 12H21M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>',c1:'#FFD98A',c2:'#C97A1A'},
+  {k:'P',img:'assets/symbols/pharaon/P.svg',g:'△',w:2,bonus:true,name:'Pyramide (Bonus)',ic:'<path d="M12 3 3 20h18z"/><path d="M12 3v17M7.5 11.5h9"/>',c1:'#FFE08A',c2:'#B8841E'},
   {k:'E',img:'assets/symbols/pharaon/E.png',g:'𓁹',w:3,name:'Œil d’Horus',p:{3:117,4:489,5:2444},ic:'<path d="M2.5 12S6.5 7 12 7s9.5 5 9.5 5-4 5-9.5 5S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/><path d="M12 14.6v3.4M9.5 17l-1.2 2"/>',c1:'#2E8FB0',c2:'#0F2F40'},
   {k:'N',img:'assets/symbols/pharaon/N.png',g:'🐫',w:4,name:'Chameau',p:{3:78,4:323,5:1173},ic:'<path d="M2 18c1.6-.8 2.4-3.2 4-3.2s1.6 2.4 3.2 2.4 1-4 2.8-4 1.8 3.4 3.6 3.4 1.4-1.6 2.8-1.6" fill="none"/><path d="M2 20.5h20"/>',c1:'#C79A5C',c2:'#5C3E17'},
   {k:'B',img:'assets/symbols/pharaon/B.png',g:'🏺',w:5,name:'Vase',p:{3:64,4:195,5:782},ic:'<path d="M9.5 3h5M10.5 3v2.6c0 1.3-2 2.4-2 5.4v7a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7c0-3-2-4.1-2-5.4V3"/>',c1:'#4FAE8A',c2:'#0F4A38'},
@@ -70,7 +71,6 @@ function slotMachine(cfg){
     stage.innerHTML=`
       <div class="slot-stage${cfg.bgImage?' has-bg':''}" id="slotStage" style="--slot-accent:${cfg.accent||'#D4AF37'}${cfg.bgImage?`;background-image:url(${cfg.bgImage})`:''}">
       <div class="slot-glow"></div><div class="slot-particles">${particles}</div>
-      <button class="slot-fsbtn" id="fsToggle" type="button" aria-label="Plein écran"></button>
       <div class="slot-cab">
         ${cfg.logo?`<div class="slot-logo" style="aspect-ratio:${cfg.logo.w}/${cfg.logo.h}"><img src="${cfg.logo.img}" alt=""><h1 style="left:${cfg.logo.l}%;right:${cfg.logo.r}%;top:${cfg.logo.t}%;bottom:${cfg.logo.b}%">${esc(cfg.title)}</h1></div>`:`<div class="slot-banner"><i class="orn">${orn}</i><h1>${esc(cfg.title)}</h1><i class="orn">${orn}</i></div>`}
         <div class="slot-frame">
@@ -105,28 +105,69 @@ function slotMachine(cfg){
     let freeSpins=0,fsTotal=0,fsWin=0,busy=false,auto=0;
     const setFS=()=>{fsb.style.display=freeSpins>0?'':'none';fsb.textContent=freeSpins>0?`TOURS GRATUITS — ${fsTotal-freeSpins+1} / ${fsTotal}`:''};
 
-    /* ---- Plein écran : API native quand disponible, repli CSS position:fixed sinon ---- */
-    const fsBtn=$('#fsToggle',stage);
-    const paintFs=()=>{const on=document.fullscreenElement===slotStage||slotStage.classList.contains('fs-fake');fsBtn.innerHTML=ic(on?'compress':'expand',18);fsBtn.setAttribute('aria-label',on?'Quitter le plein écran':'Plein écran')};
-    const onFsChange=()=>paintFs();
-    document.addEventListener('fullscreenchange',onFsChange);
-    paintFs();
-    fsBtn.addEventListener('click',async()=>{
-      snd('click');
-      if(document.fullscreenElement===slotStage||slotStage.classList.contains('fs-fake')){
-        if(document.fullscreenElement)try{await document.exitFullscreen()}catch(e){}
-        slotStage.classList.remove('fs-fake');document.body.classList.remove('fs-lock');paintFs();return;
-      }
-      if(slotStage.requestFullscreen){try{await slotStage.requestFullscreen();return}catch(e){}}
-      slotStage.classList.add('fs-fake');document.body.classList.add('fs-lock');paintFs();
-    });
+    /* ---- Mode plein écran immersif (machines à cadre illustré) ----
+       Le décor couvre tout l'écran, le cadre et les symboles sont agrandis au maximum
+       entre la barre du haut et les commandes. API Fullscreen quand elle existe
+       (sur la page entière, pour garder notifications et fenêtres visibles), sinon
+       le mode reste simplement « plein cadre » dans la fenêtre. */
+    const gxRoot=stage.closest('.gx');
+    let imm=false,immBtn=null,immRO=null;
+    function immLayout(){
+      if(!imm||!gxRoot)return;
+      const W=gxRoot.clientWidth,H=gxRoot.clientHeight,top=$('.gx-top',gxRoot),dock=$('.gx-dock',gxRoot);
+      const tH=top?top.getBoundingClientRect().bottom:0,dH=dock?H-dock.getBoundingClientRect().top:0;
+      const portrait=H>W*1.05,noLogo=!portrait&&H<520,lk=cfg.logo&&!noLogo?(portrait?.72:.56):0;
+      gxRoot.classList.toggle('imm-nologo',noLogo);
+      const fr=cfg.frame.h/cfg.frame.w,lr=cfg.logo?cfg.logo.h/cfg.logo.w:0;
+      const avail=H-tH-dH-(portrait?40:34);
+      const fw=Math.max(160,Math.min(W*(portrait?1.24:.96),avail/(fr+lk*lr*.93)));
+      slotStage.style.setProperty('--imm-fw',Math.round(fw)+'px');
+      slotStage.style.setProperty('--imm-lw',Math.round(fw*lk)+'px');
+      slotStage.style.setProperty('--imm-t',Math.round(tH)+'px');
+      slotStage.style.setProperty('--imm-b',Math.round(dH)+'px');
+    }
+    function paintImm(){if(!immBtn)return;immBtn.innerHTML=ic(imm?'compress':'expand',17);immBtn.setAttribute('aria-label',imm?'Quitter le plein écran':'Plein écran');immBtn.classList.toggle('on',imm)}
+    function setImm(on){
+      if(!gxRoot||on===imm)return;
+      imm=on;gxRoot.classList.toggle('gx-imm',on);paintImm();
+      if(on){immRO=new ResizeObserver(()=>requestAnimationFrame(immLayout));immRO.observe(gxRoot);const d=$('.gx-dock',gxRoot);if(d)immRO.observe(d);immLayout()}
+      else{if(immRO)immRO.disconnect();immRO=null;gxRoot.classList.remove('imm-nologo');['--imm-fw','--imm-lw','--imm-t','--imm-b'].forEach(k=>slotStage.style.removeProperty(k))}
+    }
+    const onFsChange=()=>{if(!document.fullscreenElement&&imm)setImm(false)};
+    if(cfg.frame&&gxRoot){
+      immBtn=h('<button class="gx-ib gx-imm-btn" type="button"></button>');
+      const info=$('#ginfo',gxRoot);info?info.before(immBtn):$('.gx-top',gxRoot).appendChild(immBtn);
+      paintImm();
+      immBtn.addEventListener('click',async()=>{
+        snd('click');
+        if(imm){setImm(false);if(document.fullscreenElement)try{await document.exitFullscreen()}catch(e){}return}
+        setImm(true);
+        const de=document.documentElement;
+        if(de.requestFullscreen&&!document.fullscreenElement)try{await de.requestFullscreen({navigationUI:'hide'})}catch(e){}
+      });
+      document.addEventListener('fullscreenchange',onFsChange);
+    }
+
+    /* ---- Bonus : déclenchement et reprise après rechargement ---- */
+    async function startBonus(betUnit,count){
+      rngStart();
+      S.pyr={g:cfg.id,st:PYR.start(betUnit,count,rand)};save();
+      slotStage.classList.add('bonus-hit');snd('bonus');
+      await sleep(1500);slotStage.classList.remove('bonus-hit');
+      await runPyramid({host:stage.closest('.gx')||stage,gameId:cfg.id,fresh:true});
+    }
+    async function resumeBonus(){
+      busy=true;spinBtn.disabled=true;autoBtn.disabled=true;bc.lock(true);
+      await runPyramid({host:stage.closest('.gx')||stage,gameId:cfg.id,fresh:false});
+      busy=false;spinBtn.disabled=false;autoBtn.disabled=false;bc.lock(false);
+    }
 
     async function spinOnce(){
       const bet=freeSpins>0?0:bc.get();
       if(freeSpins===0&&!canBet(bet))return false;
       busy=true;spinBtn.disabled=true;autoBtn.disabled=true;spinBtn.classList.add('spinning');bc.lock(true);msg.textContent=' ';msg.className='msg';
       if(freeSpins===0){take(bet);freeSpins===0&&0}
-      $$('.reel',reelsEl).forEach(r=>{r.classList.add('spin');r.classList.remove('stop');$$('.cell',r).forEach(c=>c.classList.remove('w','dim'))});
+      $$('.reel',reelsEl).forEach(r=>{r.classList.add('spin');r.classList.remove('stop');$$('.cell',r).forEach(c=>c.classList.remove('w','dim','bland'))});
       rngStart();
       const grid=[];for(let c=0;c<cols;c++){const col=[];for(let r=0;r<rows;r++)col.push(pickW(cfg.syms));grid.push(col)}
       snd('click');
@@ -139,17 +180,21 @@ function slotMachine(cfg){
         const res=evalLine(partial,payMap,'W','S');
         if(res.amt>0&&res.count>=cols-1){anticipateLast=true;break}
       }
+      let bonusSoFar=0;
       for(let c=0;c<cols;c++){
         await sleep(220+c*160);
         const isLast=c===cols-1;
-        if(isLast&&anticipateLast){
-          const r0=reelsEl.children[c];r0.classList.add('anticip');snd('tick');
-          await sleep(680);
-          r0.classList.remove('anticip');
+        const tease=cfg.bonus&&bonusSoFar>=cfg.bonus.need-1;
+        if((isLast&&anticipateLast)||tease){
+          const r0=reelsEl.children[c];r0.classList.add('anticip');if(tease)r0.classList.add('tease');snd('tick');
+          await sleep(tease?950:680);
+          r0.classList.remove('anticip','tease');
         }
         const r=reelsEl.children[c];r.classList.remove('spin');r.classList.add('stop');
-        for(let k=0;k<rows;k++)r.children[k].innerHTML=cellHTML(grid[c][k]);
-        snd('stop');
+        for(let k=0;k<rows;k++){r.children[k].innerHTML=cellHTML(grid[c][k]);r.children[k].classList.toggle('bland',!!(cfg.bonus&&grid[c][k].k===cfg.bonus.sym))}
+        const hereB=cfg.bonus?grid[c].filter(x=>x.k===cfg.bonus.sym).length:0;
+        bonusSoFar+=hereB;
+        snd(hereB?'gem':'stop');
       }
       await sleep(140);
       let win=0;const winCells=[];let scatterCount=0;let bestType=null;
@@ -160,6 +205,9 @@ function slotMachine(cfg){
       }
       function bet_unit(){return freeSpins>0?fsBetRef:bet}
       const flat=grid.flat();scatterCount=flat.filter(s=>s.k==='S').length;
+      const bonusCount=cfg.bonus?flat.filter(s=>s.k===cfg.bonus.sym).length:0;
+      const trigBonus=!!cfg.bonus&&bonusCount>=cfg.bonus.need;
+      if(trigBonus)for(let c=0;c<cols;c++)for(let r=0;r<rows;r++)if(grid[c][r].k===cfg.bonus.sym)winCells.push([c,r]);
       let scWin=0;
       if(cfg.scatterPay&&scatterCount>=3)scWin=cfg.scatterPay[scatterCount]*bet_unit()||0;
       win=r2(win+scWin);
@@ -177,16 +225,18 @@ function slotMachine(cfg){
       else if(!triggeredFS)snd('lose');
       if(triggeredFS){snd('gem');toast(`${cfg.freeSpins.need} symboles Scatter : ${cfg.freeSpins.count} tours gratuits !`,'win')}
       setFS();
-      const label=jpWin?`JACKPOT ◈ ${fmt(jpWin)} !`:totalWin>0?`Gagné ◈ ${fmt(totalWin)}`:triggeredFS?'Tours gratuits déclenchés !':'Perdu, réessaie';
-      msg.textContent=label;msg.className='msg '+(totalWin>0||triggeredFS?'w':'l');
-      record(cfg.id,bet,totalWin,triggeredFS?'Tours gratuits déclenchés':scatterCount>=3?`${scatterCount} Scatters`:'');
+      const label=jpWin?`JACKPOT ◈ ${fmt(jpWin)} !`:trigBonus?'Bonus Pyramide !':totalWin>0?`Gagné ◈ ${fmt(totalWin)}`:triggeredFS?'Tours gratuits déclenchés !':'Perdu, réessaie';
+      msg.textContent=label;msg.className='msg '+(totalWin>0||triggeredFS||trigBonus?'w':'l');
+      record(cfg.id,bet,totalWin,[triggeredFS?'Tours gratuits déclenchés':scatterCount>=3?`${scatterCount} Scatters`:'',trigBonus?`Bonus Pyramide (${bonusCount})`:''].filter(Boolean).join(' · '));
+      if(trigBonus){auto=0;await startBonus(bet_unit(),bonusCount)}
       busy=false;spinBtn.disabled=false;autoBtn.disabled=false;spinBtn.classList.remove('spinning');bc.lock(false);
       return true;
     }
     let fsBetRef=0;
     spinBtn.addEventListener('click',async()=>{if(busy)return;await spinOnce()});
+    if(cfg.bonus&&S.pyr&&S.pyr.g===cfg.id&&S.pyr.st&&S.pyr.st.phase!=='done')setTimeout(resumeBonus,350);
     autoBtn.addEventListener('click',async()=>{if(busy)return;if(auto>0){auto=0;autoBtn.textContent='Auto ×10';autoBtn.classList.remove('on');return}auto=10;autoBtn.textContent='Arrêter';autoBtn.classList.add('on');while(auto>0&&!busy){auto--;const ok=await spinOnce();if(!ok){auto=0;break}await sleep(280)}autoBtn.textContent='Auto ×10';autoBtn.classList.remove('on')});
-    return()=>{auto=0;document.removeEventListener('fullscreenchange',onFsChange);if(document.fullscreenElement===slotStage)document.exitFullscreen?.();document.body.classList.remove('fs-lock')};
+    return()=>{auto=0;document.removeEventListener('fullscreenchange',onFsChange);if(immRO)immRO.disconnect();if(imm&&document.fullscreenElement)document.exitFullscreen?.().catch(()=>{})};
   };
 }
 
@@ -194,10 +244,11 @@ function slotRules(cfg){
   return()=>`<h4>${cfg.title}</h4><p>${cfg.desc}</p>
   <p>${cfg.cols} rouleaux × ${cfg.rows} lignes, ${cfg.lines.length} ligne${cfg.lines.length>1?'s':''} de paiement. Les combinaisons se comptent depuis le rouleau le plus à gauche.</p>
   ${cfg.freeSpins?`<p><b>Symbole Wild</b> : remplace tous les symboles sauf le Scatter. <b>Symbole Scatter</b> : ${cfg.freeSpins.need} symboles ou plus, n’importe où sur la grille, déclenchent ${cfg.freeSpins.count} tours gratuits.</p>`:''}
+  ${cfg.bonus?`<p><b>Symbole Pyramide (Bonus)</b> : 3, 4 ou 5 symboles n’importe où sur la grille lancent <b>La Marche du Pharaon</b>, avec autant de torches au départ. Une pyramide de ${PYR.LEVELS} étages : à chaque étage, choisis une porte parmi trois. Derrière, un trésor (multiple de la mise), parfois une torche en plus, ou un piège qui éteint une torche (deux portes piégées sur trois aux ${PYR.TRAPS.filter(t=>t>1).length} derniers étages). Plus de torche : l’ascension s’arrête et tout le trésor accumulé est gagné (minimum garanti : ${PYR.MIN_WIN}× la mise). Au sommet, un sarcophage parmi trois multiplie le trésor par ×2, ×3 ou ×5. Le contenu des portes est tiré au hasard avant ton choix.</p>`:''}
   ${cfg.jackpot?`<p><b>Jackpot progressif</b> : 5 symboles Couronne sur une ligne remportent le Jackpot Aurum affiché dans le lobby.</p>`:''}
   <table class="ptab"><thead><tr><th>Symbole</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody>
   ${cfg.syms.filter(s=>s.p).map(s=>`<tr><td>${symBadge(s,true)}${s.name}</td><td>${s.p[3]||'—'}×</td><td>${s.p[4]||'—'}×</td><td>${s.p[5]||'—'}×</td></tr>`).join('')}
-  </tbody></table><p class="mu2" style="font-size:12px">Multiplicateurs appliqués à la mise totale, divisés sur le nombre de lignes actives (comme dans une vraie machine à sous). RTP théorique ${cfg.id==='pharaon'?'≈ 94 %':cfg.id==='fruit'?'≈ 92 %':'≈ 94 %'} sur un grand nombre de tours.</p>`;
+  </tbody></table><p class="mu2" style="font-size:12px">Multiplicateurs appliqués à la mise totale, divisés sur le nombre de lignes actives (comme dans une vraie machine à sous). RTP théorique ${cfg.id==='pharaon'?'≈ 94 % (bonus compris, hors jackpot ; bonus en moyenne tous les 130 tours environ)':cfg.id==='fruit'?'≈ 92 %':'≈ 94 %'} sur un grand nombre de tours.</p>`;
 }
 
 reg({id:'pharaon',name:'Pharaon d’Or',cat:'slots',rtp:'94 %',vol:'Haute',badge:'jp',pop:98,
@@ -207,8 +258,9 @@ reg({id:'pharaon',name:'Pharaon d’Or',cat:'slots',rtp:'94 %',vol:'Haute',badge
     bgImage:'assets/backgrounds/pharaon-bg.png',
     frame:{img:'assets/frames/pharaon-frame.png',w:1576,h:998,l:15.86,r:15.93,t:21.14,b:21.44},
     logo:{img:'assets/logos/pharaon-logo.png',w:1576,h:998,l:21.25,r:21.32,t:64.9,b:20.5},
+    bonus:{sym:'P',need:3},
     syms:SYMS_PHARAON}),
-  rules:slotRules({id:'pharaon',title:'Pharaon d’Or',desc:'5 rouleaux, 20 lignes, dans les sables de l’Égypte ancienne.',cols:5,rows:3,lines:LINES20,freeSpins:{need:3,count:10},jackpot:{sym:'W'},
+  rules:slotRules({id:'pharaon',title:'Pharaon d’Or',desc:'5 rouleaux, 20 lignes, dans les sables de l’Égypte ancienne.',cols:5,rows:3,lines:LINES20,freeSpins:{need:3,count:10},jackpot:{sym:'W'},bonus:{sym:'P',need:3},
     syms:SYMS_PHARAON})});
 
 reg({id:'fruit',name:'Fruit Classic',cat:'slots',rtp:'92 %',vol:'Moyenne',badge:null,pop:70,

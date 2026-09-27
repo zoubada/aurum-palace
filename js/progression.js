@@ -41,7 +41,8 @@ const ACH={
  ten:{n:'Explorateur',d:'Joue à 10 jeux différents',i:'🧭'},
  fs:{n:'Faveur du Pharaon',d:'Déclenche les tours gratuits',i:'☀️'},
  jp:{n:'Jackpot !',d:'Remporte le Jackpot Aurum',i:'🏆'},
- pkwin:{n:'Roi de l’Éclair',d:'Gagne un tournoi de Poker Éclair',i:'⚡'}};
+ pkwin:{n:'Roi de l’Éclair',d:'Gagne un tournoi de Poker Éclair',i:'⚡'},
+ pyr:{n:'Maître de la Pyramide',d:'Atteins le sommet du bonus de Pharaon d’Or',i:'🔺'}};
 function unlock(id){if(S.ach[id]||!ACH[id])return;S.ach[id]=Date.now();save();const a=ACH[id];setTimeout(()=>{toast(`${a.i} Succès débloqué : <b>${a.n}</b>`,'win');snd('coin')},900)}
 
 /* ============ Historique des parties ============ */
