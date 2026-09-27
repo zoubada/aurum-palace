@@ -1086,7 +1086,7 @@ html.gx-lock,html.gx-lock body{overflow:hidden;overscroll-behavior:none}
 .pyr-title small{font:800 10px var(--ff);letter-spacing:.3em;text-transform:uppercase;color:#FFD27A}
 .pyr-title b{font-family:var(--fd);font-weight:900;font-size:clamp(15px,4.1vw,26px);line-height:1.02;background:linear-gradient(180deg,#FFF6D0,#F0C75E 45%,#B8841E 60%,#F6D77A);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
 .pyr-hud{display:flex;align-items:center;gap:10px;flex:none}
-.pyr-torches{display:flex;gap:2px}
+.pyr-torches{display:flex;gap:2px;padding:6px 8px;border-radius:12px;background:rgba(10,6,2,.6);border:1px solid rgba(255,210,120,.3)}
 .pt{width:clamp(16px,4.2vw,22px);height:auto;opacity:.28;filter:grayscale(1);transition:opacity .3s,filter .3s}
 .pt svg{width:100%;height:auto;display:block}
 .pt.on{opacity:1;filter:drop-shadow(0 0 6px rgba(255,170,40,.9))}
@@ -1240,3 +1240,18 @@ html.gx-lock,html.gx-lock body{overflow:hidden;overscroll-behavior:none}
   .gx-imm .gx-dock .spin-fab{width:50px;height:50px}
 }
 @media(max-width:370px){.gx-top{gap:6px;padding-left:8px;padding-right:8px}.gx-top .gx-cov{display:none}.gx-ib{width:34px;height:34px}.gx-bal{height:34px;padding:0 9px}}
+/* Bonus Pyramide : visuels importés (torches, cartouche du titre) */
+.climber .pt-img{height:34px;width:auto;margin:0 auto;display:block}
+.climber{width:auto}
+.pyr-card li img{width:30px;height:30px;flex:none;object-fit:contain}
+.pyr-plq{position:relative;aspect-ratio:1000/295;container-type:inline-size;filter:drop-shadow(0 8px 18px rgba(0,0,0,.55))}
+.pyr-plq img{position:absolute;inset:0;width:100%;height:100%}
+.pyr-plq b{position:absolute;left:24.5%;right:24.5%;top:53%;bottom:10%;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-family:var(--fd);font-weight:900;font-size:4.3cqw;line-height:1.02;letter-spacing:.03em;text-transform:uppercase;color:#3A2503;text-shadow:0 1px 0 rgba(255,244,210,.65);white-space:nowrap}
+.pyr-plq.incard{width:calc(100% + 24px);margin:0 -12px 12px}
+.pyr-plq.hd{display:none;width:clamp(300px,34vw,440px);margin:-4px 0 -8px}
+@media(min-width:700px){
+  .pyr-title.has-plq{max-width:none}
+  .pyr-title.has-plq>small,.pyr-title.has-plq>b{display:none}
+  .pyr-plq.hd{display:block}
+}

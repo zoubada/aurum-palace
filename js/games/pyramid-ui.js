@@ -4,7 +4,7 @@
    à chaque porte ouverte : un rechargement reprend le bonus là où il en était.
    Le gain est versé au moment même où la dernière porte est ouverte. */
 const PYR_DIR = 'assets/bonus/pyramid/';
-const PYR_IMG = { bg: PYR_DIR + 'bg.jpg', door: PYR_DIR + 'door.jpg', sarco: PYR_DIR + 'sarco.png', prize: PYR_DIR + 'treasure.png', trap: null, torch: null, climber: null };
+const PYR_IMG = { bg: PYR_DIR + 'bg.jpg', door: PYR_DIR + 'door.jpg', sarco: PYR_DIR + 'sarco.png', prize: PYR_DIR + 'treasure.png', trap: PYR_DIR + 'trap.png', torch: PYR_DIR + 'torch.png', plaque: PYR_DIR + 'plaque.png', climber: null };
 
 const PYR_ICON = {
   torch: `<svg viewBox="0 0 32 48" aria-hidden="true"><defs><radialGradient id="pyrFl" cx=".5" cy=".7" r=".6"><stop offset="0" stop-color="#FFF7C2"/><stop offset=".45" stop-color="#FFB42A"/><stop offset="1" stop-color="#E4401A"/></radialGradient></defs><path class="fl" d="M16 2c3 7 10 10 10 18a10 10 0 0 1-20 0c0-5 3-7 4-10 1 3 2 5 4 5-1-5 0-9 2-13z" fill="url(#pyrFl)"/><path d="M9 27h14l-3 19h-8z" fill="#8A5A0B"/><path d="M8 26h16v4H8z" fill="#E2B13F"/></svg>`,
@@ -13,6 +13,9 @@ const PYR_ICON = {
   sun: `<svg viewBox="0 0 64 32" aria-hidden="true"><path d="M2 20q14-12 30-6 16-6 30 6-14-4-30 2-16-6-30-2z" fill="#E2B13F"/><circle cx="32" cy="15" r="8" fill="#D62828" stroke="#E2B13F" stroke-width="2"/></svg>`,
   skull: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c3.3 0 5.5 2.2 5.5 5.2 0 2-1.1 3.2-2.3 3.9V13H5v-2.4C3.6 9.9 2.5 8.7 2.5 6.7 2.5 3.7 4.7 1.5 8 1.5z" fill="currentColor"/><circle cx="6" cy="7" r="1.3" fill="#1a0707"/><circle cx="10" cy="7" r="1.3" fill="#1a0707"/></svg>`
 };
+
+const pyrTorch = () => PYR_IMG.torch ? `<img class="pt-img" src="${PYR_IMG.torch}" alt="" draggable="false">` : PYR_ICON.torch;
+const pyrPlaque = cls => PYR_IMG.plaque ? `<div class="pyr-plq ${cls}"><img src="${PYR_IMG.plaque}" alt="" draggable="false"><b>La Marche<br>du Pharaon</b></div>` : '';
 
 function runPyramid({ host, gameId, fresh }) {
   return new Promise(resolve => {
@@ -23,7 +26,7 @@ function runPyramid({ host, gameId, fresh }) {
     const img = (k, cls = '') => PYR_IMG[k] ? `<img class="${cls}" src="${PYR_IMG[k]}" alt="" draggable="false">` : '';
     const ov = h(`<div class="pyr" role="dialog" aria-modal="true" aria-label="Bonus La Marche du Pharaon">
       <div class="pyr-bg${PYR_IMG.bg ? ' has-img' : ''}"${PYR_IMG.bg ? ` style="background-image:url(${PYR_IMG.bg})"` : ''}></div><i class="pyr-rays"></i><div class="pyr-dust"></div>
-      <header class="pyr-top"><div class="pyr-title"><small>Bonus</small><b>La Marche <span>du Pharaon</span></b></div>
+      <header class="pyr-top"><div class="pyr-title${PYR_IMG.plaque ? ' has-plq' : ''}"><small>Bonus</small><b>La Marche <span>du Pharaon</span></b>${pyrPlaque('hd')}</div>
         <div class="pyr-hud"><div class="pyr-torches" aria-label="Torches"></div><div class="pyr-total"><span>Trésor</span><b class="num">◈ 0</b></div></div></header>
       <div class="pyr-main"><div class="pyr-tower" aria-hidden="true"></div>
         <div class="pyr-play"><div class="pyr-msg" aria-live="polite"></div><div class="pyr-doors"></div></div></div>
@@ -54,7 +57,7 @@ function runPyramid({ host, gameId, fresh }) {
       for (let k = PYR.LEVELS - 1; k >= 0; k--) {
         const cls = k < s.level ? 'done' : k === s.level && !summit ? 'cur' : 'lock';
         const [a, b] = PYR.prizeRange(k);
-        html += `<div class="ps ${cls} ${PYR.TRAPS[k] > 1 ? 'danger' : ''}" style="--k:${k}"><em>${k + 1}</em><span>◈ ${money(a)} – ${money(b)}</span>${PYR.TRAPS[k] > 1 ? `<i title="2 portes piégées">${PYR_ICON.skull}</i>` : ''}${cls === 'cur' ? `<b class="climber">${PYR_IMG.climber ? img('climber') : PYR_ICON.torch}</b>` : ''}</div>`;
+        html += `<div class="ps ${cls} ${PYR.TRAPS[k] > 1 ? 'danger' : ''}" style="--k:${k}"><em>${k + 1}</em><span>◈ ${money(a)} – ${money(b)}</span>${PYR.TRAPS[k] > 1 ? `<i title="2 portes piégées">${PYR_ICON.skull}</i>` : ''}${cls === 'cur' ? `<b class="climber">${PYR_IMG.climber ? img('climber') : pyrTorch()}</b>` : ''}</div>`;
       }
       tower.innerHTML = html;
     }
@@ -130,9 +133,9 @@ function runPyramid({ host, gameId, fresh }) {
         const box = h(`<div class="pyr-card pyr-intro"><i class="pyr-halo"></i>
           <div class="pyr-emb">${symBadge(SYMS_PHARAON.find(x => x.k === 'P'), false)}</div>
           <small>${fresh ? `${s.count} symboles Pyramide` : 'Reprise du bonus'}</small>
-          <h2>La Marche<br>du Pharaon</h2>
-          <ul><li>${PYR_ICON.torch}<span>Tu commences avec <b>${s.torches} torches</b></span></li>
-          <li>${PYR_ICON.coin}<span>À chaque étage, choisis une porte : <b>trésor</b> ou <b>piège</b></span></li>
+          ${PYR_IMG.plaque ? pyrPlaque('incard') : '<h2>La Marche<br>du Pharaon</h2>'}
+          <ul><li>${pyrTorch()}<span>Tu commences avec <b>${s.torches} torches</b></span></li>
+          <li>${PYR_IMG.prize ? `<img src="${PYR_IMG.prize}" alt="">` : PYR_ICON.coin}<span>À chaque étage, choisis une porte : <b>trésor</b> ou <b>piège</b></span></li>
           <li>${PYR_ICON.sun}<span>Au sommet, la Chambre du Trésor multiplie tout par <b>×2, ×3 ou ×5</b></span></li></ul>
           <p class="pyr-min">Gain minimum garanti : <b>◈ ${money(PYR.MIN_WIN)}</b> (×${PYR.MIN_WIN} la mise)</p>
           <button type="button" class="btn btn-gold btn-big">${fresh ? 'Commencer l’ascension' : 'Reprendre l’ascension'}</button></div>`);
