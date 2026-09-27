@@ -1,14 +1,14 @@
 'use strict';
 /* ============ Lobby ============ */
 const HERO_SLIDES=[
+ {k:'Nouveau · Poker Éclair',t:'Tournoi à 3,',em:'jusqu’à ×1 000',p:'Choisis ta mise, la roue fixe la dotation, puis affronte deux adversaires en Texas Hold’em. 500 jetons chacun, blindes toutes les 2 minutes.',c:'Jouer au Poker Éclair',h:'#/game/eclair',c2:'Voir les règles',h2:'#/game/eclair',ac:'#FF3A2A',fan:['blackjack','eclair','holdem'],fl:['seven','diamond','bell','clover']},
  {k:'Offre de bienvenue',t:'Le Palace t’offre',em:'10 000 jetons',p:'Machines à sous, roulette, blackjack et nos Originals. 100 % gratuit, sans argent réel, sans inscription.',c:'Jouer à Pharaon d’Or',h:'#/game/pharaon',c2:'Explorer les jeux',h2:'#/games',ac:'#F2B340',fan:['fruit','pharaon','roulette'],fl:['seven','diamond','cherry','bell']},
  {k:'Jackpot progressif',t:'Le Jackpot Aurum',em:'grimpe sans cesse',p:'Aligne cinq couronnes sur une ligne de Pharaon d’Or pour remporter le grand jackpot du Palace.',c:'Tenter le jackpot',h:'#/game/pharaon',c2:'Voir les règles',h2:'#/game/pharaon',ac:'#FF7A2A',fan:['dragon','pharaon','fruit'],fl:['diamond','bell','seven','clover']},
- {k:'Chaque jour',t:'Ta roue du jour',em:'t’attend',p:'Un tour gratuit toutes les 24 h, multiplié par ton niveau VIP. Et trois missions quotidiennes à relever.',c:'Tourner la roue',h:'#/promo',c2:'Club VIP',h2:'#/vip',ac:'#34D399',fan:['scratch','wheel','keno'],fl:['clover','horseshoe','diamond','heart']},
  {k:'Originals Aurum',t:'Crash, Mines, Plinko',em:'nos jeux maison',p:'Des parties rapides, des multiplicateurs jusqu’à ×1 000 et un hasard vérifiable tirage par tirage.',c:'Lancer Crash',h:'#/game/crash',c2:'Tous les Originals',h2:'#/cat/originals',ac:'#8B5CF6',fan:['mines','crash','plinko'],fl:['diamond','die','seven','clover']}];
 
 V.lobby=m=>{
   const recents=S.recent.map(id=>GAMES[id]).filter(Boolean);
-  const top=['pharaon','roulette','blackjack','crash','fruit','mines','plinko','dragon','videopoker','dice'].map(id=>GAMES[id]).filter(Boolean);
+  const top=['eclair','pharaon','roulette','blackjack','crash','fruit','mines','plinko','dragon','videopoker'].map(id=>GAMES[id]).filter(Boolean);
   const byCat=k=>GL.filter(g=>g.cat===k);
   const secH=(icon,t,sub,href,id)=>`<div class="sec"><div class="sec-t"><span class="sec-ic">${ic(icon,18)}</span><div><h2>${t}</h2>${sub?`<p>${sub}</p>`:''}</div></div><div class="sec-r">${href?`<a class="sec-all" href="${href}">Tout voir</a>`:''}${id?`<button class="arr" data-sc="${id}" data-d="-1" aria-label="Précédent">${ic('chevl',18)}</button><button class="arr" data-sc="${id}" data-d="1" aria-label="Suivant">${ic('chev',18)}</button>`:''}</div></div>`;
   const row=(icon,t,sub,list,href,id)=>`<section class="lrow">${secH(icon,t,sub,href,id)}<div class="hs" id="${id}">${list.map(gcard).join('')}</div></section>`;
@@ -17,7 +17,7 @@ V.lobby=m=>{
   const ms=todaysMissions();const mDone=ms.filter(x=>(S.mis.p[x.id]||0)>=x.n).length;
   const dailyLeft=Math.max(0,S.daily+864e5-Date.now());
   const pod=boardPlayers().sort((a,b)=>b.win-a.win).slice(0,3);
-  const catArt={slots:['fruit','pharaon','dragon'],table:['blackjack','roulette','baccarat'],originals:['mines','crash','plinko'],instant:['scratch','wheel','keno']};
+  const catArt={slots:['fruit','pharaon','dragon'],table:['blackjack','eclair','roulette'],originals:['mines','crash','plinko'],instant:['keno','wheel','plinko']};
   const catAc={slots:'#F2B340',table:'#22C58B',originals:'#8B5CF6',instant:'#34D399'};
 
   m.innerHTML=`

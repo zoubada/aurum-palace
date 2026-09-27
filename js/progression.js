@@ -21,6 +21,7 @@ const MPOOL=[
  {id:'crash3',t:'Encaisse à ×3 ou plus au Crash',n:1,r:1500,f:e=>e.g==='crash'&&e.mult>=3?1:0},
  {id:'keno15',t:'Joue 15 tirages de Keno',n:15,r:1200,f:e=>e.g==='keno'?1:0},
  {id:'plinko30',t:'Lâche 30 billes au Plinko',n:30,r:1200,f:e=>e.g==='plinko'?1:0},
+ {id:'pk3',t:'Joue 3 tournois de Poker Éclair',n:3,r:1500,f:e=>e.g==='eclair'?1:0},
  {id:'games4',t:'Essaie 4 jeux différents aujourd’hui',n:4,r:1500,f:e=>0}
 ];
 function todaysMissions(){if(S.mis.day!==today())S.mis={day:today(),p:{},c:{},g:[]};S.mis.g=S.mis.g||[];let x=0;for(const c of today())x=(x*31+c.charCodeAt(0))>>>0;const pool=[...MPOOL],out=[];for(let i=0;i<3;i++){x=(Math.imul(x,1103515245)+12345)>>>0;out.push(pool.splice(x%pool.length,1)[0])}return out}
@@ -39,7 +40,8 @@ const ACH={
  vip:{n:'Membre Or',d:'Atteins le niveau VIP Or',i:'⭐'},
  ten:{n:'Explorateur',d:'Joue à 10 jeux différents',i:'🧭'},
  fs:{n:'Faveur du Pharaon',d:'Déclenche les tours gratuits',i:'☀️'},
- jp:{n:'Jackpot !',d:'Remporte le Jackpot Aurum',i:'🏆'}};
+ jp:{n:'Jackpot !',d:'Remporte le Jackpot Aurum',i:'🏆'},
+ pkwin:{n:'Roi de l’Éclair',d:'Gagne un tournoi de Poker Éclair',i:'⚡'}};
 function unlock(id){if(S.ach[id]||!ACH[id])return;S.ach[id]=Date.now();save();const a=ACH[id];setTimeout(()=>{toast(`${a.i} Succès débloqué : <b>${a.n}</b>`,'win');snd('coin')},900)}
 
 /* ============ Historique des parties ============ */

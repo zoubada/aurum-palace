@@ -15,7 +15,7 @@ function listView(m,{title,sub,list,filters=true,search=false,empty,q:q0='',kick
   draw();
 }
 V.games=(m,arg)=>listView(m,{kicker:'Catalogue',title:'Tous les jeux',sub:`${GL.length} jeux jouables avec tes jetons ◈ : machines à sous, tables, Originals et jeux instantanés.`,list:GL,search:true,q:arg?decodeURIComponent(arg):'',art:fan(['roulette','pharaon','crash'],'fan-ph')});
-const CAT_ART={slots:['fruit','pharaon','dragon'],table:['blackjack','roulette','baccarat'],originals:['mines','crash','plinko'],instant:['scratch','wheel','keno']};
+const CAT_ART={slots:['fruit','pharaon','dragon'],table:['blackjack','eclair','roulette'],originals:['mines','crash','plinko'],instant:['keno','wheel','plinko']};
 const CAT_AC={slots:'#F2B340',table:'#22C58B',originals:'#8B5CF6',instant:'#34D399'};
 V.cat=(m,k)=>{if(!CATS[k])k='slots';const c=CATS[k];const L=GL.filter(g=>g.cat===k);listView(m,{kicker:L.length+' jeux',title:c.n,sub:c.d+'.',list:L,art:fan(CAT_ART[k],'fan-ph'),accent:CAT_AC[k]})};
 V.fav=m=>listView(m,{kicker:'Mes jeux',accent:'#F4526E',art:`<div class="phd-ic" style="--ac:#F4526E">${ic('heart',64)}</div>`,title:'Favoris',sub:'Touche le cœur d’un jeu pour le retrouver ici.',list:S.fav.map(id=>GAMES[id]).filter(Boolean),filters:false,empty:'<b>Aucun favori pour l’instant</b>Ajoute un jeu avec le cœur en haut à droite de sa vignette.'});

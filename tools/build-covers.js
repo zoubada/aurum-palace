@@ -529,34 +529,25 @@ S.wheel = () => {
   return { defs, body: body + logo({ main: 'FORTUNE', sub: 'ROUE DE LA', subPos: 'above', size: 50, accent: '#F59E0B' }) };
 };
 
-S.scratch = () => {
-  seed = 188;
-  const defs = `<radialGradient id="bg" cx=".5" cy=".4" r=".85"><stop offset="0" stop-color="#157A5A"/><stop offset=".55" stop-color="#083B2B"/><stop offset="1" stop-color="#021510"/></radialGradient>
-  <linearGradient id="tk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF1B8"/><stop offset=".45" stop-color="#E6B340"/><stop offset="1" stop-color="#9A6410"/></linearGradient>
-  <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F1F3F7"/><stop offset=".5" stop-color="#A9B0BE"/><stop offset="1" stop-color="#D5DAE3"/></linearGradient>`;
-  const cells = [];
-  const syms = { 0: 'clover', 2: 'clover', 4: 'clover', 6: 'horseshoe', 7: 'diamond' };
-  for (let i = 0; i < 9; i++) {
-    const cx = -60 + (i % 3) * 60, cy = -50 + Math.floor(i / 3) * 56;
-    if (syms[i]) cells.push(`<rect x="${cx - 25}" y="${cy - 23}" width="50" height="46" rx="8" fill="#FFF9E6"/><image href="${png(syms[i])}" x="${cx - 21}" y="${cy - 21}" width="42" height="42"/>`);
-    else cells.push(`<rect x="${cx - 25}" y="${cy - 23}" width="50" height="46" rx="8" fill="url(#silver)"/><path d="M${cx - 18},${cy - 8}L${cx + 10},${cy - 14}M${cx - 14},${cy + 6}L${cx + 18},${cy - 2}" stroke="#fff" stroke-width="2" opacity=".6"/>`);
-  }
+S.eclair = () => {
+  seed = 199;
+  const defs = `<radialGradient id="bg" cx=".5" cy=".38" r=".9"><stop offset="0" stop-color="#E0243A"/><stop offset=".5" stop-color="#8A0A16"/><stop offset="1" stop-color="#2A0206"/></radialGradient>
+  <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF7A2A" stop-opacity="0"/><stop offset=".5" stop-color="#FF5A1F" stop-opacity=".55"/><stop offset="1" stop-color="#FF7A2A" stop-opacity="0"/></linearGradient>
+  <linearGradient id="bolt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF7C2"/><stop offset=".45" stop-color="#FFD23F"/><stop offset="1" stop-color="#E88A10"/></linearGradient>
+  <pattern id="lattice" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0,0H8M0,0V8" stroke="#F5D76E" stroke-width="1.2"/></pattern>`;
   const body = `<rect width="300" height="400" fill="url(#bg)"/>
-  ${rays(150, 160, 20, '#B9FFE4', .07)}
-  ${glowBlob(150, 160, 110, '#34D399', .35)}
-  <g transform="translate(150 164) rotate(-6)" filter="url(#ds)">
-    <path d="M-100,-104H100V-90A8,8 0 0 0 100,-74V104H-100V-74A8,8 0 0 0 -100,-90Z" fill="url(#tk)"/>
-    <rect x="-92" y="-96" width="184" height="192" rx="8" fill="none" stroke="#7A4E08" stroke-width="1.4" stroke-dasharray="4 3"/>
-    <text y="-80" font-family="Cinzel" font-weight="900" font-size="15" text-anchor="middle" fill="#3A2503">TRIPLE TRÈFLE</text>
-    <rect x="-90" y="-76" width="180" height="170" rx="10" fill="#3A2503" opacity=".25"/>
-    ${cells.join('')}
-  </g>
-  <g transform="translate(236 256) rotate(-24)" filter="url(#ds)"><ellipse cx="0" cy="6" rx="30" ry="12" fill="#7A4E08"/><ellipse rx="30" ry="12" fill="url(#goldR)"/><ellipse rx="22" ry="8" fill="none" stroke="#8C5A0A" stroke-width="1.5"/></g>
-  <path d="M188,242C208,236 214,246 232,240" stroke="#D5DAE3" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>
-  ${dust(20, [170, 220, 60, 40], '#D5DAE3', 1.4)}
-  ${sparkles(8, [20, 20, 260, 240], 2.5, 6, '#E6FFF6')}${sparkle(70, 78, 10)}
+  <path d="M-40,120L200,-20L260,-20L20,120Z" fill="url(#streak)" opacity=".7"/><path d="M60,330L340,160L360,190L90,350Z" fill="url(#streak)" opacity=".6"/><path d="M-20,260L180,150L200,165L0,280Z" fill="url(#streak)" opacity=".45"/>
+  ${rays(150, 160, 22, '#FFB36B', .08)}
+  ${glowBlob(150, 150, 110, '#FF7A2A', .45)}
+  <g filter="url(#glow)"><path d="M168,34L96,176H144L118,290L214,128H160L190,34Z" fill="url(#bolt)" stroke="#8A4A05" stroke-width="3" stroke-linejoin="round"/></g>
+  <path d="M168,34L96,176H144L118,290L214,128H160L190,34Z" fill="none" stroke="#FFF7C2" stroke-width="1.2" opacity=".8"/>
+  ${card({ x: 104, y: 214, w: 92, rot: -14, r: 'K', s: 's' })}
+  ${card({ x: 178, y: 220, w: 92, rot: 10, r: 'J', s: 'c' })}
+  ${stack(50, 300, 26, ['red', 'red', 'black', 'red', 'red'])}
+  ${stack(252, 296, 24, ['gold', 'gold', 'gold'])}
+  ${sparkles(10, [20, 20, 260, 240], 3, 7, '#FFF4C7')}${sparkle(214, 96, 11)}
   <rect width="300" height="400" fill="url(#vig)"/>`;
-  return { defs, body: body + logo({ main: 'À GRATTER', sub: 'CARTES', subPos: 'above', size: 44, accent: '#34D399' }) };
+  return { defs, body: body + logo({ main: 'ÉCLAIR', sub: 'POKER', subPos: 'above', size: 54, accent: '#FF5A1F' }) };
 };
 
 /* ---------- Écriture ---------- */

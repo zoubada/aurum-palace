@@ -62,4 +62,4 @@ function odoHTML(v){return fmtJ(v).split('').map(ch=>/\d/.test(ch)?`<span class=
 function paintOdo(el){const v=fmtJ(S.jackpot);const digits=el.querySelectorAll('.od-s');const n=(v.match(/\d/g)||[]).length;
   if(digits.length!==n){el.innerHTML=odoHTML(S.jackpot);return}
   let k=0;for(const ch of v){if(/\d/.test(ch)){digits[k].style.transform=`translateY(-${+ch*10}%)`;k++}}}
-const ACCENT={pharaon:'#F29A2E',fruit:'#FF4FD8',dragon:'#FF5A2A',roulette:'#22C58B',blackjack:'#22C58B',baccarat:'#E11D48',videopoker:'#3B82F6',holdem:'#22C58B',crash:'#FF7A45',mines:'#22C58B',plinko:'#EC4899',dice:'#3B82F6',limbo:'#A855F7',hilo:'#F5D76E',keno:'#A855F7',wheel:'#F59E0B',scratch:'#34D399'};
+const ACCENT={pharaon:'#F29A2E',fruit:'#FF4FD8',dragon:'#FF5A2A',roulette:'#22C58B',blackjack:'#22C58B',baccarat:'#E11D48',videopoker:'#3B82F6',holdem:'#22C58B',crash:'#FF7A45',mines:'#22C58B',plinko:'#EC4899',dice:'#3B82F6',limbo:'#A855F7',hilo:'#F5D76E',keno:'#A855F7',wheel:'#F59E0B',eclair:'#FF5A1F'};
