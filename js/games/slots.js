@@ -68,7 +68,7 @@ function slotMachine(cfg){
     const particles=Array.from({length:14},(_,i)=>`<i style="left:${(i*7+3)%100}%;animation-duration:${5+(i%5)*1.3}s;animation-delay:${(i%7)*-0.7}s"></i>`).join('');
     const orn=ic('sunburst',16);
     stage.innerHTML=`
-      <div class="slot-stage" id="slotStage" style="--slot-accent:${cfg.accent||'#D4AF37'}">
+      <div class="slot-stage${cfg.bgImage?' has-bg':''}" id="slotStage" style="--slot-accent:${cfg.accent||'#D4AF37'}${cfg.bgImage?`;background-image:url(${cfg.bgImage})`:''}">
       <div class="slot-glow"></div><div class="slot-particles">${particles}</div>
       <button class="slot-fsbtn" id="fsToggle" type="button" aria-label="Plein écran"></button>
       <div class="slot-cab">
@@ -202,6 +202,7 @@ reg({id:'pharaon',name:'Pharaon d’Or',cat:'slots',rtp:'94 %',vol:'Haute',badge
   bg:'radial-gradient(circle at 50% 30%,#4a3208,#1c1305)',glyph:'👑',
   init:slotMachine({id:'pharaon',title:'Pharaon d’Or',def:100,cols:5,rows:3,lines:LINES20,accent:'#E3B23C',
     scatterPay:{3:2,4:10,5:49},freeSpins:{need:3,count:10,retrigger:5},jackpot:{sym:'W',reset:50000},
+    bgImage:'assets/backgrounds/pharaon-bg.png',
     syms:SYMS_PHARAON}),
   rules:slotRules({id:'pharaon',title:'Pharaon d’Or',desc:'5 rouleaux, 20 lignes, dans les sables de l’Égypte ancienne.',cols:5,rows:3,lines:LINES20,freeSpins:{need:3,count:10},jackpot:{sym:'W'},
     syms:SYMS_PHARAON})});
