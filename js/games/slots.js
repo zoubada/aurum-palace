@@ -74,10 +74,12 @@ function slotMachine(cfg){
       <div class="slot-cab">
         <div class="slot-banner"><i class="orn">${orn}</i><h1>${esc(cfg.title)}</h1><i class="orn">${orn}</i></div>
         <div class="slot-frame">
-          <div class="slot-pillar l"></div>
-          <div class="slot-wrap"><div class="fsb" id="fsb" style="display:none"></div>
-          <div class="slot ${cfg.skin||''}" style="--cols:${cols};--rows:${rows}" id="reels"></div></div>
-          <div class="slot-pillar r"></div>
+          ${!cfg.frame?'<div class="slot-pillar l"></div>':''}
+          <div class="slot-wrap${cfg.frame?' framed':''}"${cfg.frame?` style="aspect-ratio:${cfg.frame.w}/${cfg.frame.h}"`:''}>
+          ${cfg.frame?`<img class="slot-frame-img" src="${cfg.frame.img}" alt="" aria-hidden="true">`:''}
+          <div class="fsb" id="fsb" style="display:none"></div>
+          <div class="slot ${cfg.skin||''}" style="--cols:${cols};--rows:${rows}${cfg.frame?`;position:absolute;left:${cfg.frame.l}%;right:${cfg.frame.r}%;top:${cfg.frame.t}%;bottom:${cfg.frame.b}%`:''}" id="reels"></div></div>
+          ${!cfg.frame?'<div class="slot-pillar r"></div>':''}
         </div>
       </div>
       <div class="msg" id="msg" aria-live="polite">&nbsp;</div>
@@ -203,6 +205,7 @@ reg({id:'pharaon',name:'Pharaon d’Or',cat:'slots',rtp:'94 %',vol:'Haute',badge
   init:slotMachine({id:'pharaon',title:'Pharaon d’Or',def:100,cols:5,rows:3,lines:LINES20,accent:'#E3B23C',
     scatterPay:{3:2,4:10,5:49},freeSpins:{need:3,count:10,retrigger:5},jackpot:{sym:'W',reset:50000},
     bgImage:'assets/backgrounds/pharaon-bg.png',
+    frame:{img:'assets/frames/pharaon-frame.png',w:1576,h:998,l:15.86,r:15.93,t:21.14,b:21.44},
     syms:SYMS_PHARAON}),
   rules:slotRules({id:'pharaon',title:'Pharaon d’Or',desc:'5 rouleaux, 20 lignes, dans les sables de l’Égypte ancienne.',cols:5,rows:3,lines:LINES20,freeSpins:{need:3,count:10},jackpot:{sym:'W'},
     syms:SYMS_PHARAON})});
