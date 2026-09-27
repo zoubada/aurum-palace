@@ -44,7 +44,7 @@ function pkWheelSVG(buyin){
   <path d="M4,-16 L-9,3 L-1,3 L-5,17 L9,-3 L1,-3 Z" fill="#FFD23F" stroke="#8A4A05" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
 }
 
-reg({id:'eclair',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge:'new',pop:99,
+reg({id:'eclair',layout:'self',name:'Poker Éclair',cat:'table',rtp:'91,5 %',vol:'Haute',badge:'new',pop:99,
   bg:'radial-gradient(circle at 50% 30%,#7a0a12,#1a0204)',glyph:'⚡',
   init(stage){
     let alive=true,rzOpen=false,T=S.pk,timers=[],pending=false,turnEnd=0,turnSeat=-1,pre=null,shown=new Set(),tab='log',buyin=S.bets.eclair&&PK_BUYINS.includes(S.bets.eclair)?S.bets.eclair:5;

@@ -3,7 +3,7 @@
 const RN=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
 const RED=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 const isRed=n=>n===0?null:RED.has(n);
-reg({id:'roulette',name:'Roulette Européenne',cat:'table',rtp:'97,3 %',vol:'Moyenne',badge:'hot',pop:92,
+reg({id:'roulette',layout:'fill',name:'Roulette Européenne',cat:'table',rtp:'97,3 %',vol:'Moyenne',badge:'hot',pop:92,
   bg:'radial-gradient(circle at 50% 30%,#062a1c,#021109)',
   glyph:`<svg viewBox="-150 -150 300 300"><circle r="148" fill="#0B0D12" stroke="#8B6508" stroke-width="6"/>${wheelSVG(RN.map(n=>({l:'',c:n===0?'#047857':RED.has(n)?'#B4232A':'#1C2130'})),{r:140,inner:56,id:'rmini'})}<circle r="52" fill="#0B0D12" stroke="#D4AF37" stroke-width="3"/></svg>`,
   init(stage){
@@ -15,7 +15,7 @@ reg({id:'roulette',name:'Roulette Européenne',cat:'table',rtp:'97,3 %',vol:'Moy
       <div class="rt-out2" id="outside2" style="margin-top:6px"></div>
       <div class="rt-out" id="outside" style="margin-top:4px"></div>
       <div class="ctrl-row" style="margin-top:14px;gap:8px">
-        <span class="lbl" style="margin:0;flex:1">Mise totale : <b class="gold num" id="tot">0</b> ◈</span>
+        <span class="lbl rtot" style="margin:0;flex:1">Mise : <b class="gold num" id="tot">0</b> ◈</span>
         <button class="btn btn-ghost btn-sm" id="rebet">Rejouer</button>
         <button class="btn btn-ghost btn-sm" id="dbl2">×2</button>
         <button class="btn btn-ghost btn-sm" id="clear">Effacer</button>
@@ -93,7 +93,7 @@ reg({id:'roulette',name:'Roulette Européenne',cat:'table',rtp:'97,3 %',vol:'Moy
       if(busy)return;const tot=r2(Object.values(bets).reduce((a,b)=>a+b,0));
       if(tot<=0){toast('Place au moins un jeton sur le tapis.','err');return}
       if(!canBet(tot))return;
-      busy=true;spinBtn.disabled=true;msg.textContent='La bille tourne…';msg.className='msg';
+      busy=true;spinBtn.disabled=true;msg.textContent='La bille tourne…';msg.className='msg';$('.rl',stage).classList.add('spinning');
       lastBets={...bets};
       take(tot);
       rngStart();const idx=randInt(37);const n=RN[idx];
@@ -114,7 +114,7 @@ reg({id:'roulette',name:'Roulette Européenne',cat:'table',rtp:'97,3 %',vol:'Moy
       record('roulette',tot,win,`Sortie : ${n}`);
       paintHistory();
       Object.keys(bets).forEach(k=>delete bets[k]);redraw();
-      setTimeout(()=>{const s=$('#rnum span',stage);if(s)s.classList.remove('show')},2600);
+      setTimeout(()=>{const s=$('#rnum span',stage);if(s)s.classList.remove('show');const rl=$('.rl',stage);if(rl)rl.classList.remove('spinning')},2600);
       busy=false;spinBtn.disabled=false;
     });
     redraw();
