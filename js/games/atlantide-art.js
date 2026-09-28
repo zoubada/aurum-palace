@@ -5,7 +5,7 @@
    image (data URI) une seule fois : le navigateur la met en cache et les 30
    cases restent légères à animer. */
 const ATL_IMG = {
-  sym: { PO: null, SI: null, HI: null, TU: null, NA: null, RU: null, SA: null, EM: null, AM: null, TP: null, AQ: null, W: null, S: null, PE: null, FR: null },
+  sym: { PO: 'assets/symbols/atlantide/PO.webp', SI: 'assets/symbols/atlantide/SI.webp', HI: 'assets/symbols/atlantide/HI.webp', TU: 'assets/symbols/atlantide/TU.webp', NA: 'assets/symbols/atlantide/NA.webp', RU: null, SA: null, EM: null, AM: null, TP: null, AQ: null, W: null, S: null, PE: null, FR: null },
   bg: null, frame: null, logo: null, cover: null, kraken: null, map: null, sub: null, chest: null,
 };
 
