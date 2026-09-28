@@ -5,7 +5,7 @@
    image (data URI) une seule fois : le navigateur la met en cache et les 30
    cases restent légères à animer. */
 const ATL_IMG = {
-  sym: { PO: 'assets/symbols/atlantide/PO.webp', SI: 'assets/symbols/atlantide/SI.webp', HI: 'assets/symbols/atlantide/HI.webp', TU: 'assets/symbols/atlantide/TU.webp', NA: 'assets/symbols/atlantide/NA.webp', RU: 'assets/symbols/atlantide/RU.webp', SA: 'assets/symbols/atlantide/SA.webp', EM: null, AM: 'assets/symbols/atlantide/AM.webp', TP: 'assets/symbols/atlantide/TP.webp', AQ: null, W: 'assets/symbols/atlantide/W.webp', S: 'assets/symbols/atlantide/S.webp', PE: 'assets/symbols/atlantide/PE.webp', FR: null },
+  sym: { PO: 'assets/symbols/atlantide/PO.webp', SI: 'assets/symbols/atlantide/SI.webp', HI: 'assets/symbols/atlantide/HI.webp', TU: 'assets/symbols/atlantide/TU.webp', NA: 'assets/symbols/atlantide/NA.webp', RU: 'assets/symbols/atlantide/RU.webp', SA: 'assets/symbols/atlantide/SA.webp', EM: 'assets/symbols/atlantide/EM.webp', AM: 'assets/symbols/atlantide/AM.webp', TP: 'assets/symbols/atlantide/TP.webp', AQ: 'assets/symbols/atlantide/AQ.webp', W: 'assets/symbols/atlantide/W.webp', S: 'assets/symbols/atlantide/S.webp', PE: 'assets/symbols/atlantide/PE.webp', FR: 'assets/symbols/atlantide/FR.webp' },
   bg: null, frame: null, logo: null, cover: null, kraken: null, map: null, sub: null, chest: null,
 };
 
