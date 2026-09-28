@@ -550,6 +550,34 @@ S.eclair = () => {
   return { defs, body: body + logo({ main: 'ÉCLAIR', sub: 'POKER', subPos: 'above', size: 54, accent: '#FF5A1F' }) };
 };
 
+S.atlantide = () => {
+  seed = 71;
+  /* Les symboles du jeu (js/games/atlantide-art.js) sont réutilisés tels quels */
+  const vm = require('vm'), ctx = { encodeURIComponent };
+  vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'js/games/atlantide-art.js'), 'utf8') + ';this.A=ATL_ART;', ctx);
+  const sym = (k, x, y, s, rot = 0, op = 1) => `<image href="${ctx.A.uri(ctx.A.SVG[k])}" x="${f(x - s / 2)}" y="${f(y - s / 2)}" width="${s}" height="${s}" opacity="${op}" transform="rotate(${rot} ${x} ${y})"/>`;
+  const defs = `<radialGradient id="bg" cx=".5" cy=".05" r="1.05"><stop offset="0" stop-color="#1FB0D2"/><stop offset=".25" stop-color="#0B5876"/><stop offset=".55" stop-color="#063450"/><stop offset=".8" stop-color="#031A2B"/><stop offset="1" stop-color="#010810"/></radialGradient>
+  <linearGradient id="ray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BFF6FF" stop-opacity=".35"/><stop offset="1" stop-color="#BFF6FF" stop-opacity="0"/></linearGradient>
+  <linearGradient id="ruin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B4A66" stop-opacity=".2"/><stop offset=".5" stop-color="#083A52" stop-opacity=".75"/><stop offset="1" stop-color="#021018"/></linearGradient>`;
+  const lightRay = (x, w, sk, op) => `<path d="M${x},-10L${x + w},-10L${x + w + sk},300L${x + sk},300Z" fill="url(#ray)" opacity="${op}"/>`;
+  const bubbles = Array.from({ length: 26 }, () => { const x = f(10 + rnd() * 280), y = f(20 + rnd() * 300), r = f(1 + rnd() * 4); return `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="#CFF8FF" stroke-width=".8" opacity="${f(.25 + rnd() * .5)}"/><circle cx="${f(x - r * .35)}" cy="${f(y - r * .35)}" r="${f(r * .3)}" fill="#fff" opacity=".6"/>`; }).join('');
+  const body = `<rect width="300" height="400" fill="url(#bg)"/>
+  ${lightRay(60, 26, 40, .7)}${lightRay(120, 14, 30, .5)}${lightRay(170, 34, 20, .6)}${lightRay(236, 18, -10, .45)}
+  <g fill="url(#ruin)">
+    <path d="M70,330V190L150,152L230,190V330Z"/><rect x="64" y="186" width="172" height="8"/>
+    ${[0, 1, 2, 3, 4].map(i => `<rect x="${84 + i * 30}" y="198" width="12" height="140" rx="2"/>`).join('')}
+    <path d="M10,330V250q0-22 20-22t20,22v80h-9v-76q0-12-11-12t-11,12v76z"/><path d="M262,330V230h10v100zM282,330V252l10-5v83z"/>
+  </g>
+  ${glowBlob(150, 150, 95, '#22D3EE', .45)}
+  ${rays(150, 150, 18, '#9FF6FF', .07, 300)}
+  ${sym('W', 150, 150, 150)}
+  ${sym('PE', 64, 250, 58, 0, .95)}${sym('S', 242, 246, 70, 12)}${sym('SA', 96, 112, 46, -14, .9)}${sym('RU', 214, 100, 42, 14, .9)}
+  ${bubbles}
+  ${sparkles(8, [20, 40, 260, 220], 3, 7, '#E6FFFF')}${sparkle(196, 86, 10)}
+  <rect width="300" height="400" fill="url(#vig)"/>`;
+  return { defs, body: body + logo({ main: 'ATLANTIDE', sub: 'L’ÉVEIL DE POSÉIDON', size: 42, accent: '#22D3EE' }) };
+};
+
 /* ---------- Écriture ---------- */
 function writeSvg(file, defs, body, w = W, h = H) {
   const textsFor = fam => {

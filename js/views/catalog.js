@@ -7,7 +7,7 @@ function listView(m,{title,sub,list,filters=true,search=false,empty,q:q0='',kick
   <div class="ggrid" id="gg"></div>`;
   let vol='Toutes',sort='pop',q=q0;
   const rtpN=g=>parseFloat(g.rtp.replace(',','.').replace(/[^\d.]/g,''))||0;
-  const draw=()=>{let L=list.filter(g=>(vol==='Toutes'||g.vol===vol)&&(!q||g.name.toLowerCase().includes(q.toLowerCase())||CATS[g.cat].n.toLowerCase().includes(q.toLowerCase())));
+  const draw=()=>{let L=list.filter(g=>(vol==='Toutes'||g.vol.toLowerCase().endsWith(vol.toLowerCase()))&&(!q||g.name.toLowerCase().includes(q.toLowerCase())||CATS[g.cat].n.toLowerCase().includes(q.toLowerCase())));
     if(sort==='az')L=[...L].sort((a,b)=>a.name.localeCompare(b.name,'fr'));if(sort==='new')L=[...L].sort((a,b)=>(b.badge==='new')-(a.badge==='new'));if(sort==='rtp')L=[...L].sort((a,b)=>rtpN(b)-rtpN(a));if(sort==='pop')L=[...L].sort((a,b)=>(b.pop||0)-(a.pop||0));
     $('#gg',m).innerHTML=L.length?L.map(gcard).join(''):`<div class="empty" style="grid-column:1/-1">${empty||'<b>Aucun jeu ne correspond</b>Essaie un autre filtre ou un autre mot-clé.'}</div>`;bindFavs(m)};
   if(filters){$$('#fv .chip',m).forEach(c=>c.addEventListener('click',()=>{vol=c.dataset.v;$$('#fv .chip',m).forEach(x=>x.classList.toggle('on',x===c));draw()}));$('#fs',m).addEventListener('change',e=>{sort=e.target.value;draw()})}
@@ -40,7 +40,7 @@ V.game=(m,id)=>{
   $('#gfav',m).addEventListener('click',e=>{const on=toggleFav(id);e.currentTarget.classList.toggle('on',on);toast(on?'Ajouté à tes favoris':'Retiré de tes favoris')});
   let tab='h',sheetEl=null;
   const tabHTML=()=>{
-    if(tab==='h'){const L=S.hist.filter(e=>e.g===id).slice(0,20);return L.length?L.map(e=>`<div class="hrow"><div><div>◈ ${fmt(e.bet)} ${e.info?`<span class="mu2">· ${esc(e.info)}</span>`:''}</div><div class="t">${when(e.t)} · n° ${e.id}</div></div><span class="pill ${e.bet===0?'y':e.win>e.bet?'g':e.win===0?'r':''}">${e.bet?fmtM(e.mult):'Offert'}</span><b class="num ${e.win>e.bet?'pos':e.win<e.bet?'neg':''}">${e.win>0?'+'+fmt(e.win):'0'}</b></div>`).join(''):'<div class="empty"><b>Aucune partie</b>Tes 20 derniers coups apparaîtront ici.</div>'}
+    if(tab==='h'){const L=S.hist.filter(e=>e.g===id).slice(0,20);return L.length?L.map(e=>`<div class="hrow"><div><div>◈ ${fmt(e.bet)} ${e.info?`<span class="mu2">· ${esc(e.info)}</span>`:''}</div><div class="t">${when(e.t)} · n° ${e.id}</div></div><span class="pill ${e.bet===0?'y':e.win>e.bet?'g':e.win===0?'r':''}">${e.bet||e.ref?fmtM(e.mult):'Offert'}</span><b class="num ${e.win>e.bet?'pos':e.win<e.bet?'neg':''}">${e.win>0?'+'+fmt(e.win):'0'}</b></div>`).join(''):'<div class="empty"><b>Aucune partie</b>Tes 20 derniers coups apparaîtront ici.</div>'}
     if(tab==='s'){const s=sess.g[id]||{bet:0,win:0,n:0};const net=s.win-s.bet;const mins=Math.floor((Date.now()-sess.start)/60000);return `<div class="stats"><div class="st"><b>${s.n}</b><span>Parties sur ce jeu</span></div><div class="st"><b>◈ ${fmt(s.bet)}</b><span>Misé</span></div><div class="st"><b>◈ ${fmt(s.win)}</b><span>Gagné</span></div><div class="st"><b class="${net>0?'pos':net<0?'neg':''}">${net>0?'+':''}${fmt(net)}</b><span>Résultat net</span></div></div><p class="mu" style="font-size:12.5px;margin:14px 0 0">Session en cours : ${mins} min · ${fmt(sess.wag)} ◈ misés tous jeux confondus.</p>`}
     return `<div class="rules">${typeof g.rules==='function'?g.rules():g.rules}</div>`};
   $('#ginfo',m).addEventListener('click',()=>{snd('click');

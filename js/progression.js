@@ -46,22 +46,23 @@ const ACH={
 function unlock(id){if(S.ach[id]||!ACH[id])return;S.ach[id]=Date.now();save();const a=ACH[id];setTimeout(()=>{toast(`${a.i} Succès débloqué : <b>${a.n}</b>`,'win');snd('coin')},900)}
 
 /* ============ Historique des parties ============ */
-function record(g,bet,win,info=''){
-  bet=r2(bet);win=r2(win);const mult=bet>0?win/bet:0;
-  const e={id:rid(),t:Date.now(),g,bet,win,mult:r2(mult),info,rng:(rlog||[]).slice(0,10).map(v=>v.toFixed(6))};rlog=null;
+function record(g,bet,win,info='',o={}){
+  /* o.quiet : le jeu affiche lui-même sa célébration · o.ref : mise de référence
+     du multiplicateur quand la partie n'a rien coûté (bonus déclenché par un tour) */
+  bet=r2(bet);win=r2(win);const ref=bet>0?bet:r2(o.ref||0),mult=ref>0?win/ref:0;
+  const e={id:rid(),t:Date.now(),g,bet,win,mult:r2(mult),info,ref:bet>0?undefined:ref||undefined,rng:(rlog||[]).slice(0,10).map(v=>v.toFixed(6))};rlog=null;
   S.hist.unshift(e);if(S.hist.length>150)S.hist.length=150;
   S.rounds++;S.played[g]=(S.played[g]||0)+1;
   const sg=sess.g[g]||(sess.g[g]={bet:0,win:0,n:0});sg.bet+=bet;sg.win+=win;sg.n++;
   if(win>S.best.win)S.best={...S.best,win,game:g};
-  if(bet>0&&mult>S.best.mult)S.best.mult=r2(mult);
+  if(ref>0&&mult>S.best.mult)S.best.mult=r2(mult);
   const rate=LEVELS[lvl()].cb;if(rate&&win<bet)S.cb=r2((S.cb||0)+(bet-win)*rate);
   missionTick(e);
   if(win>bet&&bet>0)unlock('first');
   if(S.rounds>=100)unlock('r100');if(S.rounds>=1000)unlock('r1000');
-  if(bet>0&&mult>=50)unlock('x50');
+  if(ref>0&&mult>=50)unlock('x50');
   if(Object.keys(S.played).length>=10)unlock('ten');
-  if(bet>0&&mult>=15)bigWin(win,mult);
-  else if(win>0)winFlash(win,bet>0?mult:0);
+  if(!o.quiet){if(bet>0&&mult>=15)bigWin(win,mult);else if(win>0)winFlash(win,bet>0?mult:0)}
   save();vipCheck();
   document.dispatchEvent(new CustomEvent('round',{detail:e}));
   return e;

@@ -26,7 +26,7 @@ V.lobby=m=>{
       <div class="hx-bg"><i class="hx-rays"></i><i class="hx-orb"></i></div>
       <div class="hx-copy"><span class="kick">${ic('sparkle',14)} ${s.k}</span><h1>${s.t}<em>${s.em}</em></h1><p>${s.p}</p>
         <div class="hx-cta"><a class="btn btn-gold btn-lg" href="${s.h}" tabindex="${i?-1:0}">${ic('play',16)} ${s.c}</a><a class="btn btn-glass btn-lg" href="${s.h2}" tabindex="${i?-1:0}">${s.c2}</a></div>
-        <ul class="hx-trust"><li>${ic('check',14)} 17 jeux</li><li>${ic('check',14)} Aucun argent réel</li><li>${ic('check',14)} Hasard vérifiable</li></ul></div>
+        <ul class="hx-trust"><li>${ic('check',14)} ${GL.length} jeux</li><li>${ic('check',14)} Aucun argent réel</li><li>${ic('check',14)} Hasard vérifiable</li></ul></div>
       <div class="hx-art">${fan(s.fan,'fan-hero')}${s.fl.map((n,k)=>`<img class="fl fl-${k}" src="${SYM(n)}" alt="" decoding="async">`).join('')}</div>
     </div>`).join('')}
     <div class="hx-nav" role="tablist">${HERO_SLIDES.map((s,i)=>`<button class="${i?'':'on'}" role="tab" aria-label="${s.k}"><span>${s.k}</span><i><b></b></i></button>`).join('')}</div>
