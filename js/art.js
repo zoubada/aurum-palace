@@ -1,7 +1,8 @@
 'use strict';
 /* ============ Illustrations partagées (vignettes, médailles, décors de pages) ============ */
 const COVER_PNG=new Set(['pharaon']);
-const COVER=id=>COVER_PNG.has(id)?`assets/covers/${id}.png`:`assets/covers/${id}.svg`;
+const COVER_EXT={atlantide:'webp'};
+const COVER=id=>COVER_EXT[id]?`assets/covers/${id}.${COVER_EXT[id]}`:COVER_PNG.has(id)?`assets/covers/${id}.png`:`assets/covers/${id}.svg`;
 const SYM=n=>`assets/slots-symbols/${n}.png`;
 
 const GOLD_DEFS=p=>`<linearGradient id="${p}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF3BF"/><stop offset=".3" stop-color="#F0C75E"/><stop offset=".6" stop-color="#B8841E"/><stop offset=".8" stop-color="#E9BE55"/><stop offset="1" stop-color="#7A4E08"/></linearGradient><radialGradient id="${p}r" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFF7D0"/><stop offset=".35" stop-color="#F1C95B"/><stop offset=".75" stop-color="#B07A17"/><stop offset="1" stop-color="#6E4506"/></radialGradient>`;
