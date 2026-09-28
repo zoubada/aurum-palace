@@ -71,6 +71,7 @@ const symBadge=(s,mini)=>{
    dans un même tour, et silhouette de palmier partagée par les 3 arbres (seule la
    couleur --pc, posée par la classe .palm-jp/.palm-bonus/.palm-mini, change). ---- */
 const TREE_ORDER=['jp','bonus','mini'];
+const TREE_COLOR={jp:'#FFD54A',bonus:'#5B9CF6',mini:'#FF6B6B'};
 const PALM_SVG=`<svg viewBox="0 0 48 64" aria-hidden="true" fill="currentColor"><path d="M21.4 64V33h5.2v31z"/>
   <path d="M24 30C15 26 10 18 4 19c3-9 13-10 20-3-3-6-2-14 2-18-2 7 0 14 4 18 7-7 17-6 20 3-6-1-11 7-20 11 4 2 7 6 8 11-6-3-11-4-14-2-3-2-8-1-14 2 1-5 4-9 8-11-9-4-14 1-20-1z"/>
   <ellipse cx="24" cy="30" rx="4.4" ry="3.2" opacity=".9"/></svg>`;
@@ -176,6 +177,13 @@ function slotMachine(cfg){
         const palmIc=$('.palm-'+tree+' .palm-ic',palmsEl);
         const img=cell&&cell.querySelector('img,svg');
         if(!cell||!palmIc||!img){resolve();return}
+        if(!REDUCED){
+          const glow=document.createElement('i');
+          glow.className='scarab-glow';glow.style.setProperty('--sc',TREE_COLOR[tree]||'#FFD54A');
+          cell.appendChild(glow);
+          cell.classList.remove('scarab-pop');void cell.offsetWidth;cell.classList.add('scarab-pop');
+          setTimeout(()=>glow.remove(),650);
+        }
         const a=cell.getBoundingClientRect(),b=palmIc.getBoundingClientRect();
         const clone=img.cloneNode(true);
         clone.className='';clone.removeAttribute('style');

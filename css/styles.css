@@ -1299,6 +1299,19 @@ html.gx-lock,html.gx-lock body{overflow:hidden;overscroll-behavior:none}
 .cell.sacred::after{content:"✦";position:absolute;top:-2px;right:2px;font-size:11px;color:#FFF3C4;text-shadow:0 0 6px #FFD54A;animation:sacredSpark 1s ease-in-out infinite}
 @keyframes sacredPulse{50%{filter:drop-shadow(0 0 12px #FFF3C4) drop-shadow(0 0 22px #FFD54A)}}
 @keyframes sacredSpark{50%{transform:scale(1.4) rotate(20deg);opacity:.7}}
+/* Scarabée récolté : la case s'illumine dans la couleur de son palmier au moment
+   où il s'envole (voir flyToTree dans slots.js), pour bien montrer laquelle vient
+   de charger l'arbre. */
+.scarab-glow{position:absolute;inset:-10%;z-index:3;border-radius:14px;pointer-events:none;
+  background:radial-gradient(circle,color-mix(in srgb,var(--sc) 65%,#fff) 0%,var(--sc) 38%,transparent 72%);
+  opacity:0;animation:scarabGlow .62s ease-out forwards}
+.scarab-glow::after{content:"";position:absolute;inset:8%;border-radius:10px;border:2px solid var(--sc);opacity:0;animation:scarabRing .62s ease-out forwards}
+.scarab-glow::before{content:"";position:absolute;inset:0;border-radius:14px;box-shadow:0 0 0 0 var(--sc);animation:scarabFlash .62s ease-out forwards}
+@keyframes scarabGlow{0%{opacity:0;transform:scale(.5)}22%{opacity:1;transform:scale(1.14)}100%{opacity:0;transform:scale(1.4)}}
+@keyframes scarabRing{0%{opacity:0;transform:scale(.7)}28%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.7)}}
+@keyframes scarabFlash{0%{box-shadow:0 0 18px 6px color-mix(in srgb,var(--sc) 80%,transparent)}100%{box-shadow:0 0 0 0 transparent}}
+.cell.scarab-pop .symbadge{animation:scarabSymPop .5s ease-out}
+@keyframes scarabSymPop{0%{filter:brightness(1)}30%{transform:scale(1.22);filter:brightness(1.7) drop-shadow(0 0 14px var(--sc))}100%{transform:scale(1);filter:brightness(1)}}
 
 /* ============ Petit bonus « Les Faveurs du Sphinx » ============ */
 .pyr.sph .pyr-top{justify-content:center}
