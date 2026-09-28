@@ -242,7 +242,9 @@ const ATLUI = (() => {
       root.classList.toggle('tiny', H < 400);
       const r = bw.getBoundingClientRect();
       const side = root.classList.contains('land') ? 2 * Math.min(100, Math.max(70, r.width * .09)) : 0;
-      const n = Math.max(26, Math.floor(Math.min((r.width - 4 - side) / 6.3, (r.height - 4) / 5.35)));
+      /* Diviseurs alignés sur l'encombrement réel du cadre illustré (bien plus large
+         que les rouleaux) pour qu'il ne soit jamais rogné par .atl-bw{overflow:hidden}. */
+      const n = Math.max(24, Math.floor(Math.min((r.width - 4 - side) / 9.75, (r.height - 4) / 8.75)));
       if (n !== cs || !root.style.getPropertyValue('--cs')) { cs = n; root.style.setProperty('--cs', cs + 'px'); }
       amb.size(); fx.size();
     }

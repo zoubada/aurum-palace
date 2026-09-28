@@ -70,11 +70,11 @@
 .lamps i.on{background:radial-gradient(circle at 40% 35%,#fff,#5FE3FF 55%,#0E8FB5);box-shadow:0 0 10px #5FE3FF}
 
 .atl-mid{flex:1;min-height:0;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"tide map" "bw bw";gap:4px 8px}
-.atl-bw{grid-area:bw;position:relative;min-height:0;min-width:0;display:grid;place-items:center}
+.atl-bw{grid-area:bw;position:relative;min-height:0;min-width:0;display:grid;place-items:center;overflow:hidden}
 .atl.land .atl-mid{position:relative;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"bw"}
 .atl.land .atl-tide,.atl.land .atl-map{position:absolute;z-index:2;top:50%;transform:translateY(-50%)}
-.atl.land .atl-tide{right:calc(50% + var(--cs)*3.15 + 12px)}
-.atl.land .atl-map{left:calc(50% + var(--cs)*3.15 + 12px)}
+.atl.land .atl-tide{right:calc(50% + var(--cs)*4.9 + 12px)}
+.atl.land .atl-map{left:calc(50% + var(--cs)*4.9 + 12px)}
 
 /* Marée */
 .atl-tide{grid-area:tide;display:flex;align-items:center;gap:4px;min-width:0}
@@ -115,7 +115,12 @@
 .atl-board::after{content:"";position:absolute;z-index:7;pointer-events:none;left:50%;top:calc(var(--bp)*-.62);width:calc(var(--cs)*.95);height:calc(var(--cs)*.5);transform:translateX(-50%);
   background:repeating-conic-gradient(from -90deg at 50% 100%,rgba(90,50,8,.55) 0 3deg,transparent 3deg 15deg),radial-gradient(circle at 50% 100%,#FFF1B8,#D9A331 45%,#6B4410 72%);
   -webkit-mask:radial-gradient(circle at 50% 100%,#000 69%,transparent 70%);mask:radial-gradient(circle at 50% 100%,#000 69%,transparent 70%);filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
-.atl-frame[style*=background-image]{padding:0;-webkit-mask:none;mask:none;background-size:100% 100%;background-repeat:no-repeat;inset:calc(var(--bp)*-1)}
+/* L'image de cadre livrée a une fenêtre intérieure transparente dont les proportions
+   ne sont pas celles de la grille (6:5) : on l'agrandit sans la déformer (même échelle
+   en x et y) jusqu'à ce que cette fenêtre couvre entièrement les rouleaux, quitte à
+   garder une petite marge dorée visible de chaque côté plutôt que de la déformer. */
+.atl-frame[style*=background-image]{padding:0;-webkit-mask:none;mask:none;background-size:100% 100%;background-repeat:no-repeat;
+  left:calc(var(--cs)*-1.87);right:calc(var(--cs)*-1.86);top:calc(var(--cs)*-2.11);bottom:calc(var(--cs)*-1.62)}
 .atl-board:has(.atl-frame[style*=background-image])::after{display:none}
 .atl-reels{position:relative;width:calc(var(--cs)*6);height:calc(var(--cs)*5);overflow:hidden;border-radius:calc(var(--cs)*.1);
   background:radial-gradient(90% 70% at 50% 0,rgba(22,120,150,.35),transparent 70%),linear-gradient(180deg,rgba(3,30,46,.9),rgba(2,12,22,.95))}
