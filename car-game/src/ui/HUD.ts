@@ -33,6 +33,7 @@ export class HUD {
   private readonly help: HTMLDivElement;
   private readonly debug: HTMLPreElement;
   private readonly toast: HTMLDivElement;
+  private readonly banner: HTMLDivElement;
   private toastTimer = 0;
   private gTrail: Array<[number, number]> = [];
   private frames = 0;
@@ -49,10 +50,9 @@ export class HUD {
     this.fps = el('div', 'hud-fps', tl);
     this.info = el('div', 'hud-info', tl);
 
-    if (placeholder) {
-      const banner = el('div', 'hud-banner', this.root);
-      banner.innerHTML = `<b>PHASE 1 — PROVISOIRE</b> · ${carName} (voiture placeholder) · piste d'essai plate`;
-    }
+    this.banner = el('div', 'hud-banner', this.root);
+    this.banner.innerHTML = `<b>PROVISOIRE</b> · ${carName} : modèle 3D de remplacement · piste d'essai`;
+    this.setPlaceholderBanner(placeholder);
 
     // Bottom-right cluster.
     const cluster = el('div', 'hud-cluster', this.root);
@@ -107,6 +107,11 @@ export class HUD {
     this.debug = el('pre', 'hud-debug', this.root);
     this.debug.style.display = 'none';
     setTimeout(() => this.help.classList.add('faded'), 12000);
+  }
+
+  /** The banner flags the procedural stand-in model; hidden once a real model is loaded. */
+  setPlaceholderBanner(show: boolean): void {
+    this.banner.hidden = !show;
   }
 
   setVisible(v: boolean): void {

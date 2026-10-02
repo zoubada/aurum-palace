@@ -75,6 +75,7 @@ export const nissanGtr: CarConfig = {
   name: 'Nissan GT-R',
   placeholder: true,
   physics,
+  sound: { cylinders: 6, roughness: 0.35, brightness: 0.45, intake: 0.5, turbo: 0.9, pops: 0.3, seed: 66 },
   visual: {
     model: 'assets/cars/nissan-gt-r-r35/model.glb',
     brand: 'Nissan',
@@ -90,6 +91,7 @@ export const nissanGtr: CarConfig = {
     dash: 'nissan-analog',
     doors: 'conventional',
     exhaust: { count: 4, layout: 'corners' },
+    rimDesign: { spokes: 12 },
     paints: [
       { name: 'Gris Ultimate Silver', color: 0xb5babe, metallic: 0.8 },
       { name: 'Bleu Bayside', color: 0x1a4c9e, metallic: 0.6 },
@@ -108,6 +110,8 @@ export const nissanGtr: CarConfig = {
     driverEye: [0.37, 1.1, -0.34],
   },
   reference: {
+    engine: '3.8 V6 biturbo (VR38DETT)',
+    drivetrain: 'Intégrale ATTESA E-TS',
     zeroTo100: 3.3,
     topSpeedKmh: 315,
     powerHp: 570,

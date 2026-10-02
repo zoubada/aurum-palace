@@ -75,6 +75,7 @@ export const fordMustangGt: CarConfig = {
   name: 'Ford Mustang GT',
   placeholder: true,
   physics,
+  sound: { cylinders: 8, roughness: 0.95, brightness: 0.4, intake: 0.55, turbo: 0, pops: 0.5, seed: 48 },
   visual: {
     model: 'assets/cars/ford-mustang-gt-s650/model.glb',
     brand: 'Ford',
@@ -90,6 +91,7 @@ export const fordMustangGt: CarConfig = {
     dash: 'ford-digital',
     doors: 'conventional',
     exhaust: { count: 4, layout: 'corners' },
+    rimDesign: { spokes: 10 },
     paints: [
       { name: 'Grabber Blue', color: 0x1f6dc3, metallic: 0.3 },
       { name: 'Race Red', color: 0xb3111b, metallic: 0 },
@@ -108,6 +110,8 @@ export const fordMustangGt: CarConfig = {
     driverEye: [0.37, 1.12, -0.48],
   },
   reference: {
+    engine: '5.0 V8 Coyote atmosphérique',
+    drivetrain: 'Propulsion, autobloquant',
     zeroTo100: 4.6,
     topSpeedKmh: 250,
     powerHp: 486,

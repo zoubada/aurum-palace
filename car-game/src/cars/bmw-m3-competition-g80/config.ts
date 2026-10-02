@@ -72,6 +72,7 @@ export const bmwM3: CarConfig = {
   name: 'BMW M3 Competition',
   placeholder: true,
   physics,
+  sound: { cylinders: 6, roughness: 0.2, brightness: 0.6, intake: 0.45, turbo: 0.6, pops: 0.6, seed: 56 },
   visual: {
     model: 'assets/cars/bmw-m3-competition-g80/model.glb',
     brand: 'BMW',
@@ -87,6 +88,7 @@ export const bmwM3: CarConfig = {
     dash: 'bmw-curved',
     doors: 'conventional',
     exhaust: { count: 4, layout: 'corners' },
+    rimDesign: { spokes: 10 },
     paints: [
       { name: 'Vert Isle of Man', color: 0x1d5a38, metallic: 0.8 },
       { name: 'Jaune São Paulo', color: 0xf0c016, metallic: 0 },
@@ -106,6 +108,8 @@ export const bmwM3: CarConfig = {
     driverEye: [0.37, 1.13, -0.38],
   },
   reference: {
+    engine: '3.0 6 cylindres en ligne biturbo (S58)',
+    drivetrain: 'Propulsion, Active M Differential',
     zeroTo100: 3.9,
     topSpeedKmh: 290,
     powerHp: 510,

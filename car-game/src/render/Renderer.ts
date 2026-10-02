@@ -15,13 +15,11 @@ import type { QualitySettings } from '../core/quality';
 export class Renderer {
   readonly renderer: THREE.WebGLRenderer;
   private composer: EffectComposer | null = null;
+  private renderPass: RenderPass | null = null;
+  private scene: THREE.Scene = new THREE.Scene();
+  private camera: THREE.PerspectiveCamera = new THREE.PerspectiveCamera();
 
-  constructor(
-    canvas: HTMLCanvasElement,
-    quality: QualitySettings,
-    private scene: THREE.Scene,
-    private camera: THREE.PerspectiveCamera,
-  ) {
+  constructor(canvas: HTMLCanvasElement, quality: QualitySettings) {
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: !quality.postProcessing,
@@ -45,6 +43,7 @@ export class Renderer {
     this.renderer.shadowMap.enabled = q.shadows;
     this.composer?.dispose();
     this.composer = null;
+    this.renderPass = null;
     if (q.postProcessing) {
       const size = this.renderer.getDrawingBufferSize(new THREE.Vector2());
       const target = new THREE.WebGLRenderTarget(size.x, size.y, {
@@ -52,7 +51,8 @@ export class Renderer {
         samples: q.msaa,
       });
       const composer = new EffectComposer(this.renderer, target);
-      composer.addPass(new RenderPass(this.scene, this.camera));
+      this.renderPass = new RenderPass(this.scene, this.camera);
+      composer.addPass(this.renderPass);
       if (q.bloom) {
         // Threshold in linear HDR, well above the (scaled) sky so only lights, the sun and glints bloom.
         const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.2, 0.35, 3);
@@ -67,6 +67,17 @@ export class Renderer {
       }
       composer.addPass(new OutputPass());
       this.composer = composer;
+    }
+    this.resize();
+  }
+
+  /** Switch the scene/camera being displayed (garage ↔ drive). */
+  setView(scene: THREE.Scene, camera: THREE.PerspectiveCamera): void {
+    this.scene = scene;
+    this.camera = camera;
+    if (this.renderPass) {
+      this.renderPass.scene = scene;
+      this.renderPass.camera = camera;
     }
     this.resize();
   }

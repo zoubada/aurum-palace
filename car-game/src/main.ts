@@ -1,5 +1,5 @@
 import './ui/styles.css';
-import { Game } from './core/Game';
+import { App } from './core/App';
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const ui = document.getElementById('ui') as HTMLElement;
@@ -9,6 +9,7 @@ const tips = [
   'Astuce : sans ABS, une roue bloquée ne dirige plus la voiture.',
   'Astuce : en mode Simulation, toutes les aides sont coupées et la boîte est manuelle.',
   'Astuce : F3 affiche la télémétrie des pneus (charge, glissement, angle de dérive).',
+  'Astuce : dans le garage, l’onglet Réglages montre l’effet de vos réglages sur le 0–100 et la vitesse max.',
 ];
 const tipEl = document.getElementById('loading-tip');
 if (tipEl) tipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
@@ -39,10 +40,14 @@ function fail(err: unknown): void {
 requestAnimationFrame(() =>
   setTimeout(() => {
     try {
-      const game = new Game(canvas, ui);
-      game.start();
-      // Debug/automation hook (used by the smoke test in tools/).
-      (window as unknown as { __game: Game }).__game = game;
+      const app = new App(canvas, ui);
+      app.start();
+      // Debug/automation hook (used by the browser smoke test in tools/).
+      (window as unknown as { __app: App }).__app = app;
+      (window as unknown as { __debug: object }).__debug = {
+        gltfRoundTrip: async (id: string) => (await import('./debug/gltfRoundTrip')).gltfRoundTrip(id),
+        engineSoundWav: async (id: string) => (await import('./debug/engineSound')).engineSoundWav(id),
+      };
       loading.classList.add('done');
       setTimeout(() => loading.remove(), 800);
       showFocusHint();

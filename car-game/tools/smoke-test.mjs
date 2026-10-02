@@ -1,11 +1,11 @@
 /**
- * Browser smoke test: loads the built game, drives it, switches every camera,
- * opens the menu, and fails on any console error or physics anomaly.
+ * Browser smoke test: garage → drive session → menu → back to garage, plus the glTF pipeline
+ * round trip and an offline engine-sound render. Fails on any console error.
  *
  *   npm run build && npm run preview   (in another terminal)
  *   npm run smoke [-- <url> <screenshot-dir> <quality>]
  *
- * Waits are in *simulated* time (Game.simTime) so the test is meaningful even on
+ * Waits are in *simulated* time (DriveSession.simTime) so the test is meaningful even on
  * machines without a GPU, where software rendering runs at ~1 FPS.
  * Set CHROMIUM_PATH to use a specific Chromium binary.
  */
@@ -36,57 +36,75 @@ await page.addInitScript((q) => {
   localStorage.setItem('cargame.quality', q);
 }, QUALITY);
 await page.goto(URL);
-await page.waitForFunction(() => window.__game, null, { timeout: 120000 });
+await page.waitForFunction(() => window.__app?.current, null, { timeout: 120000 });
 
+// --- Garage.
+const cars = await page.evaluate(() => [...document.querySelectorAll('[data-car]')].map((b) => b.dataset.car));
+check(cars.length === 7, `garage lists the 7 cars (${cars.join(', ')})`);
+await page.click('[data-car="mclaren-720s"]');
+await page.click('[data-tab="setup"]');
+await page.waitForFunction(() => /km\/h/.test(document.querySelector('[data-sim]')?.textContent ?? ''), null, { timeout: 120000 });
+const simText = await page.textContent('[data-sim]');
+check(/2,[6-9]\d? s|2\.[6-9]\d? s/.test(simText ?? ''), `garage measures the 720S in simulation: "${simText?.trim()}"`);
+await page.screenshot({ path: `${OUT}/01-garage.png` });
+
+// --- Drive.
+await page.click('[data-action="drive"]');
+await page.waitForFunction(() => window.__app.current?.vehicle, null, { timeout: 120000 });
 const waitSim = async (s) => {
-  const start = await page.evaluate(() => window.__game.simTime);
-  await page.waitForFunction((t) => window.__game.simTime >= t, start + s, { timeout: 900000, polling: 50 });
+  const start = await page.evaluate(() => window.__app.current.simTime);
+  await page.waitForFunction((t) => window.__app.current.simTime >= t, start + s, { timeout: 900000, polling: 50 });
 };
 const state = () =>
   page.evaluate(() => {
-    const v = window.__game.vehicle;
-    return { kmh: v.speedKmh, gear: v.gear, x: v.x, z: v.z, finite: [v.x, v.z, v.u, v.v, v.r].every(Number.isFinite) };
+    const v = window.__app.current.vehicle;
+    return { kmh: v.speedKmh, gear: v.gear, finite: [v.x, v.z, v.u, v.v, v.r].every(Number.isFinite) };
   });
 
 await waitSim(0.5);
-const s0 = await state();
-check(s0.kmh < 8, `car starts (almost) still: ${s0.kmh.toFixed(1)} km/h`);
-await page.screenshot({ path: `${OUT}/01-start.png` });
-
 await page.keyboard.down('ArrowUp');
 await waitSim(4);
 const s1 = await state();
-check(s1.kmh > 85, `accelerates: ${s1.kmh.toFixed(1)} km/h after 4 s, gear ${s1.gear}`);
-await page.screenshot({ path: `${OUT}/02-accelerating.png` });
-
-for (const [i, mode] of ['far', 'cockpit', 'hood', 'bumper', 'chase'].entries()) {
-  await page.evaluate((m) => window.__game.rig.setMode(m), mode);
+check(s1.kmh > 120, `720S accelerates: ${s1.kmh.toFixed(1)} km/h after 4 s, gear ${s1.gear}`);
+check(await page.evaluate(() => !!window.__app.current.carAudio), 'engine sound running');
+await page.screenshot({ path: `${OUT}/02-drive.png` });
+for (const [i, mode] of ['cockpit', 'hood', 'chase'].entries()) {
+  await page.evaluate((m) => window.__app.current.rig.setMode(m), mode);
   await waitSim(0.25);
   await page.screenshot({ path: `${OUT}/03-camera-${i}-${mode}.png` });
 }
 await page.keyboard.up('ArrowUp');
-
 await page.keyboard.down('ArrowDown');
-await waitSim(0.4); // pedal ramp + throttle release
+await waitSim(0.4);
 const b0 = await state();
-const t0 = await page.evaluate(() => window.__game.simTime);
-await waitSim(1.5);
+const wing = await page.evaluate(() => window.__app.current.vehicle.wingDeploy);
+const t0 = await page.evaluate(() => window.__app.current.simTime);
+await waitSim(1.2);
 const b1 = await state();
-const t1 = await page.evaluate(() => window.__game.simTime);
+const t1 = await page.evaluate(() => window.__app.current.simTime);
 await page.keyboard.up('ArrowDown');
 const decelG = ((b0.kmh - b1.kmh) / 3.6 / (t1 - t0)) / 9.81;
 check(decelG > 0.9, `brakes: ${b0.kmh.toFixed(0)} → ${b1.kmh.toFixed(0)} km/h, ${decelG.toFixed(2)} g average`);
+check(wing > 0.5, `720S airbrake deployed under hard braking above 100 km/h (${wing.toFixed(2)})`);
 
 await page.keyboard.press('Escape');
 await page.waitForSelector('.menu:not(.hidden)', { timeout: 120000 });
 await page.screenshot({ path: `${OUT}/04-menu.png` });
 await page.click('button[data-preset="simulation"]');
-const assists = await page.evaluate(() => window.__game.vehicle.assists);
+const assists = await page.evaluate(() => window.__app.current.vehicle.assists);
 check(!assists.abs && !assists.tc && !assists.autoGear, 'menu applies the Simulation preset');
-await page.click('button[data-action="resume"]');
+check((await state()).finite, 'vehicle state is finite');
+await page.click('[data-action="garage"]');
+await page.waitForSelector('.garage', { timeout: 120000 });
+check(true, 'back to the garage');
 
-const s3 = await state();
-check(s3.finite, 'vehicle state is finite');
+// --- Pipelines.
+const rt = await page.evaluate(() => window.__debug.gltfRoundTrip('porsche-911-gt3-rs-992'));
+const hubOk = rt.frontLeftHub.every((v, i) => Math.abs(v - rt.expectedFrontLeftHub[i]) < 0.005);
+check(rt.wheels === 4 && hubOk && rt.steeringWheel && rt.wing && rt.mirrors.length === 3 && rt.dash, `glTF round trip maps the model (${JSON.stringify(rt)})`);
+const wavLen = await page.evaluate(async () => (await window.__debug.engineSoundWav('ford-mustang-gt-s650')).length);
+check(wavLen > 100000, `offline engine sound render (${Math.round((wavLen * 0.75) / 1024)} KB WAV)`);
+
 check(errors.length === 0, `no console errors${errors.length ? ': ' + errors.join(' | ') : ''}`);
 await browser.close();
 

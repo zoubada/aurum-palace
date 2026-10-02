@@ -12,6 +12,7 @@ export interface CarConfig {
   placeholder: boolean;
   physics: CarPhysicsConfig;
   visual: CarVisualConfig;
+  sound: EngineSoundProfile;
   /** Official figures used by the automated tests (SPEC §11). */
   reference: CarReference;
 }
@@ -125,7 +126,7 @@ export interface CarPhysicsConfig {
   };
 }
 
-export type BodyStyle = 'hatch' | 'wagon' | 'sedan' | 'fastback' | 'coupe' | 'midengine';
+export type BodyStyle = 'hatch' | 'wagon' | 'sedan' | 'fastback' | 'coupe' | 'rearengine' | 'midengine';
 export type HeadlightStyle = 'audi-matrix' | 'porsche-quad' | 'ford-tribar' | 'bmw-l' | 'nissan-boomerang' | 'mclaren-socket' | 'generic';
 export type TaillightStyle = 'audi-strip' | 'porsche-bar' | 'ford-tribar' | 'bmw-l' | 'nissan-quad-round' | 'mclaren-c' | 'generic';
 export type GrilleStyle = 'audi-singleframe' | 'porsche-intakes' | 'ford-pony' | 'bmw-kidney' | 'nissan-v' | 'mclaren-intakes' | 'generic';
@@ -157,6 +158,8 @@ export interface CarVisualConfig {
   dash: DashStyle;
   doors: 'conventional' | 'dihedral';
   exhaust: { count: 2 | 4; layout: 'corners' | 'center' | 'wide' };
+  /** Rim design: number of spokes, centre-lock nut. */
+  rimDesign: { spokes: number; centerLock?: boolean };
   /** Factory colours (first = default). */
   paints: PaintOption[];
   paint: number;
@@ -168,6 +171,10 @@ export interface CarVisualConfig {
 }
 
 export interface CarReference {
+  /** Engine description shown in the garage, e.g. "2.5 TFSI 5 cylindres turbo". */
+  engine: string;
+  /** Drivetrain description, e.g. "quattro avec RS Torque Splitter". */
+  drivetrain: string;
   /** 0–100 km/h (s). */
   zeroTo100: number;
   topSpeedKmh: number;
@@ -176,4 +183,24 @@ export interface CarReference {
   massKg: number;
   /** Where the numbers come from. */
   source: string;
+}
+
+/**
+ * Engine sound character (see src/audio/EngineAudio.ts). The synthesiser builds the waveform
+ * from the engine's firing orders, so these values describe the architecture, not a recording.
+ */
+export interface EngineSoundProfile {
+  cylinders: number;
+  /** Uneven-firing / burble content between the firing orders (0 smooth – 1 lumpy). */
+  roughness: number;
+  /** High-order content (0 deep – 1 shrieking). */
+  brightness: number;
+  /** Intake roar level (0–1). */
+  intake: number;
+  /** Turbo whistle and blow-off valve level (0 = naturally aspirated). */
+  turbo: number;
+  /** Overrun crackles and pops (0–1). */
+  pops: number;
+  /** Seed for the deterministic part of the timbre, so two engines never sound identical. */
+  seed: number;
 }

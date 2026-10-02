@@ -1,4 +1,6 @@
 import { ASSIST_PRESETS, type AssistPresetId, type Assists } from '../physics/vehicle';
+import type { VolumeSettings } from '../audio/AudioEngine';
+import { presetOf } from '../core/assists';
 import { QUALITY_PRESETS, type QualityId } from '../core/quality';
 import { CAMERA_MODES, type CameraModeId, type CameraSettings } from '../camera/CameraRig';
 
@@ -14,6 +16,7 @@ export interface MenuState {
   camera: CameraModeId;
   cameraSettings: CameraSettings;
   device: string;
+  volumes: VolumeSettings;
 }
 
 export interface MenuCallbacks {
@@ -23,6 +26,8 @@ export interface MenuCallbacks {
   onQuality(q: QualityId): void;
   onCamera(id: CameraModeId): void;
   onCameraSettings(s: CameraSettings): void;
+  onVolumes(v: VolumeSettings): void;
+  onGarage(): void;
 }
 
 const PRESET_LABELS: Record<AssistPresetId, string> = {
@@ -66,17 +71,9 @@ export class Menu {
     this.root.classList.add('hidden');
   }
 
-  private presetOf(a: Assists): AssistPresetId | null {
-    for (const id of Object.keys(ASSIST_PRESETS) as AssistPresetId[]) {
-      const p = ASSIST_PRESETS[id];
-      if ((Object.keys(p) as Array<keyof Assists>).every((k) => p[k] === a[k])) return id;
-    }
-    return null;
-  }
-
   private render(): void {
     const s = this.state;
-    const preset = this.presetOf(s.assists);
+    const preset = presetOf(s.assists);
     this.root.innerHTML = `
       <div class="menu-panel">
         <header>
@@ -122,6 +119,14 @@ export class Menu {
           </div>
         </section>
         <section>
+          <h2>Son</h2>
+          <div class="sliders">
+            ${this.volume('master', 'Volume général', s.volumes.master)}
+            ${this.volume('engine', 'Moteur', s.volumes.engine)}
+            ${this.volume('effects', 'Effets (pneus, vent, chocs)', s.volumes.effects)}
+          </div>
+        </section>
+        <section>
           <h2>Commandes</h2>
           <table class="controls">
             <tr><th></th><th>Clavier</th><th>Manette</th></tr>
@@ -139,6 +144,7 @@ export class Menu {
           <p class="device">Périphérique actif : <b>${s.device === 'keyboard' ? 'clavier' : escapeHtml(s.device)}</b></p>
         </section>
         <footer>
+          <button class="ghost" data-action="garage">Retour au garage</button>
           <button class="ghost" data-action="reset">Replacer la voiture</button>
           <button class="primary" data-action="resume">Reprendre</button>
         </footer>
@@ -152,6 +158,15 @@ export class Menu {
         <span>${label}</span>
         <input type="range" data-cam="${key}" min="${min}" max="${max}" step="${step}" value="${value}">
         <output>${value.toFixed(step < 1 ? 1 : 0)} ${unit}</output>
+      </label>`;
+  }
+
+  private volume(key: keyof VolumeSettings, label: string, value: number): string {
+    return `
+      <label class="slider">
+        <span>${label}</span>
+        <input type="range" id="vol-${key}" data-vol="${key}" min="0" max="1" step="0.05" value="${value}">
+        <output>${Math.round(value * 100)} %</output>
       </label>`;
   }
 
@@ -195,7 +210,17 @@ export class Menu {
         this.cb.onCameraSettings({ ...this.state.cameraSettings });
       }),
     );
+    r.querySelectorAll<HTMLInputElement>('[data-vol]').forEach((i) =>
+      i.addEventListener('input', () => {
+        const k = i.dataset.vol as keyof VolumeSettings;
+        this.state.volumes[k] = Number(i.value);
+        const out = i.parentElement?.querySelector('output');
+        if (out) out.textContent = `${Math.round(Number(i.value) * 100)} %`;
+        this.cb.onVolumes({ ...this.state.volumes });
+      }),
+    );
     r.querySelector('[data-action="resume"]')?.addEventListener('click', () => this.cb.onResume());
+    r.querySelector('[data-action="garage"]')?.addEventListener('click', () => this.cb.onGarage());
     r.querySelector('[data-action="reset"]')?.addEventListener('click', () => this.cb.onReset());
   }
 }

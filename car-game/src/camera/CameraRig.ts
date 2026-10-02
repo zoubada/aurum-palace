@@ -110,11 +110,11 @@ export class CameraRig {
       const cg = visual.config.physics.cgHeight;
       let local: [number, number, number];
       if (mode === 'cockpit') {
-        local = visual.config.visual.driverEye;
+        local = visual.eye;
         near = 0.03;
         fov += 4;
       } else if (mode === 'hood') {
-        local = [0, 1.12, 0.75];
+        local = [0, visual.eye[1] - 0.04, visual.eye[2] + 1.05];
       } else {
         local = [0, 0.48, visual.config.visual.frontOverhangFromCg + 0.05];
         fov += 4;

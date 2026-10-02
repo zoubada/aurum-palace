@@ -77,6 +77,7 @@ export const porscheGt3Rs: CarConfig = {
   name: 'Porsche 911 GT3 RS',
   placeholder: true,
   physics,
+  sound: { cylinders: 6, roughness: 0.12, brightness: 0.95, intake: 0.85, turbo: 0, pops: 0.25, seed: 36 },
   visual: {
     model: 'assets/cars/porsche-911-gt3-rs-992/model.glb',
     brand: 'Porsche',
@@ -84,7 +85,7 @@ export const porscheGt3Rs: CarConfig = {
     width: 1.9,
     height: 1.322,
     ...overhangsFromCg(physics, 1.04, 1.075),
-    bodyStyle: 'coupe',
+    bodyStyle: 'rearengine',
     headlights: 'porsche-quad',
     taillights: 'porsche-bar',
     grille: 'porsche-intakes',
@@ -92,6 +93,7 @@ export const porscheGt3Rs: CarConfig = {
     dash: 'porsche-gt',
     doors: 'conventional',
     exhaust: { count: 2, layout: 'center' },
+    rimDesign: { spokes: 10, centerLock: true },
     paints: [
       { name: 'Bleu Requin', color: 0x1d8ad0, metallic: 0 },
       { name: 'Vert Python', color: 0x6fb13a, metallic: 0 },
@@ -111,6 +113,8 @@ export const porscheGt3Rs: CarConfig = {
     driverEye: [0.36, 1.03, -0.1],
   },
   reference: {
+    engine: '4.0 flat-six atmosphérique',
+    drivetrain: 'Propulsion, différentiel piloté',
     zeroTo100: 3.2,
     topSpeedKmh: 296,
     powerHp: 525,

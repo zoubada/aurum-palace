@@ -70,6 +70,7 @@ export const audiRs6: CarConfig = {
   name: 'Audi RS 6 Avant performance',
   placeholder: true,
   physics,
+  sound: { cylinders: 8, roughness: 0.75, brightness: 0.35, intake: 0.4, turbo: 0.45, pops: 0.6, seed: 28 },
   visual: {
     model: 'assets/cars/audi-rs6-c8/model.glb',
     brand: 'Audi',
@@ -85,6 +86,7 @@ export const audiRs6: CarConfig = {
     dash: 'audi-virtual',
     doors: 'conventional',
     exhaust: { count: 2, layout: 'wide' },
+    rimDesign: { spokes: 10 },
     paints: [
       { name: 'Gris Nardo', color: 0x7c7f82, metallic: 0 },
       { name: 'Gris Daytona', color: 0x3c3f43, metallic: 0.7 },
@@ -104,6 +106,8 @@ export const audiRs6: CarConfig = {
     driverEye: [0.38, 1.17, -0.38],
   },
   reference: {
+    engine: '4.0 TFSI V8 biturbo',
+    drivetrain: 'Intégrale quattro, différentiel sport',
     zeroTo100: 3.4,
     topSpeedKmh: 305,
     powerHp: 630,

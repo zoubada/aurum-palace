@@ -68,6 +68,7 @@ export const audiRs3: CarConfig = {
   name: 'Audi RS 3 Sportback',
   placeholder: true,
   physics,
+  sound: { cylinders: 5, roughness: 0.65, brightness: 0.6, intake: 0.5, turbo: 0.55, pops: 0.75, seed: 15 },
   visual: {
     model: 'assets/cars/audi-rs3-8y/model.glb',
     brand: 'Audi',
@@ -83,6 +84,7 @@ export const audiRs3: CarConfig = {
     dash: 'audi-virtual',
     doors: 'conventional',
     exhaust: { count: 2, layout: 'wide' },
+    rimDesign: { spokes: 10 },
     paints: [
       { name: 'Vert Kyalami', color: 0x3f7a35, metallic: 0.2 },
       { name: 'Gris Nardo', color: 0x7c7f82, metallic: 0 },
@@ -102,6 +104,8 @@ export const audiRs3: CarConfig = {
     driverEye: [0.37, 1.15, -0.32],
   },
   reference: {
+    engine: '2.5 TFSI 5 cylindres turbo',
+    drivetrain: 'Intégrale quattro, RS Torque Splitter',
     zeroTo100: 3.8,
     topSpeedKmh: 290,
     powerHp: 400,

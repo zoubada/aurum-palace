@@ -78,6 +78,7 @@ export const mclaren720s: CarConfig = {
   name: 'McLaren 720S',
   placeholder: true,
   physics,
+  sound: { cylinders: 8, roughness: 0.1, brightness: 0.8, intake: 0.6, turbo: 0.7, pops: 0.45, seed: 78 },
   visual: {
     model: 'assets/cars/mclaren-720s/model.glb',
     brand: 'McLaren',
@@ -93,6 +94,7 @@ export const mclaren720s: CarConfig = {
     dash: 'mclaren-folding',
     doors: 'dihedral',
     exhaust: { count: 2, layout: 'center' },
+    rimDesign: { spokes: 10 },
     paints: [
       { name: 'Orange Azores', color: 0xd0561a, metallic: 0.7 },
       { name: 'Papaya Spark', color: 0xff7a0d, metallic: 0.5 },
@@ -112,6 +114,8 @@ export const mclaren720s: CarConfig = {
     driverEye: [0.34, 0.98, 0.35],
   },
   reference: {
+    engine: '4.0 V8 biturbo (M840T)',
+    drivetrain: 'Propulsion, moteur central arrière',
     zeroTo100: 2.9,
     topSpeedKmh: 341,
     powerHp: 720,
