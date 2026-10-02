@@ -71,6 +71,7 @@ export const audiRs3: CarConfig = {
   sound: { cylinders: 5, roughness: 0.65, brightness: 0.6, intake: 0.5, turbo: 0.55, pops: 0.75, seed: 15 },
   visual: {
     model: 'assets/cars/audi-rs3-8y/model.glb',
+    modelCredit: 'Modèle 3D « 2021 Audi RS3 Sportback » (Sketchfab) — adapté pour le jeu',
     brand: 'Audi',
     length: 4.389,
     width: 1.851,
@@ -101,7 +102,7 @@ export const audiRs3: CarConfig = {
     ],
     rim: 0x17181a,
     caliper: 0xc8102e,
-    driverEye: [0.37, 1.15, -0.32],
+    driverEye: [0.36, 1.2, -0.42],
   },
   reference: {
     engine: '2.5 TFSI 5 cylindres turbo',

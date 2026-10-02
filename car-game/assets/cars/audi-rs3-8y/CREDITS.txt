@@ -1,0 +1,9 @@
+2021 Audi RS3 Sportback
+Source : Sketchfab (modèle téléchargé par le propriétaire du projet, format glb + textures)
+Auteur et licence : à compléter avec la page Sketchfab du modèle (le fichier ne les contient pas).
+
+Modifications : modèle remis à l'empattement officiel (2,631 m), roues, étriers, volant, portes,
+rétroviseurs, feux, écran de compteurs et sorties d'échappement détachés en nœuds animables,
+carrosserie séparée des garnitures (couleur choisie au garage), textures grises de l'habitacle et
+des garnitures retouchées vers le noir réel, textures converties en WebP et géométrie compressée.
+Script : tools/cars/prepare-rs3.mjs

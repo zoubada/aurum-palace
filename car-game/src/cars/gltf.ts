@@ -155,6 +155,8 @@ export function mapCarModel(scene: THREE.Object3D, car: CarConfig, a: number): C
       if (seen.has(mat)) return;
       seen.add(mat);
       const s = mat as THREE.MeshStandardMaterial;
+      // Cabin (`int_…`): the roof and pillars hide most of the sky from the interior.
+      if (/^int_/.test(n) && s.isMeshStandardMaterial) s.envMapIntensity = 0.3;
       if (/paint/.test(n)) parts.paint.push(mat as THREE.MeshPhysicalMaterial);
       else if (/brake|tail/.test(n) && /light/.test(n)) parts.brakeLights.push(s);
       else if (/reverse/.test(n)) parts.reverseLights.push(s);
@@ -207,6 +209,8 @@ export function mapCarModel(scene: THREE.Object3D, car: CarConfig, a: number): C
     canvas.height = DASH_HEIGHT;
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
+    // glTF UVs have their origin at the top-left of the image (no vertical flip).
+    texture.flipY = false;
     screen.material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false });
     parts.dash = { canvas, texture };
   }

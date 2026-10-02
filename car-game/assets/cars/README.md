@@ -25,10 +25,12 @@ Déposez le modèle de chaque voiture ici : `assets/cars/<id>/model.glb`. Le jeu
 | **`wheel_FL`, `wheel_FR`, `wheel_RL`, `wheel_RR`** | Roue complète (pneu + jante + disque), origine au centre du moyeu. Tourne et braque. |
 | `caliper_FL` … `caliper_RR` | Étriers : suivent le braquage mais ne tournent pas. |
 | `steering_wheel` | Volant, axe Z local = axe de la colonne. |
+
+Les nœuds sans maillage (`driver_eye`, `exhaust_tip_N`) doivent survivre à l'optimisation : `prune({ keepLeaves: true })`.
 | `door_L`, `door_R` | Portes, origine sur la charnière (ouverture dans le garage). |
 | `wing_active` | Aileron mobile, rotation autour de X local (DRS / aérofrein). |
 | `mirror_L`, `mirror_R`, `mirror_interior` | Maillages des glaces de rétroviseurs (reçoivent l'image temps réel). |
-| `dash_screen` | Écran du combiné d'instruments (reçoit l'affichage animé). |
+| `dash_screen` | Écran du combiné d'instruments (reçoit l'affichage animé ; UV glTF, origine en haut à gauche). |
 | `exhaust_tip_0`, `exhaust_tip_1`… | Sorties d'échappement (flammes). |
 | `driver_eye` | Position des yeux du pilote (caméra cockpit). |
 | `hide_in_cockpit…` | Éléments masqués en vue cockpit (appui-tête, etc.). |
@@ -44,5 +46,6 @@ Déposez le modèle de chaque voiture ici : `assets/cars/<id>/model.glb`. Le jeu
 | `rim` | Jantes (couleur choisie au garage). |
 | `caliper` | Étriers. |
 | `disc` / `rotor` | Disques de frein (rougissent quand ils chauffent). |
+| préfixe `int_` | Habitacle : reflets du ciel atténués (toit et montants le cachent). |
 
 Le test `window.__debug.gltfRoundTrip('<id>')` exporte la voiture provisoire au format ci-dessus puis la recharge par ce même chargeur ; il sert de modèle de référence.

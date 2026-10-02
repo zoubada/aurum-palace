@@ -193,6 +193,41 @@ const RENAME = {
   Ln1Mtl: 'light_brake_lens',
 };
 for (const m of root.listMaterials()) if (RENAME[m.getName()]) m.setName(RENAME[m.getName()]);
+// Cabin materials: the source sets most of them to roughness 0 (mirror-like leather, Alcantara and
+// plastics that reflect the whole sky). Prefix `int_` (the game dims their sky reflections, a
+// closed cabin sees little of it) and give them the satin finish of the real materials.
+const INTERIOR = {
+  Interior0481Mtl: 0.62, // dashboard, door cards, headliner
+  Interior2091Mtl: 0.7,
+  Seatbelt0021Mtl: 0.85, // seats, belts, Race-Tex
+  Carbon1m0021Mtl: 0.35, // clear-coated carbon trim
+  Csb1Mtl: 0.45,
+  Usagemeral1Mtl: 0.6,
+  Usagemeral2Mtl: 0.6,
+  Grille20021Mtl: 0.6,
+  Grille40011Mtl: 0.6,
+  Grille40021Mtl: 0.6,
+  Grille60011Mtl: 0.6,
+  Grille71Mtl: 0.6,
+  Grille81Mtl: 0.6,
+  PatternColor1Mtl: 0.6,
+  PatternColor3Mtl: 0.6,
+  Rollcage1Mtl: 0.5,
+  Rollcage2Mtl: 0.5,
+  W1Mtl: 0.6,
+  Needle1Mtl: 0.4,
+  Interioremissive0041Mtl: 0.5,
+  Interioremissive1Mtl: 0.5,
+  Dashpadscreen1Mtl: 0.12, // glass over the instruments
+};
+for (const m of root.listMaterials()) {
+  const r = INTERIOR[m.getName()];
+  if (r === undefined) continue;
+  // With a metal/rough texture the factor multiplies its green channel (≈ 1 in these maps).
+  m.setRoughnessFactor(Math.max(m.getRoughnessFactor(), r));
+  if (m.getName() !== 'Dashpadscreen1Mtl') m.setMetallicFactor(Math.min(m.getMetallicFactor(), m.getName().startsWith('Csb') ? 0.6 : 0.05));
+  m.setName(`int_${m.getName()}`);
+}
 for (const n of nodes) {
   const prims = n.getMesh()?.listPrimitives() ?? [];
   // Objects 46 and 47 are copies of the body panels carrying a fully transparent layer.
@@ -214,7 +249,7 @@ function cutOut(inside, origin, onlyMaterials = null) {
   for (const n of carNodes()) {
     const mesh = n.getMesh();
     for (const prim of [...mesh.listPrimitives()]) {
-      if (onlyMaterials && !onlyMaterials.includes(prim.getMaterial()?.getName())) continue;
+      if (onlyMaterials && !onlyMaterials.includes(prim.getMaterial()?.getName().replace(/^int_/, ''))) continue;
       const pos = prim.getAttribute('POSITION').getArray();
       const idx = indicesOf(prim);
       const sel = new Uint8Array(idx.length / 3);
@@ -302,13 +337,13 @@ function cutOut(inside, origin, onlyMaterials = null) {
 
 // Exhaust tips and the driver's eye (model space: x left, y up, z forward, front axle at z = 0).
 for (const [i, x] of [[0, 0.1], [1, -0.1]]) scene.addChild(doc.createNode(`exhaust_tip_${i}`).setTranslation([x, 0.32, -3.45]));
-scene.addChild(doc.createNode('driver_eye').setTranslation([0.36, 0.97, -1.4]));
+scene.addChild(doc.createNode('driver_eye').setTranslation([0.36, 0.99, -1.52]));
 
 // =============================================================================
 // Output: weld/dedup/prune, textures to WebP ≤ 1024 px.
 // =============================================================================
 await doc.transform(
-  prune(),
+  prune({ keepLeaves: true }), // keep the empty marker nodes (driver_eye, exhaust_tip_N)
   dedup(),
   textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [1024, 1024], quality: 82 }),
   meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
