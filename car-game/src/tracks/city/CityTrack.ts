@@ -8,6 +8,7 @@ import { RacingLine } from '../../ai/RacingLine';
 import { TrackSpline } from '../TrackSpline';
 import { buildRoad, type RoadMaterials } from '../roadBuilder';
 import { gridSlot } from '../grid';
+import { racingLineMesh } from '../racingLineMesh';
 import type { TrackScene, TrackView } from '../TrackScene';
 import { buildCity, type CityBuild } from './cityBuilder';
 import { CITY_LAYOUT, CITY_SECTORS } from './layout';
@@ -116,6 +117,9 @@ export class CityTrack implements TrackScene {
   readonly night = true;
   exposure = NIGHT_EXPOSURE;
   enclosure = 0;
+  readonly viewDistance = 9000;
+  readonly sprint = null;
+  readonly ambience = 'city' as const;
   private readonly group = new THREE.Group();
   private readonly env: NightEnvironment;
   private readonly city: CityBuild;
@@ -249,49 +253,7 @@ export class CityTrack implements TrackScene {
       this.lineMesh = null;
     }
     if (!profile) return;
-    const line = this.racingLine;
-    const M = line.count;
-    const pos: number[] = [];
-    const col: number[] = [];
-    const idx: number[] = [];
-    const c = new THREE.Color();
-    for (let k = 0; k <= M; k++) {
-      const i = k % M;
-      const p = line.points[i];
-      const smp = this.spline.sample(this.spline.indexAt(p.s));
-      const ahead = profile[(i + 4) % M];
-      const decel = (profile[i] - ahead) / Math.max(1, profile[i]);
-      if (decel > 0.02) c.setRGB(0.9, 0.06, 0.04);
-      else if (decel > 0.004) c.setRGB(0.9, 0.6, 0.05);
-      else c.setRGB(0.08, 0.75, 0.22);
-      for (const side of [1, -1]) {
-        const off = p.offset + side * 0.25;
-        this.spline.pointAt(p.s, off, this.tmp);
-        this.tmp.addScaledVector(smp.up, 0.03);
-        pos.push(this.tmp.x, this.tmp.y, this.tmp.z);
-        col.push(c.r, c.g, c.b);
-      }
-      if (k > 0) {
-        const v = k * 2;
-        idx.push(v - 2, v - 1, v, v - 1, v + 1, v);
-      }
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-    g.setIndex(idx);
-    const mat = new THREE.MeshBasicMaterial({
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.38,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-      polygonOffset: true,
-      polygonOffsetFactor: -10,
-    });
-    this.lineMesh = new THREE.Mesh(g, mat);
-    this.lineMesh.renderOrder = 3;
-    this.lineMesh.frustumCulled = false;
+    this.lineMesh = racingLineMesh(this.spline, this.racingLine, profile);
     this.group.add(this.lineMesh);
   }
 

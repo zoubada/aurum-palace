@@ -1,6 +1,6 @@
 import type { CarConfig } from '../cars/types';
 import { Vehicle, ASSIST_PRESETS, type DriveInput } from '../physics/vehicle';
-import { collideWalls, outlinePoints, rectangleWalls, type Wall } from '../physics/collision';
+import { collideWalls, outlinePoints, rectangleWalls, resolveContact, type Wall } from '../physics/collision';
 import { collideCars, type CarBox } from '../physics/carCollision';
 import type { TrackSpline } from '../tracks/TrackSpline';
 import { LapTimer, type LapRecord, type TimerEvents } from '../tracks/LapTimer';
@@ -38,6 +38,8 @@ export interface WorldSurface {
   /** Ground height/normal, per-wheel grip, track position. */
   ground(r: Racer): void;
   walls(r: Racer): Wall[];
+  /** Barrier contacts computed by the surface itself; returns the closing speed (m/s). */
+  collide?(r: Racer): number;
   /** Put a car on the track at distance s, lateral offset d, facing the direction of travel. */
   place(r: Racer, s: number, d: number): void;
 }
@@ -74,6 +76,59 @@ export class SplineSurface implements WorldSurface {
       if (lat > smp.hw + 0.5) off++;
     }
     r.offTrack = off === 4;
+  }
+
+  /**
+   * Barriers follow the curve: every outline point of the car is located on the spline (local
+   * search around the car's sample) and compared with the barrier offsets there. (A single
+   * plane per side would be too restrictive on the inside of tight hairpins.)
+   */
+  collide(r: Racer): number {
+    const v = r.vehicle;
+    const sp = this.spline;
+    // Deepest penetration on each side (0 = left barrier, 1 = right barrier).
+    const depth = [0, 0];
+    const px = [0, 0];
+    const pz = [0, 0];
+    const nx = [0, 0];
+    const nz = [0, 0];
+    for (const [f, l] of r.outline) {
+      const [x, z] = v.bodyToWorld(f, l);
+      let best = r.trackIndex;
+      let bd = Infinity;
+      for (let k = -9; k <= 9; k++) {
+        const p = sp.sample(r.trackIndex + k).p;
+        const d = (p.x - x) ** 2 + (p.z - z) ** 2;
+        if (d < bd) {
+          bd = d;
+          best = r.trackIndex + k;
+        }
+      }
+      const smp = sp.sample(best);
+      const lh = Math.hypot(smp.left.x, smp.left.z) || 1;
+      const lx = smp.left.x / lh;
+      const lz = smp.left.z / lh;
+      const lat = (x - smp.p.x) * lx + (z - smp.p.z) * lz;
+      const penL = lat - smp.wallL;
+      const penR = -lat - smp.wallR;
+      if (penL > depth[0]) {
+        depth[0] = penL;
+        px[0] = x;
+        pz[0] = z;
+        nx[0] = -lx;
+        nz[0] = -lz;
+      }
+      if (penR > depth[1]) {
+        depth[1] = penR;
+        px[1] = x;
+        pz[1] = z;
+        nx[1] = lx;
+        nz[1] = lz;
+      }
+    }
+    let worst = 0;
+    for (const k of [0, 1]) if (depth[k] > 0) worst = Math.max(worst, resolveContact(v, px[k], pz[k], nx[k], nz[k], depth[k]));
+    return worst;
   }
 
   walls(r: Racer): Wall[] {
@@ -153,6 +208,8 @@ export class RaceWorld {
     private readonly sectors: number[] = [0],
     /** Tire grip of the surface for every car (1 = dry, ~0.78 = wet). */
     readonly grip = 1,
+    /** Point-to-point course on the circuit (start and finish distances), null = laps. */
+    readonly sprint: { from: number; to: number } | null = null,
   ) {}
 
   add(car: CarConfig, ai?: AISetup, best: LapRecord | null = null): Racer {
@@ -170,7 +227,7 @@ export class RaceWorld {
       lateral: 0,
       offTrack: false,
       impact: 0,
-      timer: this.surface.spline ? new LapTimer(this.surface.spline.length, this.sectors, best) : null,
+      timer: this.surface.spline ? new LapTimer(this.surface.spline.length, this.sectors, best, this.sprint) : null,
       progress: 0,
     };
     if (ai) {
@@ -198,8 +255,8 @@ export class RaceWorld {
       }
       r.vehicle.step(dt, r.input);
       this.surface.ground(r);
-      const hit = collideWalls(r.vehicle, r.outline, this.surface.walls(r));
-      r.impact = Math.max(r.impact, hit?.speed ?? 0);
+      const hit = this.surface.collide ? this.surface.collide(r) : (collideWalls(r.vehicle, r.outline, this.surface.walls(r))?.speed ?? 0);
+      r.impact = Math.max(r.impact, hit);
     }
     for (let i = 0; i < this.racers.length; i++) {
       for (let j = i + 1; j < this.racers.length; j++) {
@@ -215,7 +272,8 @@ export class RaceWorld {
       const ev = r.timer.update(dt, r.s, r.offTrack);
       if (ev.lap || ev.sector || ev.invalidated) this.events.push({ racer: r, ev });
       // Before its first crossing of the line a car is still behind it (on the grid).
-      r.progress = r.timer.started ? r.timer.laps * r.timer.length + r.s : r.s - r.timer.length;
+      const s = r.timer.local(r.s);
+      r.progress = r.timer.finished ? r.timer.length + 1e6 - r.timer.lastLap!.time : r.timer.started ? r.timer.laps * r.timer.length + s : s - r.timer.length;
     }
   }
 }

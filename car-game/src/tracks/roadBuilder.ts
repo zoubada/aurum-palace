@@ -40,10 +40,10 @@ export interface RoadBuild {
   groundHoles: Array<Array<[number, number]>>;
 }
 
-type Fn = (smp: TrackSample) => number;
+export type Fn = (smp: TrackSample) => number;
 
 /** Index ranges [from, to] (inclusive, `to` may exceed count to wrap) where `pred` holds. */
-function ranges(track: TrackSpline, pred: (smp: TrackSample) => boolean): Array<[number, number]> {
+export function ranges(track: TrackSpline, pred: (smp: TrackSample) => boolean): Array<[number, number]> {
   const n = track.count;
   const out: Array<[number, number]> = [];
   // Start the scan at a sample where pred is false so ranges never straddle the seam.
@@ -66,7 +66,7 @@ function ranges(track: TrackSpline, pred: (smp: TrackSample) => boolean): Array<
 const tmp = new THREE.Vector3();
 
 /** Strip between lateral offsets a and b (m, + = left), at heights ya / yb above the road. */
-function ribbon(
+export function ribbon(
   track: TrackSpline,
   from: number,
   to: number,

@@ -1,4 +1,4 @@
-# Jeu de course 3D — Prototype (Phases 1 à 3)
+# Jeu de course 3D — Prototype (Phases 1 à 4)
 
 Jeu de course réaliste dans le navigateur (TypeScript + Vite + Three.js), développé par phases selon le cahier des charges.
 « APEX » est un nom de travail provisoire.
@@ -18,7 +18,8 @@ Autres commandes :
 | `npm test` | Tests unitaires : physique (0–100, vitesse max, freinage, aides, collisions), circuit, chronos, IA |
 | `npm run build` | Vérification des types + build de production dans `dist/` |
 | `npm run preview` | Sert le build sur http://localhost:4173 |
-| `npm run smoke` | Test navigateur (Playwright) sur le build : garage, piste d'essai, ville de nuit sous la pluie avec IA, feux de départ, tunnel, menu, pipeline glTF, son, erreurs console |
+| `npm run smoke` | Test navigateur (Playwright) sur le build : garage, piste d'essai, ville de nuit sous la pluie avec IA, feux de départ, tunnel, lac d'Annecy (sprint), menu, pipeline glTF, son, erreurs console |
+| `npm run data:annecy` | Régénère le circuit d'Annecy depuis OpenStreetMap et l'IGN (voir `tools/annecy/README.md`) |
 
 ## Commandes
 
@@ -40,6 +41,27 @@ Les vibrations de la manette suivent le glissement des pneus et les chocs.
 
 ## État du projet
 
+### Phase 4 (circuit 2 : tour du lac d'Annecy, données réelles) — fait
+- **Tracé réel de 37,5 km** calculé sur les routes OpenStreetMap : départ avenue d'Albigny à Annecy, quai Eustache-Chappuis, **D1508** par Sévrier, Saint-Jorioz et Duingt jusqu'à Doussard, puis **D909a / D909** par Talloires, les lacets du Thoron, Menthon-Saint-Bernard et Veyrier-du-Lac. Sens antihoraire, une vingtaine de ronds-points, ponts. Largeurs d'après le nombre de voies, élargies dans les épingles.
+- **Relief réel** (IGN RGE ALTI) : la route monte de 448 à 557 m ; montagnes autour du lac (Semnoz, Tournette, Dents de Lanfon…) sur 48 km.
+- **Photos aériennes IGN** (≈ 1 m/pixel) sur le terrain, avec un grain de détail près de la caméra.
+- **Arbres à leurs vraies positions** (≈ 100 000 dans les 185 m autour de la route), hauteur mesurée par le modèle de surface de l'IGN, couleur prise sur la photo. Au-delà, forêts et villages en volume grâce au même modèle de surface.
+- **≈ 7 900 bâtiments** OpenStreetMap à leur hauteur mesurée, toits à quatre pans ou plats, couleur de toit tirée de la photo, fenêtres et volets.
+- **Lac** au contour réel : reflets réels des montagnes en qualité Élevée / Ultra, eau transparente sinon.
+- **Bord de route** : marquages français (tirets de 3 m / 10 m, ligne continue en virage, rien dans les ronds-points), accotements, glissières sur poteaux, trottoirs et murets dans les villages, ponts, **panneaux d'entrée et de sortie des villages** aux emplacements OSM.
+- **Chargement par zones** (cases de 1 km autour de la caméra, 3 niveaux de détail, libérées quand on s'éloigne) + montagnes en basse résolution au loin.
+- **Heure réglable** (matin, midi, fin d'après-midi, coucher du soleil) avec la vraie position du soleil à Annecy fin juin ; **pluie** (ciel couvert, route mouillée, adhérence réduite).
+- **Parcours** : tour complet, ou **sprints** rive ouest (Annecy → Doussard, 18 km) et rive est (Doussard → Annecy, 19,5 km).
+- Ambiance sonore : vent, oiseaux (par beau temps), pluie.
+- L'IA fait le tour complet sans accrochage (911 GT3 RS : 13 min 40 s, 164 km/h de moyenne).
+
+#### Provisoire / limites (Phase 4)
+- **Arbres et bâtiments simplifiés** : formes génériques (sapins, feuillus, maisons à toit en croupe), pas de modèles 3D détaillés ni de végétation au sol (herbes, buissons).
+- **Photos aériennes** : prises du ciel, elles contiennent leurs propres ombres et voitures garées ; de près, le sol reste un peu flou.
+- **Pas encore** : port et bateaux, voies vertes, lampadaires et mobilier urbain, tunnel (le parcours n'en a pas), autres routes en 3D (elles sont visibles sur la photo). Les murs de la course sont continus (route fermée).
+- **Données** : le cache de téléchargement n'est pas versionné ; `npm run data:annecy` le reconstruit.
+- Fluidité non mesurée ici (pas de carte graphique dans mon environnement) : sur MacBook Air, la qualité **Moyen** est conseillée sur ce circuit.
+
 ### Phase 3 (circuit 1 : Métropole de nuit) — fait
 - **Circuit de 4,9 km** tracé par une spline (`src/tracks/city/layout.ts`) : boulevard de départ, chicane, montée sur un **pont à haubans** à 14 m au-dessus du fleuve, épingle en descente, **tunnel sous le fleuve** (−12 m), enchaînement entre les tours, **viaduc** relevé, retour sur le boulevard. Relief, dévers, bordures, murs, grillages, panneaux de sponsors (fictifs), trottoirs, ligne de départ et grille.
 - **Ville générée** autour : rues en damier, fleuve et quais, tours avec fenêtres éclairées (calculées dans le shader), enseignes au néon, écrans LED animés, feux d'obstacle clignotants, circulation, piétons et feux tricolores décoratifs.
@@ -54,20 +76,20 @@ Les vibrations de la manette suivent le glissement des pneus et les chocs.
 
 | Voiture (IA) | Tour |
 |---|---|
-| McLaren 720S | 1:56.9 |
-| Porsche 911 GT3 RS | 1:59.3 (pluie : 2:08.0) |
-| Nissan GT-R | 2:07.6 |
-| BMW M3 Competition | 2:08.8 |
-| Audi RS 6 performance | 2:11.7 |
-| Audi RS 3 | 2:13.5 |
-| Ford Mustang GT | 2:14.9 |
+| McLaren 720S | 1:53.2 |
+| Porsche 911 GT3 RS | 1:56.0 (pluie : 2:03.9) |
+| Nissan GT-R | 2:03.8 |
+| BMW M3 Competition | 2:04.8 |
+| Audi RS 6 performance | 2:07.8 |
+| Audi RS 3 | 2:09.7 |
+| Ford Mustang GT | 2:10.8 |
 
 #### Provisoire / limites (Phase 3)
 - **Bâtiments** : volumes simples avec fenêtres dessinées par le shader, pas de façades détaillées ni de modèles 3D d'architecture.
 - **IA** : pas encore de vraie stratégie de dépassement ni de défense (Phase 6) ; en peloton, une voiture rapide peut rester bloquée derrière une plus lente.
 - **Courses** : pour l'instant c'est un « essai libre » chronométré avec adversaires ; course avec nombre de tours, classement final, fantôme et championnat arrivent en Phase 6.
 - **Reflets** : la ville est capturée une fois depuis un point du boulevard ; les reflets ne suivent pas exactement la position de la voiture.
-- **Physique** : Rapier n'est pas utilisé ; les collisions (murs du circuit, voitures) sont calculées par notre propre code à partir de la spline, plus simple et plus rapide pour un circuit routier.
+- **Physique** : Rapier n'est pas utilisé ; les collisions (murs du circuit, voitures) sont calculées par notre propre code à partir de la spline (point par point le long de la courbe), plus simple et plus rapide pour un circuit routier.
 
 ### Phase 2 (voitures) — fait
 - **7 voitures** avec leurs caractéristiques officielles (`src/cars/<id>/config.ts`) : Audi RS 3 (8Y), Audi RS 6 Avant performance (C8), Porsche 911 GT3 RS (992), Ford Mustang GT (S650), BMW M3 Competition (G80), Nissan GT-R (R35), McLaren 720S.
@@ -109,14 +131,16 @@ src/
   audio/       moteur audio et synthèse des sons de voiture
   garage/      garage / showroom
   game-modes/  session de conduite, monde de course (physique de toutes les voitures, chronos)
-  tracks/      spline de circuit, chronométrage, génération de la route ; city/ = circuit 1 ; piste d'essai
+  tracks/      spline de circuit, chronométrage, génération de la route ; city/ = circuit 1 ;
+               annecy/ = circuit 2 (terrain par zones, arbres, bâtiments, lac) ; piste d'essai
   camera/      caméras de conduite
   render/      renderer, ciel de jour / de nuit, phares, pluie, textures procédurales, effets pneus
   ui/          HUD, tour de chronométrage et mini-carte, menu, styles
   ai/          trajectoire idéale, profil de vitesse, pilote IA
-assets/cars, assets/tracks  modèles et textures (à venir)
+assets/cars                 modèles 3D des voitures (à fournir)
+assets/tracks/annecy        données du circuit d'Annecy générées depuis OSM et l'IGN (≈ 28 Mo)
 tests/        tests unitaires de la physique
-tools/        test navigateur ; scripts de génération des circuits (Phase 4)
+tools/        test navigateur ; tools/annecy = récupération et conversion des données OSM / IGN
 ```
 
 Ajouter une voiture consiste à créer `src/cars/<id>/config.ts` (un `CarConfig` : physique, visuel, valeurs officielles), puis à l'ajouter dans `src/cars/registry.ts`.

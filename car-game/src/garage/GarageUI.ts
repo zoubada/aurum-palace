@@ -3,7 +3,7 @@ import { defaultSetup, applySetup, type CarSetup } from '../cars/setup';
 import { topSpeed, zeroTo } from '../physics/benchmark';
 import { QUALITY_PRESETS, type QualityId } from '../core/quality';
 import { loadJSON } from '../core/storage';
-import { DEFAULT_DRIVE, MAX_OPPONENTS, TRACK_NAMES, type DriveOptions, type TrackId } from '../game-modes/options';
+import { ANNECY_VARIANTS, DEFAULT_DRIVE, MAX_OPPONENTS, TIMES, TRACK_NAMES, type DriveOptions, type TimeOfDay, type TrackId } from '../game-modes/options';
 
 /**
  * Garage interface: car list, spec sheet with comparison bars, paint / rims, setup sliders.
@@ -166,9 +166,13 @@ export class GarageUI {
       `<div class="g-seg" role="group" aria-label="${name}">${items
         .map(([v, l]) => `<button data-race="${name}" data-value="${v}" class="${v === value ? 'on' : ''}" ${disabled ? 'disabled' : ''}>${l}</button>`)
         .join('')}</div>`;
+    const lake = d.track === 'annecy';
+    const order: TrackId[] = ['city', 'annecy', 'test'];
     return `
       <div class="g-race">
-        <div class="g-race-item"><span>Circuit</span>${seg('track', (Object.keys(TRACK_NAMES) as TrackId[]).reverse().map((t) => [t, TRACK_NAMES[t]]), d.track)}</div>
+        <div class="g-race-item"><span>Circuit</span>${seg('track', order.map((t) => [t, TRACK_NAMES[t]]), d.track)}</div>
+        ${lake ? `<div class="g-race-item"><span>Parcours</span>${seg('variant', ANNECY_VARIANTS.map((v) => [v.id, v.label]), d.variant ?? 'full')}</div>` : ''}
+        ${lake ? `<div class="g-race-item"><span>Heure</span>${seg('time', (Object.keys(TIMES) as TimeOfDay[]).map((t) => [t, TIMES[t].label]), d.time ?? 'evening')}</div>` : ''}
         <div class="g-race-item"><span>Météo</span>${seg('rain', [['0', 'Sec'], ['1', 'Pluie']], d.rain ? '1' : '0', !circuit)}</div>
         <div class="g-race-item"><span>Adversaires</span>${seg('opponents', Array.from({ length: MAX_OPPONENTS + 1 }, (_, i) => [String(i), String(i)]), String(circuit ? d.opponents : 0), !circuit)}</div>
       </div>`;
@@ -341,8 +345,11 @@ export class GarageUI {
     r.querySelectorAll<HTMLButtonElement>('[data-race]').forEach((b) =>
       b.addEventListener('click', () => {
         const v = b.dataset.value!;
-        if (b.dataset.race === 'track') this.drive.track = v as TrackId;
-        else if (b.dataset.race === 'rain') this.drive.rain = v === '1';
+        const kind = b.dataset.race;
+        if (kind === 'track') this.drive.track = v as TrackId;
+        else if (kind === 'rain') this.drive.rain = v === '1';
+        else if (kind === 'variant') this.drive.variant = v;
+        else if (kind === 'time') this.drive.time = v as TimeOfDay;
         else this.drive.opponents = Number(v);
         this.render();
       }),

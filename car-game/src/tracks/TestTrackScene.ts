@@ -17,6 +17,9 @@ export class TestTrackScene implements TrackScene {
   readonly night = false;
   readonly exposure = 1;
   readonly enclosure = 0;
+  readonly viewDistance = 9000;
+  readonly sprint = null;
+  readonly ambience = 'none' as const;
   private readonly env: Environment;
   private readonly track: TestTrack;
   private readonly focus = new THREE.Vector3();

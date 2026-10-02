@@ -79,6 +79,7 @@ export class Environment {
     const envScene = new THREE.Scene();
     const skyCopy = createSky(1000);
     skyCopy.material.uniforms.sunPosition.value.copy(this.sunDir);
+    for (const k of ['turbidity', 'rayleigh', 'mieCoefficient', 'mieDirectionalG'] as const) skyCopy.material.uniforms[k].value = this.sky.material.uniforms[k].value;
     // The sun disc is ~60 000 in HDR: baked into the IBL it would add a second sun on top of
     // the directional light. The directional light alone carries the direct sunlight.
     skyCopy.material.uniforms.showSunDisc.value = 0;
@@ -100,6 +101,25 @@ export class Environment {
     (ground.material as THREE.Material).dispose();
   }
 
+  /** Long-distance haze (big outdoor circuits) instead of the test area's short fog. */
+  setFog(color: number, density: number): void {
+    this.scene.fog = new THREE.FogExp2(color, density);
+  }
+
+  /** Grey overcast sky (rain): flat light, no sun disc, denser haze. Rebuilds the IBL. */
+  setOvercast(on: boolean): void {
+    const u = this.sky.material.uniforms;
+    u.turbidity.value = on ? 18 : 4.5;
+    u.rayleigh.value = on ? 0.25 : 1.4;
+    u.mieCoefficient.value = on ? 0.03 : 0.0025;
+    u.mieDirectionalG.value = on ? 0.3 : 0.78;
+  }
+
+  /** Keep the sky box centred on the camera (circuits several km wide). */
+  centreSky(camera: THREE.Vector3): void {
+    this.sky.position.copy(camera);
+  }
+
   applyQuality(q: QualitySettings): void {
     this.sun.castShadow = q.shadows;
     if (this.sun.shadow.mapSize.x !== q.shadowMapSize) {
@@ -114,7 +134,7 @@ export class Environment {
     const texel = 90 / this.sun.shadow.mapSize.x;
     const x = Math.round(target.x / texel) * texel;
     const z = Math.round(target.z / texel) * texel;
-    this.sun.target.position.set(x, 0, z);
-    this.sun.position.set(x + this.sunDir.x * 150, this.sunDir.y * 150, z + this.sunDir.z * 150);
+    this.sun.target.position.set(x, target.y, z);
+    this.sun.position.set(x + this.sunDir.x * 150, target.y + this.sunDir.y * 150, z + this.sunDir.z * 150);
   }
 }

@@ -1,7 +1,8 @@
 /**
  * Browser smoke test: garage → test track → menu → back to garage → night city with rain and
- * AI opponents (start lights, lap timing, tunnel), plus the glTF pipeline round trip and an
- * offline engine-sound render. Fails on any console error.
+ * AI opponents (start lights, lap timing, tunnel) → Lake Annecy sprint (real data, streamed
+ * terrain), plus the glTF pipeline round trip and an offline engine-sound render. Fails on any
+ * console error.
  *
  *   npm run build && npm run preview   (in another terminal)
  *   npm run smoke [-- <url> <screenshot-dir> <quality>]
@@ -53,7 +54,7 @@ await page.screenshot({ path: `${OUT}/01-garage.png` });
 await page.click('[data-race="track"][data-value="test"]');
 check((await page.textContent('[data-action="drive"]'))?.includes("Piste d'essai"), 'garage: test track selected');
 await page.click('[data-action="drive"]');
-await page.waitForFunction(() => window.__app.current?.vehicle, null, { timeout: 120000 });
+await page.waitForFunction(() => window.__app.current?.world && window.__app.current.simTime > 0, null, { timeout: 300000 });
 const waitSim = async (s) => {
   const start = await page.evaluate(() => window.__app.current.simTime);
   await page.waitForFunction((t) => window.__app.current.simTime >= t, start + s, { timeout: 900000, polling: 50 });
@@ -149,6 +150,35 @@ await page.keyboard.press('Escape');
 await page.waitForSelector('.menu:not(.hidden)', { timeout: 120000 });
 await page.click('label:has([data-line])');
 check(await page.evaluate(() => JSON.parse(localStorage.getItem('cargame.racingLine')).on === true), 'racing line toggled from the menu');
+await page.click('[data-action="garage"]');
+await page.waitForSelector('.garage', { timeout: 120000 });
+
+// --- Lac d'Annecy (real data, streamed terrain): west-shore sprint, one AI opponent, sunset.
+await page.click('[data-race="track"][data-value="annecy"]');
+await page.click('[data-race="variant"][data-value="west"]');
+await page.click('[data-race="time"][data-value="sunset"]');
+await page.click('[data-race="rain"][data-value="0"]');
+await page.click('[data-race="opponents"][data-value="1"]');
+await page.click('[data-action="drive"]');
+await page.waitForFunction(() => window.__app.current?.track?.id === 'annecy', null, { timeout: 600000 });
+const lake = await page.evaluate(() => {
+  const s = window.__app.current;
+  return { name: s.track.name, km: s.track.spline.length / 1000, sprint: s.track.sprint, tiles: s.track.stats, racers: s.world.racers.length };
+});
+check(lake.km > 35 && lake.km < 42 && lake.sprint && lake.racers === 2, `Annecy loaded: ${JSON.stringify(lake)}`);
+await waitSim(6);
+await page.keyboard.down('ArrowUp');
+await waitSim(5);
+await page.keyboard.up('ArrowUp');
+const lakeRun = await page.evaluate(() => {
+  const s = window.__app.current;
+  return { kmh: s.vehicle.speedKmh, started: s.player.timer.started, label: document.querySelector('.race-lap')?.textContent, tiles: s.track.stats };
+});
+check(lakeRun.kmh > 60 && lakeRun.started && /Sprint/.test(lakeRun.label ?? ''), `Annecy sprint under way: ${lakeRun.kmh.toFixed(0)} km/h, ${lakeRun.label}, ${lakeRun.tiles}`);
+await page.screenshot({ path: `${OUT}/08-annecy.png` });
+check((await state()).finite, 'vehicle state is finite');
+await page.click('.hud-menu-btn');
+await page.waitForSelector('.menu:not(.hidden)', { timeout: 120000 });
 await page.click('[data-action="garage"]');
 await page.waitForSelector('.garage', { timeout: 120000 });
 

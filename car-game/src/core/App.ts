@@ -4,6 +4,7 @@ import { AudioEngine } from '../audio/AudioEngine';
 import { Input } from './Input';
 import { QUALITY_PRESETS, loadQuality, saveQuality, type QualityId, type QualitySettings } from './quality';
 import { DriveSession } from '../game-modes/DriveSession';
+import { loadAnnecy } from '../tracks/annecy/AnnecyTrack';
 import { DEFAULT_DRIVE, TRACK_NAMES, type DriveOptions } from '../game-modes/options';
 import { Garage } from '../garage/Garage';
 import { CARS, getCar } from '../cars/registry';
@@ -83,17 +84,24 @@ export class App implements AppContext {
     // Building a circuit takes a moment: show a loading card first (after it has been painted).
     const card = document.createElement('div');
     card.className = 'track-loading';
-    card.innerHTML = `<div><small>Chargement</small><b>${TRACK_NAMES[opts.track]}</b><span></span></div>`;
+    const tip = opts.track === 'annecy' ? 'Relief, photos aériennes et arbres : IGN · routes, lac et bâtiments : OpenStreetMap' : '';
+    card.innerHTML = `<div><small>Chargement</small><b>${TRACK_NAMES[opts.track]}</b><span></span><p>${tip}</p></div>`;
     this.uiRoot.appendChild(card);
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        try {
-          this.show(new DriveSession(this, applySetup(base, loadSetup(base)), opts));
-        } finally {
-          card.remove();
-        }
-      }),
-    );
+    const go = async () => {
+      try {
+        const bundle = opts.track === 'annecy' ? await loadAnnecy(this.renderer.maxAnisotropy) : undefined;
+        const session = new DriveSession(this, applySetup(base, loadSetup(base)), opts, bundle);
+        await session.ready();
+        this.show(session);
+        card.remove();
+      } catch (err) {
+        console.error(err);
+        card.querySelector('small')!.textContent = 'Impossible de charger le circuit';
+        card.querySelector('p')!.textContent = String((err as Error).message ?? err);
+        setTimeout(() => card.remove(), 4000);
+      }
+    };
+    requestAnimationFrame(() => requestAnimationFrame(() => void go()));
   }
 
   setQuality(id: QualityId): void {

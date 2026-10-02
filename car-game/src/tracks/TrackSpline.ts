@@ -67,16 +67,20 @@ export class TrackSpline {
   readonly ds: number;
   readonly curve: THREE.CatmullRomCurve3;
 
-  constructor(
-    readonly points: ControlPoint[],
-    ds = 1,
-  ) {
+  readonly points: ControlPoint[];
+
+  // (No constructor parameter properties: the build tools import this file with Node's
+  // TypeScript type stripping.)
+  constructor(points: ControlPoint[], ds = 1) {
+    this.points = points;
     const n = points.length;
     this.curve = new THREE.CatmullRomCurve3(
       points.map((c) => new THREE.Vector3(c.x, c.y ?? 0, c.z)),
       true,
       'centripetal',
     );
+    // Arc-length table fine enough for long circuits (default: 200 divisions in total).
+    this.curve.arcLengthDivisions = Math.max(200, n * 12);
     const total = this.curve.getLength();
     const N = Math.round(total / ds);
     this.ds = total / N;

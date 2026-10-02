@@ -132,8 +132,9 @@ export class RaceHUD {
     let ahead = 0;
     for (const r of racers) if (r !== player && r.progress > player.progress) ahead++;
     this.pos.innerHTML = `<b>P${ahead + 1}</b><small>/${racers.length}</small>`;
-    this.lap.innerHTML = t.started ? `Tour <b>${t.laps + 1}</b>` : 'Tour de lancement';
-    this.time.textContent = t.started ? formatLapTime(t.current) : '–:––.–––';
+    if (t.sprint) this.lap.innerHTML = t.finished ? '<b>Arrivée</b>' : t.started ? `Sprint <b>${((t.length - t.local(player.s)) / 1000).toFixed(1)} km</b>` : 'Vers le départ';
+    else this.lap.innerHTML = t.started ? `Tour <b>${t.laps + 1}</b>` : 'Tour de lancement';
+    this.time.textContent = t.finished && t.lastLap ? formatLapTime(t.lastLap.time) : t.started ? formatLapTime(t.current) : '–:––.–––';
     this.time.classList.toggle('bad', t.started && !t.valid);
     this.invalid.hidden = !(t.started && !t.valid);
     if (!this.invalid.hidden) this.invalid.textContent = `Tour invalidé · ${t.invalidReason}`;

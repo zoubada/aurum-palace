@@ -40,15 +40,29 @@ export class LapTimer {
   private sectorStartTime = 0;
   private offTime = 0;
 
-  constructor(
-    readonly length: number,
-    sectorFractions: number[],
-    best: LapRecord | null = null,
-  ) {
+  /** Distance timed (the lap, or the sprint from start to finish). */
+  readonly length: number;
+  /** Sprint (point to point on the circuit): start and finish distances along the lap. */
+  readonly sprint: { from: number; to: number } | null;
+  /** Sprint finished: the timer has stopped. */
+  finished = false;
+  private readonly lapLength: number;
+
+  constructor(lapLength: number, sectorFractions: number[], best: LapRecord | null = null, sprint: { from: number; to: number } | null = null) {
+    this.lapLength = lapLength;
+    this.sprint = sprint && sprint.to - sprint.from < lapLength - 1 ? sprint : null;
+    const length = this.sprint ? this.sprint.to - this.sprint.from : lapLength;
+    this.length = length;
     this.sectorStarts = sectorFractions.map((f) => f * length);
     for (let s = CHECKPOINT_SPACING; s < length - 50; s += CHECKPOINT_SPACING) this.checkpoints.push(s);
     this.bestLap = best;
     if (best) this.bestSectors = [...best.sectors];
+  }
+
+  /** Distance along the timed course (sprints: measured from the start line). */
+  local(s: number): number {
+    if (!this.sprint) return s;
+    return (((s - this.sprint.from) % this.lapLength) + this.lapLength) % this.lapLength;
   }
 
   get sectorCount(): number {
@@ -67,17 +81,22 @@ export class LapTimer {
     ev.invalidated = reason;
   }
 
-  update(dt: number, s: number, offTrack: boolean): TimerEvents {
+  update(dt: number, sLap: number, offTrack: boolean): TimerEvents {
     const ev: TimerEvents = {};
-    const L = this.length;
+    if (this.finished) return ev;
+    const L = this.lapLength;
+    const s = this.local(sLap);
     const prev = this.prevS;
     this.prevS = s;
     if (prev < 0) return ev;
     let ds = s - prev;
     if (ds < -L / 2) ds += L;
     if (ds > L / 2) ds -= L;
-    const crossedLine = ds > 0 && prev > s; // wrapped forwards through s = 0
+    let crossedLine = ds > 0 && prev > s; // wrapped forwards through s = 0
     const crossedBack = ds < 0 && s > prev; // wrapped backwards
+    // Sprint: the finish line is at the end of the timed distance.
+    const finishing = !!this.sprint && this.started && ds > 0 && prev < this.length && s >= this.length;
+    if (finishing) crossedLine = true;
 
     if (this.started) {
       this.current += dt;
@@ -104,6 +123,10 @@ export class LapTimer {
         this.lastLap = rec;
         this.laps++;
         ev.lap = { ...rec, valid: this.valid, best };
+        if (this.sprint) {
+          this.finished = true;
+          return ev;
+        }
       }
       this.started = true;
       this.current = 0;

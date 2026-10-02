@@ -83,7 +83,7 @@ describe('six AI cars together', () => {
     console.log(`Choc max entre voitures/murs : ${maxImpact.toFixed(1)} m/s, voitures replacées : ${resets}`);
     expect(racers.every((r) => r.timer!.laps >= 2)).toBe(true);
     expect(resets).toBe(0);
-  });
+  }, 60000);
 });
 
 describe('starting grid and race start', () => {

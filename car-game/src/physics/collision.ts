@@ -44,10 +44,45 @@ export function outlinePoints(front: number, rear: number, halfWidth: number): A
   ];
 }
 
-export function collideWalls(vehicle: Vehicle, outline: Array<[number, number]>, walls: Wall[]): Impact | null {
-  let worst: Impact | null = null;
+/**
+ * Push the car out of a contact (point px, pz penetrating `depth` m along the inward normal
+ * nx, nz) and apply the impulse (restitution + Coulomb friction). Returns the closing speed
+ * (m/s), 0 when the point was already separating.
+ */
+export function resolveContact(vehicle: Vehicle, px: number, pz: number, nx: number, nz: number, depth: number): number {
   const m = vehicle.cfg.mass;
   const I = vehicle.cfg.yawInertia;
+  // Positional correction: push the car out of the wall.
+  vehicle.x += nx * depth;
+  vehicle.z += nz * depth;
+  px += nx * depth;
+  pz += nz * depth;
+
+  const [vpx, vpz] = vehicle.pointVelocity(px, pz);
+  const vn = vpx * nx + vpz * nz;
+  if (vn >= 0) return 0; // already separating
+
+  const rx = px - vehicle.x;
+  const rz = pz - vehicle.z;
+  const cn = rz * nx - rx * nz;
+  const jn = (-(1 + RESTITUTION) * vn) / (1 / m + (cn * cn) / I);
+  vehicle.applyImpulse(px, pz, jn * nx, jn * nz);
+
+  // Friction along the wall.
+  const tx = -nz;
+  const tz = nx;
+  const [vpx2, vpz2] = vehicle.pointVelocity(px, pz);
+  const vt = vpx2 * tx + vpz2 * tz;
+  const ct = rz * tx - rx * tz;
+  let jt = -vt / (1 / m + (ct * ct) / I);
+  const maxJt = FRICTION * jn;
+  jt = Math.max(-maxJt, Math.min(maxJt, jt));
+  vehicle.applyImpulse(px, pz, jt * tx, jt * tz);
+  return -vn;
+}
+
+export function collideWalls(vehicle: Vehicle, outline: Array<[number, number]>, walls: Wall[]): Impact | null {
+  let worst: Impact | null = null;
   for (const wall of walls) {
     // Deepest penetrating point against this wall.
     let depth = 0;
@@ -63,35 +98,8 @@ export function collideWalls(vehicle: Vehicle, outline: Array<[number, number]>,
       }
     }
     if (depth <= 0) continue;
-
-    // Positional correction: push the car out of the wall.
-    vehicle.x += wall.nx * depth;
-    vehicle.z += wall.nz * depth;
-    px += wall.nx * depth;
-    pz += wall.nz * depth;
-
-    const [vpx, vpz] = vehicle.pointVelocity(px, pz);
-    const vn = vpx * wall.nx + vpz * wall.nz;
-    if (vn >= 0) continue; // already separating
-
-    const rx = px - vehicle.x;
-    const rz = pz - vehicle.z;
-    const cn = rz * wall.nx - rx * wall.nz;
-    const jn = (-(1 + RESTITUTION) * vn) / (1 / m + (cn * cn) / I);
-    vehicle.applyImpulse(px, pz, jn * wall.nx, jn * wall.nz);
-
-    // Friction along the wall.
-    const tx = -wall.nz;
-    const tz = wall.nx;
-    const [vpx2, vpz2] = vehicle.pointVelocity(px, pz);
-    const vt = vpx2 * tx + vpz2 * tz;
-    const ct = rz * tx - rx * tz;
-    let jt = -vt / (1 / m + (ct * ct) / I);
-    const maxJt = FRICTION * jn;
-    jt = Math.max(-maxJt, Math.min(maxJt, jt));
-    vehicle.applyImpulse(px, pz, jt * tx, jt * tz);
-
-    if (!worst || -vn > worst.speed) worst = { speed: -vn, x: px, z: pz };
+    const speed = resolveContact(vehicle, px, pz, wall.nx, wall.nz, depth);
+    if (speed > 0 && (!worst || speed > worst.speed)) worst = { speed, x: px, z: pz };
   }
   return worst;
 }

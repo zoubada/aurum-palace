@@ -21,6 +21,7 @@ import { HOLD, RaceWorld, type Racer } from './RaceWorld';
 import type { TrackScene } from '../tracks/TrackScene';
 import { TestTrackScene } from '../tracks/TestTrackScene';
 import { CityTrack } from '../tracks/city/CityTrack';
+import { AnnecyTrack, type AnnecyBundle } from '../tracks/annecy/AnnecyTrack';
 import { formatLapTime, type LapRecord } from '../tracks/LapTimer';
 import { DEFAULT_DRIVE, MAX_OPPONENTS, type DriveOptions } from './options';
 
@@ -80,20 +81,32 @@ export class DriveSession implements Screen {
     private readonly app: AppContext,
     readonly car: CarConfig,
     readonly options: DriveOptions = DEFAULT_DRIVE,
+    /** Pre-downloaded data of a streamed circuit (Annecy). */
+    bundle?: AnnecyBundle,
   ) {
     this.rig = new CameraRig(window.innerWidth / window.innerHeight);
     this.rig.settings = loadJSON<CameraSettings>('camera', this.rig.settings);
     this.rig.setMode(loadJSON<{ mode: CameraModeId }>('cameraMode', { mode: 'chase' }).mode);
 
     const r = app.renderer;
-    this.track =
-      options.track === 'city'
-        ? new CityTrack(this.scene, r.renderer, app.quality, r.maxAnisotropy, options.rain)
-        : new TestTrackScene(this.scene, r.renderer, app.quality, r.maxAnisotropy);
-    this.world = new RaceWorld(this.track.surface, this.track.sectors, this.track.grip);
+    if (options.track === 'annecy' && bundle) {
+      this.track = new AnnecyTrack(this.scene, r.renderer, app.quality, r.maxAnisotropy, bundle, {
+        variant: options.variant ?? 'full',
+        time: options.time ?? 'evening',
+        rain: options.rain,
+      });
+    } else if (options.track === 'city') {
+      this.track = new CityTrack(this.scene, r.renderer, app.quality, r.maxAnisotropy, options.rain);
+    } else {
+      this.track = new TestTrackScene(this.scene, r.renderer, app.quality, r.maxAnisotropy);
+    }
+    this.rig.camera.far = this.track.viewDistance;
+    this.rig.camera.updateProjectionMatrix();
+    this.world = new RaceWorld(this.track.surface, this.track.sectors, this.track.grip, this.track.sprint);
 
     // --- Player.
-    this.bestKey = `best.${this.track.id}.${options.rain ? 'wet' : 'dry'}.${car.id}`;
+    const course = this.track.id === 'annecy' ? `${this.track.id}-${options.variant ?? 'full'}` : this.track.id;
+    this.bestKey = `best.${course}.${options.rain ? 'wet' : 'dry'}.${car.id}`;
     this.player = this.world.add(car, undefined, loadJSON<LapRecord | null>(this.bestKey, null));
     this.player.vehicle.assists = loadJSON<Assists>('assists', { ...ASSIST_PRESETS.intermediate });
     this.visual = new CarVisual(car, this.player.vehicle);
@@ -162,7 +175,7 @@ export class DriveSession implements Screen {
     app.audio.onReady(() => {
       if (this.disposed) return;
       this.carAudio = new CarAudio(app.audio, car);
-      this.ambience = new Ambience(app.audio, { city: this.track.night, rain: options.rain });
+      this.ambience = new Ambience(app.audio, { city: this.track.ambience === 'city', nature: this.track.ambience === 'nature', rain: options.rain });
       for (const o of this.opponents) o.audio = new CarAudio(app.audio, o.racer.car, true);
     });
     document.addEventListener('visibilitychange', this.onVisibility);
@@ -174,6 +187,11 @@ export class DriveSession implements Screen {
 
   get camera(): THREE.PerspectiveCamera {
     return this.rig.camera;
+  }
+
+  /** Resolves when the scenery around the start is ready (streamed circuits). */
+  async ready(): Promise<void> {
+    await this.track.ready?.();
   }
 
   /** The player's car (kept for the smoke test and tools). */
@@ -264,6 +282,7 @@ export class DriveSession implements Screen {
       `Qualité ${this.app.quality.label} · Caméra ${this.rig.label}`,
       `Aides : ${preset ? ASSIST_LABELS[preset] : 'Personnalisées'}`,
       `${this.track.name}${weather}`,
+      ...(this.track.credits ? [this.track.credits] : []),
     ]);
   }
 
@@ -319,7 +338,10 @@ export class DriveSession implements Screen {
       if (ev.invalidated) this.hud.showToast(`Tour invalidé : ${ev.invalidated}`);
       if (ev.lap) {
         const t = formatLapTime(ev.lap.time);
-        if (!ev.lap.valid) this.hud.showToast(`Tour ${t} (non valable)`);
+        if (this.track.sprint) {
+          this.hud.showToast(`Arrivée : ${t}${ev.lap.valid ? (ev.lap.best ? ' · record' : '') : ' (non valable)'}`);
+          if (ev.lap.valid && ev.lap.best) saveJSON(this.bestKey, { time: ev.lap.time, sectors: ev.lap.sectors });
+        } else if (!ev.lap.valid) this.hud.showToast(`Tour ${t} (non valable)`);
         else if (ev.lap.best) {
           this.hud.showToast(`Meilleur tour : ${t}`);
           saveJSON(this.bestKey, { time: ev.lap.time, sectors: ev.lap.sectors });
@@ -383,7 +405,7 @@ export class DriveSession implements Screen {
     this.updateOpponents(dt);
     this.track.update(this.paused ? 0 : dt, { camera: cam, player: this.player, racers: this.world.racers, time: this.simTime });
     this.app.renderer.renderer.toneMappingExposure = this.track.exposure;
-    this.ambience?.update(this.track.enclosure);
+    this.ambience?.update(this.track.enclosure, this.paused ? 0 : dt);
 
     const mode = this.rig.mode;
     this.mirrors.update(this.app.renderer.renderer, this.scene, this.visual, (mode === 'cockpit' || mode === 'hood') && !input.lookBack);

@@ -34,6 +34,16 @@ export interface TrackScene {
   readonly exposure: number;
   /** 0 = open air, 1 = deep in the tunnel (reverb, lighting). */
   readonly enclosure: number;
+  /** Camera far plane (m). */
+  readonly viewDistance: number;
+  /** Point-to-point course (start and finish distances), null = laps. */
+  readonly sprint: { from: number; to: number } | null;
+  /** Data sources to credit on screen (licences), if any. */
+  readonly credits?: string;
+  /** Kind of ambience sound. */
+  readonly ambience: 'city' | 'nature' | 'none';
+  /** Resolves once the scenery around the start is ready (streamed circuits). */
+  ready?(): Promise<void>;
   /** Put a car on starting-grid slot k (0 = pole). */
   placeOnGrid(r: Racer, slot: number): void;
   /** Put a car back on the track after "R" (on the road, facing the right way). */
