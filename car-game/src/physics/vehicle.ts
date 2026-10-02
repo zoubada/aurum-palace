@@ -91,6 +91,8 @@ export class Wheel {
   brakeTorque = 0;
   /** ABS pressure modulation (0–1). */
   absFactor = 1;
+  /** Grip of the surface under this wheel (1 = asphalt; kerb, run-off… set by the world). */
+  surface = 1;
   /** Suspension compression relative to static (m, + = compressed). */
   travel = 0;
   readonly tire: TireParams;
@@ -130,7 +132,14 @@ export class Vehicle {
   // --- Planar rigid-body state ---------------------------------------------
   x = 0;
   z = 0;
+  /** Height of the ground under the car (m), set by the world. */
+  y = 0;
   yaw = 0;
+  /**
+   * Surface under the car, set by the world before each step (flat ground by default):
+   * unit normal and vertical curvature along the road (1/m, + = compression, − = crest).
+   */
+  readonly ground = { nx: 0, ny: 1, nz: 0, curv: 0 };
   /** Longitudinal / lateral velocity in the body frame (m/s). */
   u = 0;
   v = 0;
@@ -397,14 +406,18 @@ export class Vehicle {
     const q = 0.5 * AIR_DENSITY * this.u * this.u;
     const dfF = (q * c.aero.clAFront) / 2;
     const dfR = (q * clARear) / 2;
+    // Slopes, banking and vertical curvature: the weight pressing the tires scales with the
+    // normal component of gravity, plus the centripetal term over crests and dips.
+    const gr = this.ground;
+    const loadScale = clamp(gr.ny + (this.u * this.u * gr.curv) / G, 0, 2.5);
     const longT = (m * this.axF * c.cgHeight) / L / 2;
     const rsf = c.suspension.rollStiffnessFront;
     const latF = (m * this.ayF * c.cgHeight * rsf) / c.trackFront;
     const latR = (m * this.ayF * c.cgHeight * (1 - rsf)) / c.trackRear;
-    wheels[0].fz = Math.max(0, wheels[0].staticLoad - longT + dfF - latF);
-    wheels[1].fz = Math.max(0, wheels[1].staticLoad - longT + dfF + latF);
-    wheels[2].fz = Math.max(0, wheels[2].staticLoad + longT + dfR - latR);
-    wheels[3].fz = Math.max(0, wheels[3].staticLoad + longT + dfR + latR);
+    wheels[0].fz = Math.max(0, wheels[0].staticLoad * loadScale - longT + dfF - latF);
+    wheels[1].fz = Math.max(0, wheels[1].staticLoad * loadScale - longT + dfF + latF);
+    wheels[2].fz = Math.max(0, wheels[2].staticLoad * loadScale + longT + dfR - latR);
+    wheels[3].fz = Math.max(0, wheels[3].staticLoad * loadScale + longT + dfR + latR);
 
     // --- Traction control (uses last step's slip) ------------------------------
     let maxDrivenKappa = 0;
@@ -503,7 +516,7 @@ export class Vehicle {
     if (ast.tc && clutchTorque > 0 && ratio !== 0) {
       let grip = 0;
       for (const w of wheels) {
-        if (this.isDriven(w)) grip += effectiveMu(w.tire, w.fz, this.surfaceGrip) * w.tire.muLongScale * w.fz * w.tire.radius;
+        if (this.isDriven(w)) grip += effectiveMu(w.tire, w.fz, this.surfaceGrip * w.surface) * w.tire.muLongScale * w.fz * w.tire.radius;
       }
       const cap = (grip * this.tcTrim) / (Math.abs(ratio) * gb.efficiency);
       if (clutchTorque > cap) {
@@ -567,7 +580,7 @@ export class Vehicle {
     let sumFx = 0;
     let sumFy = 0;
     let sumMz = 0;
-    const grip = this.surfaceGrip;
+    const weatherGrip = this.surfaceGrip;
     for (const w of wheels) {
       const p = w.tire;
       const R = p.radius;
@@ -586,6 +599,7 @@ export class Vehicle {
 
       const vref = Math.max(vAbs, SLIP_REF_SPEED);
       w.kappa = (w.omega * R - vlong) / vref;
+      const grip = weatherGrip * w.surface;
       tireForce(p, w.B, w.kappa, w.alpha, w.fz, grip, tmpForce);
       w.fx = tmpForce.fx;
       w.fy = tmpForce.fy;
@@ -624,6 +638,16 @@ export class Vehicle {
 
     // --- Aerodynamic drag ------------------------------------------------------
     sumFx -= 0.5 * AIR_DENSITY * cdA * this.u * Math.abs(this.u);
+
+    // --- Gravity along the slope and across the banking ----------------------------
+    {
+      const sy = Math.sin(this.yaw);
+      const cy = Math.cos(this.yaw);
+      const fn = sy * gr.nx + cy * gr.nz; // forward · normal (< 0 uphill)
+      const ln = cy * gr.nx - sy * gr.nz; // left · normal (> 0 when the road leans left)
+      sumFx += m * G * fn * gr.ny;
+      sumFy += m * G * ln * gr.ny;
+    }
 
     // --- Integrate the body ---------------------------------------------------------
     const ax = sumFx / m;
@@ -674,7 +698,7 @@ export class Vehicle {
 
   /** Friction coefficient currently available at a wheel (HUD / debug). */
   wheelMu(w: Wheel): number {
-    return effectiveMu(w.tire, w.fz, this.surfaceGrip);
+    return effectiveMu(w.tire, w.fz, this.surfaceGrip * w.surface);
   }
 
   /** World-space velocity (X, Z). */
