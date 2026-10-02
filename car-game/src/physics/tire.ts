@@ -34,6 +34,11 @@ export interface TireParams {
   relaxationLength: number;
   /** Rolling resistance coefficient. */
   rollingResistance: number;
+  /**
+   * Longitudinal / lateral peak grip ratio (friction ellipse). Performance tires grip a little
+   * more under braking and traction than in cornering: typically 1.05–1.15.
+   */
+  muLongScale: number;
 }
 
 export interface TireForce {
@@ -89,7 +94,7 @@ export function tireForce(
     return out;
   }
   const mag = effectiveMu(p, fz, surfaceGrip) * fz * magic(rho, B, p.shapeC);
-  out.fx = (mag * kn) / rho;
+  out.fx = (mag * p.muLongScale * kn) / rho;
   // Lateral force opposes the lateral sliding velocity (positive alpha = sliding left).
   out.fy = (-mag * an) / rho;
   return out;

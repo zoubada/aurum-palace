@@ -164,13 +164,15 @@ export class Vehicle {
   absActive = false;
   tcActive = false;
   espActive = false;
-  private tcFactor = 1;
-  private tcIntegral = 1;
+  private tcTrim = 1;
 
   /** Front road-wheel angle (rad, + = left), before Ackermann. */
   steerAngle = 0;
   /** Grip multiplier of the surface under the car (1 = dry asphalt). */
   surfaceGrip = 1;
+  /** Active wing deployment, 0 = rest, 1 = fully deployed (DRS open / airbrake up). */
+  wingDeploy = 0;
+  speedLimiterOn = false;
 
   /** Effective pedal values after reverse handling (for HUD / lights). */
   appliedThrottle = 0;
@@ -216,8 +218,9 @@ export class Vehicle {
     this.engineRpm = this.cfg.engine.idleRpm;
     this.gear = 1;
     this.shiftTimer = this.shiftCooldown = this.reverseTimer = 0;
-    this.tcFactor = this.tcIntegral = 1;
+    this.tcTrim = 1;
     this.steerAngle = 0;
+    this.wingDeploy = 0;
     for (const w of this.wheels) {
       w.omega = w.alpha = w.kappa = w.rho = w.slipSpeed = 0;
       w.absFactor = 1;
@@ -380,9 +383,20 @@ export class Vehicle {
     }
 
     // --- Vertical loads ---------------------------------------------------
+    // Active wing: DRS opens on full throttle in a straight line, the airbrake rises under hard braking.
+    const wing = c.aero.activeWing;
+    let wingTarget = 0;
+    if (wing && absU * 3.6 > wing.minSpeedKmh) {
+      if (wing.mode === 'drs') wingTarget = throttle > 0.95 && brake < 0.05 && Math.abs(input.steer) < 0.1 ? 1 : 0;
+      else wingTarget = brake > 0.4 ? 1 : 0;
+    }
+    this.wingDeploy = approach(this.wingDeploy, wingTarget, 4 * dt);
+    const cdA = c.aero.cdA + (wing ? wing.cdADelta * this.wingDeploy : 0);
+    const clARear = c.aero.clARear + (wing ? wing.clARearDelta * this.wingDeploy : 0);
+
     const q = 0.5 * AIR_DENSITY * this.u * this.u;
     const dfF = (q * c.aero.clAFront) / 2;
-    const dfR = (q * c.aero.clARear) / 2;
+    const dfR = (q * clARear) / 2;
     const longT = (m * this.axF * c.cgHeight) / L / 2;
     const rsf = c.suspension.rollStiffnessFront;
     const latF = (m * this.ayF * c.cgHeight * rsf) / c.trackFront;
@@ -397,17 +411,17 @@ export class Vehicle {
     for (const w of wheels) {
       if (this.isDriven(w)) maxDrivenKappa = Math.max(maxDrivenKappa, w.kappa);
     }
-    // PI controller on the driven wheels' slip ratio. The integral term finds the torque the
-    // surface can take; the proportional term damps the (very fast) wheel-spin dynamics.
+    // Traction control = grip-based torque cap (computed after the clutch, below) trimmed by a
+    // slow integral loop on the driven wheels' slip, which absorbs the estimate's error
+    // (unknown surface, split between axles...). Like modern TC / launch control, it meters
+    // torque instead of cutting it after the wheels have already spun.
     if (ast.tc && throttle > 0.05) {
-      const err = maxDrivenKappa - c.tires.rear.peakSlipRatio * 1.1;
-      this.tcIntegral = clamp(this.tcIntegral - err * (err > 0 ? 30 : 6) * dt, 0.05, 1);
-      this.tcFactor = clamp(this.tcIntegral - Math.max(0, err) * 3, 0.02, 1);
+      const err = maxDrivenKappa - c.tires.rear.peakSlipRatio;
+      this.tcTrim = clamp(this.tcTrim - err * (err > 0 ? 10 : 3) * dt, 0.3, 1.25);
     } else {
-      this.tcIntegral = approach(this.tcIntegral, 1, 2 * dt);
-      this.tcFactor = 1;
+      this.tcTrim = approach(this.tcTrim, 1, 2 * dt);
     }
-    this.tcActive = ast.tc && this.tcFactor < 0.97 && throttle > 0.05;
+    this.tcActive = false;
 
     // --- ESP: yaw-rate control by individual wheel braking ---------------------
     const espBrake = [0, 0, 0, 0];
@@ -437,14 +451,24 @@ export class Vehicle {
     const eng = c.engine;
     const gb = c.gearbox;
     if (this.shiftCooldown > 0) this.shiftCooldown -= dt;
-    const thrEff = throttle * this.tcFactor * espThrottle;
+    let limiter = 1;
+    if (eng.speedLimiterKmh) limiter = clamp((eng.speedLimiterKmh + 1 - absU * 3.6) / 1.5, 0, 1);
+    this.speedLimiterOn = limiter < 1 && throttle > 0.1;
+    // Aids reduce the engine's *positive* torque; they never add engine braking.
+    const torqueCut = espThrottle * limiter;
+    const thrEff = throttle * torqueCut;
     const ratio = this.totalRatio(this.gear);
     const rpmIn = this.drivetrainOmega() * ratio * RADS_TO_RPM;
-    const lockRpm = eng.idleRpm + 450;
+    // The clutch slips until the drivetrain catches up with the engine: at idle it bites just
+    // above idle (creeping), at full throttle it holds the launch rpm (launch control).
+    const lockRpm = lerp(eng.idleRpm + 450, eng.launchRpm * 0.9, throttle);
     let clutchTorque = 0;
     this.clutchSlipping = false;
     if (this.shiftTimer > 0) this.shiftTimer -= dt;
-    if (this.gear === 0 || this.shiftTimer > 0) {
+    // Torque kept during a shift: a dual-clutch hands over from one clutch to the other (no gap),
+    // a modern automatic shifts clutch-to-clutch with a dip, a manual opens the clutch.
+    const shiftTorque = gb.type === 'dct' ? 1 : gb.type === 'automatic' ? 0.65 : 0;
+    if (this.gear === 0 || (this.shiftTimer > 0 && shiftTorque === 0)) {
       // Clutch open: engine spins freely; during a shift it is synchronised to the new gear.
       if (this.gear !== 0 && rpmIn > eng.idleRpm) {
         this.engineRpm = lerp(this.engineRpm, rpmIn, smoothFactor(dt, 0.03));
@@ -458,9 +482,11 @@ export class Vehicle {
     } else if (rpmIn < lockRpm) {
       // Clutch slipping: launch / creeping. Engine held at a launch rpm that rises with throttle.
       this.clutchSlipping = true;
-      const target = lerp(eng.idleRpm, eng.launchRpm, thrEff);
+      // The driver's pedal sets the launch rpm; traction control trims the torque that goes through.
+      const target = lerp(eng.idleRpm, eng.launchRpm, throttle);
       this.engineRpm = lerp(this.engineRpm, target, smoothFactor(dt, 0.12));
-      let tq = this.crankTorque(this.engineRpm, thrEff);
+      let tq = this.crankTorque(this.engineRpm, throttle);
+      if (tq > 0) tq *= torqueCut;
       if (tq < 0) tq *= clamp(rpmIn / lockRpm, 0, 1); // little engine braking while slipping
       const creep = ast.autoGear ? 45 * clamp(1 - rpmIn / lockRpm, 0, 1) : 0;
       clutchTorque = clamp(Math.max(tq, creep), -gb.clutchCapacity, gb.clutchCapacity);
@@ -468,10 +494,24 @@ export class Vehicle {
     } else {
       // Clutch locked: engine speed follows the wheels.
       this.engineRpm = rpmIn;
-      clutchTorque = this.crankTorque(this.engineRpm, thrEff);
+      clutchTorque = this.crankTorque(this.engineRpm, throttle);
+      if (clutchTorque > 0) clutchTorque *= torqueCut * (this.shiftTimer > 0 ? shiftTorque : 1);
       this.engineTorque = clutchTorque;
     }
     this.engineRpm = clamp(this.engineRpm, eng.idleRpm * 0.6, eng.redlineRpm + 600);
+
+    if (ast.tc && clutchTorque > 0 && ratio !== 0) {
+      let grip = 0;
+      for (const w of wheels) {
+        if (this.isDriven(w)) grip += effectiveMu(w.tire, w.fz, this.surfaceGrip) * w.tire.muLongScale * w.fz * w.tire.radius;
+      }
+      const cap = (grip * this.tcTrim) / (Math.abs(ratio) * gb.efficiency);
+      if (clutchTorque > cap) {
+        clutchTorque = cap;
+        this.engineTorque = cap;
+        this.tcActive = throttle > 0.05;
+      }
+    }
 
     // --- Distribute drive torque -----------------------------------------------
     const wheelTorque = clutchTorque * ratio * gb.efficiency;
@@ -497,6 +537,13 @@ export class Vehicle {
     }
     this.splitAxle(wheels[0], wheels[1], frontT);
     this.splitAxle(wheels[2], wheels[3], rearT);
+    const tv = c.differential.rearTorqueVectoring ?? 0;
+    if (tv > 0 && rearT > 0) {
+      // Send rear torque to the outer wheel in proportion to cornering load (left turn → right wheel).
+      const shift = rearT * 0.5 * tv * clamp(this.ayF / (0.8 * G), -1, 1);
+      wheels[2].driveTorque -= shift;
+      wheels[3].driveTorque += shift;
+    }
 
     // --- Brakes + ABS --------------------------------------------------------
     this.absActive = false;
@@ -576,7 +623,7 @@ export class Vehicle {
     }
 
     // --- Aerodynamic drag ------------------------------------------------------
-    sumFx -= 0.5 * AIR_DENSITY * c.aero.cdA * this.u * Math.abs(this.u);
+    sumFx -= 0.5 * AIR_DENSITY * cdA * this.u * Math.abs(this.u);
 
     // --- Integrate the body ---------------------------------------------------------
     const ax = sumFx / m;

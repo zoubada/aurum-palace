@@ -1,0 +1,122 @@
+import type { CarConfig, CarPhysicsConfig } from '../types';
+import { overhangsFromCg, tire, tireRadius, withDriver, yawInertia } from '../helpers';
+
+// McLaren 720S (2017–2023). M840T 4.0 V8 biturbo (flat-plane crank), 720 PS @ 7500 / 770 N·m @ 5500,
+// 7-speed SSG dual-clutch, RWD, active rear wing with airbrake. Pirelli P Zero Corsa.
+// Kerb weight DIN 1419 kg. Gear ratios are close estimates.
+const rf = tireRadius(245, 35, 19);
+const rr = tireRadius(305, 30, 20);
+const kerb = 1419;
+const physics: CarPhysicsConfig = {
+  mass: withDriver(kerb),
+  wheelbase: 2.67,
+  frontWeightFraction: 0.42,
+  trackFront: 1.674,
+  trackRear: 1.629,
+  cgHeight: 0.4,
+  yawInertia: yawInertia(withDriver(kerb), 2.67, 0.42, 0.95),
+  drive: 'RWD',
+  engine: {
+    idleRpm: 900,
+    redlineRpm: 8500,
+    torqueCurve: [
+      [800, 340],
+      [2500, 580],
+      [4000, 720],
+      [5500, 770],
+      [6500, 740],
+      [7500, 675],
+      [8100, 600],
+      [8600, 510],
+    ],
+    engineBrakeTorque: 120,
+    inertia: 0.16,
+    launchRpm: 4500,
+    turbo: true,
+  },
+  gearbox: {
+    type: 'dct',
+    ratios: [3.98, 2.61, 1.91, 1.48, 1.16, 0.91, 0.69],
+    reverseRatio: 3.3,
+    finalDrive: 3.31,
+    shiftTime: 0.06,
+    efficiency: 0.9,
+    clutchCapacity: 850,
+  },
+  differential: {
+    frontTorqueSplit: 0,
+    lockingCoefficient: 70,
+    maxLockFraction: 0.4,
+    centerLockingCoefficient: 0,
+    centerMaxLockFraction: 0,
+  },
+  tires: {
+    front: tire(rf, 1.28, { nominalLoad: 3000, shapeC: 1.35 }),
+    rear: tire(rr, 1.34, { nominalLoad: 4300, shapeC: 1.35 }),
+  },
+  brakes: { maxTorqueFront: 3800, maxTorqueRear: 2900, handbrakeTorque: 2500 },
+  suspension: {
+    rollStiffnessFront: 0.52,
+    wheelRateFront: 60000,
+    wheelRateRear: 70000,
+    rollGradient: 1.6,
+    pitchGradient: 1.1,
+    bodyFrequency: 2.1,
+    bodyDamping: 0.6,
+  },
+  aero: {
+    cdA: 0.85,
+    clAFront: 0.25,
+    clARear: 0.35,
+    activeWing: { mode: 'airbrake', cdADelta: 0.45, clARearDelta: 0.7, minSpeedKmh: 100 },
+  },
+  steering: { maxAngle: 0.56, steeringWheelMaxDeg: 360 },
+};
+
+export const mclaren720s: CarConfig = {
+  id: 'mclaren-720s',
+  name: 'McLaren 720S',
+  placeholder: true,
+  physics,
+  visual: {
+    model: 'assets/cars/mclaren-720s/model.glb',
+    brand: 'McLaren',
+    length: 4.543,
+    width: 1.93,
+    height: 1.196,
+    ...overhangsFromCg(physics, 0.98, 0.89),
+    bodyStyle: 'midengine',
+    headlights: 'mclaren-socket',
+    taillights: 'mclaren-c',
+    grille: 'mclaren-intakes',
+    wing: 'active-blade',
+    dash: 'mclaren-folding',
+    doors: 'dihedral',
+    exhaust: { count: 2, layout: 'center' },
+    paints: [
+      { name: 'Orange Azores', color: 0xd0561a, metallic: 0.7 },
+      { name: 'Papaya Spark', color: 0xff7a0d, metallic: 0.5 },
+      { name: 'Bleu Aurora', color: 0x2c60ad, metallic: 0.7 },
+      { name: 'Or Aztec', color: 0x8b6a3b, metallic: 0.8 },
+      { name: 'Blanc Silica', color: 0xedeeec, metallic: 0 },
+      { name: 'Noir Onyx', color: 0x0d0d0f, metallic: 0.6 },
+    ],
+    paint: 0xd0561a,
+    rimColors: [
+      { name: 'Argent', color: 0xbcc0c3 },
+      { name: 'Noir brillant', color: 0x151618 },
+      { name: 'Graphite', color: 0x3a3c3f },
+    ],
+    rim: 0x3a3c3f,
+    caliper: 0xe56a12,
+    driverEye: [0.34, 0.98, 0.35],
+  },
+  reference: {
+    zeroTo100: 2.9,
+    topSpeedKmh: 341,
+    powerHp: 720,
+    torqueNm: 770,
+    massKg: kerb,
+    source: 'McLaren Automotive, fiche 720S Coupé 2017',
+  },
+};

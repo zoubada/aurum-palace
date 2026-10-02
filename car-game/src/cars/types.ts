@@ -31,6 +31,10 @@ export interface EngineConfig {
   inertia: number;
   /** Engine speed held while the clutch slips at launch (launch control). */
   launchRpm: number;
+  /** Electronic top-speed limiter (km/h). Omit for none. */
+  speedLimiterKmh?: number;
+  /** Turbocharged engines: used by the sound (spool whistle, blow-off). */
+  turbo?: boolean;
 }
 
 export interface GearboxConfig {
@@ -58,6 +62,11 @@ export interface DifferentialConfig {
   centerLockingCoefficient: number;
   /** Max fraction of the total torque the centre coupling can move between axles. */
   centerMaxLockFraction: number;
+  /**
+   * Rear torque vectoring (e.g. Audi RS Torque Splitter): fraction of the rear-axle torque
+   * that can be sent to the outer wheel in a corner. 0 / omitted = none.
+   */
+  rearTorqueVectoring?: number;
 }
 
 export interface CarPhysicsConfig {
@@ -102,6 +111,11 @@ export interface CarPhysicsConfig {
     /** Lift coefficient × area per axle (m², positive = downforce). */
     clAFront: number;
     clARear: number;
+    /**
+     * Active rear wing. 'drs' flattens the wing on full throttle in a straight line (911 GT3 RS);
+     * 'airbrake' raises it under hard braking (McLaren 720S). Deltas are added to cdA / clARear.
+     */
+    activeWing?: { mode: 'drs' | 'airbrake'; cdADelta: number; clARearDelta: number; minSpeedKmh: number };
   };
   steering: {
     /** Max road-wheel angle at standstill (rad). */
@@ -111,14 +125,42 @@ export interface CarPhysicsConfig {
   };
 }
 
+export type BodyStyle = 'hatch' | 'wagon' | 'sedan' | 'fastback' | 'coupe' | 'midengine';
+export type HeadlightStyle = 'audi-matrix' | 'porsche-quad' | 'ford-tribar' | 'bmw-l' | 'nissan-boomerang' | 'mclaren-socket' | 'generic';
+export type TaillightStyle = 'audi-strip' | 'porsche-bar' | 'ford-tribar' | 'bmw-l' | 'nissan-quad-round' | 'mclaren-c' | 'generic';
+export type GrilleStyle = 'audi-singleframe' | 'porsche-intakes' | 'ford-pony' | 'bmw-kidney' | 'nissan-v' | 'mclaren-intakes' | 'generic';
+export type WingStyle = 'none' | 'lip' | 'roof-spoiler' | 'gt3rs-swan' | 'active-blade' | 'gtr-wing';
+export type DashStyle = 'audi-virtual' | 'porsche-gt' | 'ford-digital' | 'bmw-curved' | 'nissan-analog' | 'mclaren-folding' | 'generic';
+
+export interface PaintOption {
+  name: string;
+  color: number;
+  /** 0 = solid, 1 = strong metallic flake. */
+  metallic: number;
+}
+
 export interface CarVisualConfig {
+  /** Path of the real model (assets/cars/<id>/model.glb). Loaded when present, else placeholder. */
+  model?: string;
+  brand: string;
   length: number;
   width: number;
   height: number;
   /** Distance from the CG to the front / rear bumper (m). */
   frontOverhangFromCg: number;
   rearOverhangFromCg: number;
+  bodyStyle: BodyStyle;
+  headlights: HeadlightStyle;
+  taillights: TaillightStyle;
+  grille: GrilleStyle;
+  wing: WingStyle;
+  dash: DashStyle;
+  doors: 'conventional' | 'dihedral';
+  exhaust: { count: 2 | 4; layout: 'corners' | 'center' | 'wide' };
+  /** Factory colours (first = default). */
+  paints: PaintOption[];
   paint: number;
+  rimColors: Array<{ name: string; color: number }>;
   rim: number;
   caliper: number;
   /** Driver eye position in car space (x left, y up, z forward, origin under the CG). */
@@ -131,6 +173,7 @@ export interface CarReference {
   topSpeedKmh: number;
   powerHp: number;
   torqueNm: number;
+  massKg: number;
   /** Where the numbers come from. */
   source: string;
 }

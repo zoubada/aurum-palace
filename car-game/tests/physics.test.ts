@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { placeholderCar } from '../src/cars/placeholder/config';
+import { audiRs3 } from '../src/cars/audi-rs3-8y/config';
 import { ASSIST_PRESETS, Vehicle, type DriveInput } from '../src/physics/vehicle';
 import { collideWalls, outlinePoints, rectangleWalls } from '../src/physics/collision';
 import { G } from '../src/physics/math';
+import { braking100 } from '../src/physics/benchmark';
 
 const DT = 1 / 240;
-const cfg = placeholderCar;
+// Generic behaviour tests run on one AWD car; per-car figures are checked in cars.test.ts.
+const cfg = audiRs3;
 
 function makeCar(preset: keyof typeof ASSIST_PRESETS = 'intermediate'): Vehicle {
   const v = new Vehicle(cfg.physics);
@@ -47,37 +49,6 @@ describe('vehicle physics — straight line', () => {
     expect(v.u).toBeLessThan(2.5);
   });
 
-  it('accelerates 0–100 km/h close to the reference time', () => {
-    const v = makeCar();
-    const t = runUntil(v, input({ throttle: 1 }), () => v.speedKmh >= 100, 20);
-    console.log(`0-100 km/h: ${t.toFixed(2)} s (reference ${cfg.reference.zeroTo100} s)`);
-    expect(t).toBeGreaterThan(cfg.reference.zeroTo100 - 0.5);
-    expect(t).toBeLessThan(cfg.reference.zeroTo100 + 0.5);
-    // Straight line: no yaw drift.
-    expect(Math.abs(v.yaw)).toBeLessThan(1e-3);
-  });
-
-  it('reaches a top speed close to the reference', () => {
-    const v = makeCar();
-    let last = 0;
-    runUntil(
-      v,
-      input({ throttle: 1 }),
-      (t) => {
-        if (t % 5 < DT) {
-          const done = Math.abs(v.u - last) < 0.05;
-          last = v.u;
-          return done && t > 20;
-        }
-        return false;
-      },
-      180,
-    );
-    console.log(`Top speed: ${v.speedKmh.toFixed(1)} km/h in gear ${v.gear} @ ${v.engineRpm.toFixed(0)} rpm (reference ${cfg.reference.topSpeedKmh})`);
-    expect(v.speedKmh).toBeGreaterThan(cfg.reference.topSpeedKmh * 0.95);
-    expect(v.speedKmh).toBeLessThan(cfg.reference.topSpeedKmh * 1.05);
-  });
-
   it('brakes 100–0 km/h in a realistic distance with ABS', () => {
     const v = makeCar();
     runUntil(v, input({ throttle: 1 }), () => v.speedKmh >= 100);
@@ -99,8 +70,10 @@ describe('vehicle physics — straight line', () => {
     const z0 = v.z;
     runUntil(v, input({ brake: 1 }), () => v.u < 0.1, 10);
     const dist = Math.hypot(v.x - x0, v.z - z0);
-    console.log(`100-0 km/h (no ABS, wheels locked): ${dist.toFixed(1)} m`);
-    expect(dist).toBeGreaterThan(38);
+    const withAbs = braking100(cfg.physics);
+    console.log(`100-0 km/h: ${withAbs.toFixed(1)} m with ABS, ${dist.toFixed(1)} m wheels locked`);
+    // Locked tires slide at their (lower) sliding grip level.
+    expect(dist).toBeGreaterThan(withAbs * 1.03);
   });
 
   it('selects reverse with the brake pedal at standstill and drives backwards', () => {
