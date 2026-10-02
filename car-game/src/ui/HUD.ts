@@ -33,6 +33,9 @@ export class HUD {
   private readonly help: HTMLDivElement;
   private readonly debug: HTMLPreElement;
   private readonly toast: HTMLDivElement;
+  private readonly menuButton: HTMLButtonElement;
+  /** Called by the on-screen menu button. */
+  onMenu: (() => void) | null = null;
   private readonly banner: HTMLDivElement;
   private toastTimer = 0;
   private gTrail: Array<[number, number]> = [];
@@ -100,8 +103,19 @@ export class HUD {
       '<b>Espace</b> frein à main',
       '<b>E / A·Q</b> rapport + / −',
       '<b>C</b> caméra · <b>V</b> regarder derrière',
-      '<b>R</b> replacer · <b>Échap</b> menu',
+      '<b>R</b> replacer · <b>Échap / P</b> menu et aides',
     ].join('<br>');
+
+    // Mouse access to the pause menu (Escape can be taken by the browser or an embedding page).
+    this.menuButton = el('button', 'hud-menu-btn', this.root);
+    this.menuButton.type = 'button';
+    this.menuButton.innerHTML = '<span class="ico">☰</span> Menu · aides <small>Échap / P</small>';
+    // Keep keyboard focus on the game: a focused button would also react to Space (handbrake).
+    this.menuButton.addEventListener('mousedown', (e) => e.preventDefault());
+    this.menuButton.addEventListener('click', () => {
+      this.menuButton.blur();
+      this.onMenu?.();
+    });
 
     this.toast = el('div', 'hud-toast', this.root);
     this.debug = el('pre', 'hud-debug', this.root);

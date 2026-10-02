@@ -129,6 +129,7 @@ export class DriveSession implements Screen {
 
     // --- UI.
     this.hud = new HUD(app.uiRoot, car.name, true);
+    this.hud.onMenu = () => this.setPaused(!this.paused);
     if (this.track.spline) this.raceHud = new RaceHUD(app.uiRoot, this.track.minimap(), this.track.sectors.length, count > 0);
     this.racingLineOn = loadJSON<{ on: boolean }>('racingLine', { on: false }).on;
     this.applyRacingLine();
