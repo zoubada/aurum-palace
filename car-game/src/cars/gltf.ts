@@ -24,21 +24,33 @@ function getLoader(renderer: THREE.WebGLRenderer): GLTFLoader {
   return loader;
 }
 
+/** Shared single-file build: binaries come as base64 text (`<file>.txt`), the host serves text only. */
+const asText = () => !!(window as unknown as { __BIN_AS_TEXT__?: boolean }).__BIN_AS_TEXT__;
+
 /** True when the model file exists (dev servers answer missing files with index.html). */
 export async function modelAvailable(url: string): Promise<boolean> {
-  // Single-file builds (shared link) carry no model files: skip the probe.
+  // Single-file builds opened from disk carry no model files: skip the probe.
   if ((window as unknown as { __NO_MODELS__?: boolean }).__NO_MODELS__ || location.protocol === 'file:') return false;
   try {
-    const res = await fetch(url, { method: 'HEAD' });
+    const res = await fetch(asText() ? `${url}.txt` : url, { method: asText() ? 'GET' : 'HEAD' });
     const type = res.headers.get('content-type') ?? '';
-    return res.ok && !type.includes('text/html');
+    const ok = res.ok && !type.includes('text/html');
+    if (asText()) void res.body?.cancel();
+    return ok;
   } catch {
     return false;
   }
 }
 
 export async function loadCarModel(url: string, car: CarConfig, frontAxleZ: number, renderer: THREE.WebGLRenderer): Promise<CarParts> {
-  const gltf = await getLoader(renderer).loadAsync(url);
+  const loader = getLoader(renderer);
+  let gltf;
+  if (asText()) {
+    const bin = atob((await (await fetch(`${url}.txt`)).text()).trim());
+    const bytes = new Uint8Array(bin.length);
+    for (let k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k);
+    gltf = await loader.parseAsync(bytes.buffer, url.replace(/[^/]*$/, ''));
+  } else gltf = await loader.loadAsync(url);
   return mapCarModel(gltf.scene, car, frontAxleZ);
 }
 

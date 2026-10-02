@@ -1262,3 +1262,11 @@ body {
     max-height: none;
   }
 }
+
+.g-credit {
+  max-width: 330px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}

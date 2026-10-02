@@ -1,0 +1,9 @@
+Porsche 911 GT3 RS (992) '23
+Auteur : Mona x Supercars — https://sketchfab.com/Car2022
+Source : https://sketchfab.com/3d-models/porsche-911-gt3-rs-992-23-99c74d8fa7df42d984903868f6e593f6
+Licence : Creative Commons Attribution 4.0 (CC-BY-4.0) — https://creativecommons.org/licenses/by/4.0/
+
+Modifications : modèle remis à l'échelle (mètres), orienté (avant vers +Z), roues, étriers, volant,
+aileron, feux, écran de compteurs et sorties d'échappement détachés en nœuds animables, matériaux
+renommés pour le jeu, textures converties en WebP (1024 px max) et géométrie compressée (meshopt).
+Script : tools/cars/prepare-porsche.mjs

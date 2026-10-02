@@ -71,6 +71,11 @@ export class CarVisual {
     (this as { isPlaceholder: boolean }).isPlaceholder = parts.body.name === 'placeholder-body';
     this.placeFlames();
     this.setNight(this.night);
+    // Factory paint and rims of the configuration (the garage / session may override later).
+    const v = this.config.visual;
+    const paint = v.paints.find((x) => x.color === v.paint);
+    if (paint) this.setPaint(paint);
+    this.setRim(v.rim);
   }
 
   /**

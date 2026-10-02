@@ -143,6 +143,8 @@ export interface PaintOption {
 export interface CarVisualConfig {
   /** Path of the real model (assets/cars/<id>/model.glb). Loaded when present, else placeholder. */
   model?: string;
+  /** Attribution required by the model's licence (shown in the garage). */
+  modelCredit?: string;
   brand: string;
   length: number;
   width: number;

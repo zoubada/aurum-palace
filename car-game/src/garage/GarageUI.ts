@@ -121,7 +121,7 @@ export class GarageUI {
         <div class="g-kicker">Garage</div>
         <div class="g-brand">${escapeHtml(c.visual.brand)}</div>
         <h1>${escapeHtml(c.name.replace(c.visual.brand, '').trim())}</h1>
-        ${this.placeholder ? `<div class="g-chip" title="Déposez assets/cars/${c.id}/model.glb pour le remplacer">Modèle 3D provisoire</div>` : ''}
+        ${this.placeholder ? `<div class="g-chip" title="Déposez assets/cars/${c.id}/model.glb pour le remplacer">Modèle 3D provisoire</div>` : c.visual.modelCredit ? `<div class="g-credit">${escapeHtml(c.visual.modelCredit)}</div>` : ''}
       </header>
 
       <nav class="g-list" aria-label="Voitures">

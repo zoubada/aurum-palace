@@ -80,6 +80,7 @@ export const porscheGt3Rs: CarConfig = {
   sound: { cylinders: 6, roughness: 0.12, brightness: 0.95, intake: 0.85, turbo: 0, pops: 0.25, seed: 36 },
   visual: {
     model: 'assets/cars/porsche-911-gt3-rs-992/model.glb',
+    modelCredit: 'Modèle 3D « Porsche 911 GT3 RS (992) \'23 » par Mona x Supercars (Sketchfab), licence CC-BY 4.0 — adapté pour le jeu',
     brand: 'Porsche',
     length: 4.572,
     width: 1.9,
