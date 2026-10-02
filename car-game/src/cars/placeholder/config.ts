@@ -1,0 +1,122 @@
+import type { CarConfig } from '../types';
+
+/**
+ * PLACEHOLDER car: a generic ~450 hp AWD sports coupé used to develop the
+ * physics, cameras and HUD in Phase 1. It is NOT one of the 7 real cars; those
+ * arrive in Phase 2 with their official figures and 3D models.
+ */
+export const placeholderCar: CarConfig = {
+  id: 'placeholder-gt',
+  name: 'Prototype GT (provisoire)',
+  placeholder: true,
+  physics: {
+    mass: 1550,
+    wheelbase: 2.7,
+    frontWeightFraction: 0.57,
+    trackFront: 1.6,
+    trackRear: 1.58,
+    cgHeight: 0.5,
+    yawInertia: 2750,
+    drive: 'AWD',
+    engine: {
+      idleRpm: 900,
+      redlineRpm: 7200,
+      torqueCurve: [
+        [800, 230],
+        [1500, 380],
+        [2200, 500],
+        [3000, 560],
+        [5600, 560],
+        [6400, 495],
+        [7000, 440],
+        [7400, 390],
+      ],
+      engineBrakeTorque: 110,
+      inertia: 0.22,
+      launchRpm: 3800,
+    },
+    gearbox: {
+      type: 'dct',
+      ratios: [3.56, 2.53, 1.68, 1.22, 1.0, 0.82, 0.67],
+      reverseRatio: 3.2,
+      finalDrive: 3.3,
+      shiftTime: 0.09,
+      efficiency: 0.88,
+      clutchCapacity: 700,
+    },
+    differential: {
+      frontTorqueSplit: 0.4,
+      lockingCoefficient: 40,
+      maxLockFraction: 0.35,
+      centerLockingCoefficient: 300,
+      centerMaxLockFraction: 0.35,
+    },
+    tires: {
+      front: {
+        radius: 0.345,
+        inertia: 1.5,
+        mu: 1.12,
+        loadSensitivity: 0.12,
+        nominalLoad: 4000,
+        peakSlipRatio: 0.11,
+        peakSlipAngle: 0.13,
+        shapeC: 1.4,
+        relaxationLength: 0.35,
+        rollingResistance: 0.012,
+      },
+      rear: {
+        radius: 0.345,
+        inertia: 1.6,
+        mu: 1.15,
+        loadSensitivity: 0.12,
+        nominalLoad: 3400,
+        peakSlipRatio: 0.11,
+        peakSlipAngle: 0.13,
+        shapeC: 1.4,
+        relaxationLength: 0.35,
+        rollingResistance: 0.012,
+      },
+    },
+    brakes: {
+      maxTorqueFront: 3300,
+      maxTorqueRear: 1700,
+      handbrakeTorque: 2500,
+    },
+    suspension: {
+      rollStiffnessFront: 0.56,
+      wheelRateFront: 42000,
+      wheelRateRear: 38000,
+      rollGradient: 2.6,
+      pitchGradient: 1.8,
+      bodyFrequency: 1.6,
+      bodyDamping: 0.55,
+    },
+    aero: {
+      cdA: 0.8,
+      clAFront: 0.08,
+      clARear: 0.12,
+    },
+    steering: {
+      maxAngle: 0.6,
+      steeringWheelMaxDeg: 450,
+    },
+  },
+  visual: {
+    length: 4.55,
+    width: 1.92,
+    height: 1.38,
+    frontOverhangFromCg: 2.06,
+    rearOverhangFromCg: 2.49,
+    paint: 0x1d4f91,
+    rim: 0x2b2d31,
+    caliper: 0xd11a1a,
+    driverEye: [0.37, 1.13, -0.2],
+  },
+  reference: {
+    zeroTo100: 3.9,
+    topSpeedKmh: 290,
+    powerHp: 450,
+    torqueNm: 560,
+    source: 'Cibles de conception du prototype (pas une voiture réelle)',
+  },
+};
