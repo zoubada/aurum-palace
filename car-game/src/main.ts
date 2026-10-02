@@ -13,6 +13,21 @@ const tips = [
 const tipEl = document.getElementById('loading-tip');
 if (tipEl) tipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
 
+/** Keyboard events only reach the game once it has focus (e.g. when embedded in another page). */
+function showFocusHint(): void {
+  if (document.hasFocus()) return;
+  const hint = document.createElement('button');
+  hint.className = 'focus-hint';
+  hint.textContent = 'Cliquez ici pour prendre le volant';
+  const dismiss = () => {
+    window.focus();
+    hint.remove();
+  };
+  hint.addEventListener('click', dismiss);
+  window.addEventListener('focus', () => hint.remove(), { once: true });
+  ui.appendChild(hint);
+}
+
 function fail(err: unknown): void {
   console.error(err);
   loading.classList.add('error');
@@ -30,6 +45,7 @@ requestAnimationFrame(() =>
       (window as unknown as { __game: Game }).__game = game;
       loading.classList.add('done');
       setTimeout(() => loading.remove(), 800);
+      showFocusHint();
     } catch (err) {
       fail(err);
     }

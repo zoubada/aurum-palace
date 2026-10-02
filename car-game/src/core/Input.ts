@@ -86,7 +86,13 @@ export class Input {
   }
 
   private activePad(): Gamepad | null {
-    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let pads: ReadonlyArray<Gamepad | null> = [];
+    try {
+      // Throws when the page is embedded in a frame that does not allow gamepads.
+      pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    } catch {
+      return null;
+    }
     for (const p of pads) if (p && p.connected) return p;
     return null;
   }

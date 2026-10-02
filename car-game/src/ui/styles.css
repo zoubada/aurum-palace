@@ -600,3 +600,19 @@ body {
     transform-origin: bottom left;
   }
 }
+
+.focus-hint {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  font: 600 16px var(--font);
+  color: #1b1405;
+  background: var(--accent);
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 26px;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
