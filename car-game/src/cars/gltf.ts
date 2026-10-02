@@ -20,8 +20,50 @@ function getLoader(renderer: THREE.WebGLRenderer): GLTFLoader {
     const draco = new DRACOLoader().setDecoderPath('decoders/draco/');
     const ktx2 = new KTX2Loader().setTranscoderPath('decoders/basis/').detectSupport(renderer);
     loader = new GLTFLoader().setDRACOLoader(draco).setKTX2Loader(ktx2).setMeshoptDecoder(MeshoptDecoder);
+    loader.register((parser) => {
+      decodeEmbeddedImages(parser);
+      return { name: 'apex_embedded_images' };
+    });
   }
   return loader;
+}
+
+type Parser = Parameters<Parameters<GLTFLoader['register']>[0]>[0];
+
+/**
+ * Embedded GLB images decoded straight from their bytes with createImageBitmap. The stock path
+ * goes through a `blob:` object URL loaded by an <img> (Safari < 17), which the sandboxed page
+ * host can refuse: the model then shows up untextured (white cabin, opaque grey windows).
+ */
+function decodeEmbeddedImages(parser: Parser): void {
+  if (typeof createImageBitmap === 'undefined') return;
+  const p = parser as unknown as {
+    json: { images?: Array<{ bufferView?: number; mimeType?: string; name?: string }> };
+    sourceCache: Record<number, Promise<THREE.Texture>>;
+    loadImageSource: (index: number, loader: unknown) => Promise<THREE.Texture>;
+    getDependency: (type: string, index: number) => Promise<ArrayBuffer>;
+  };
+  const original = p.loadImageSource.bind(parser);
+  p.loadImageSource = (index, imageLoader) => {
+    const def = p.json.images?.[index];
+    if (!def || def.bufferView === undefined) return original(index, imageLoader);
+    if (p.sourceCache[index] !== undefined) return p.sourceCache[index].then((t) => t.clone());
+    const promise = p.getDependency('bufferView', def.bufferView).then(async (bytes) => {
+      const blob = new Blob([bytes], { type: def.mimeType });
+      let bitmap: ImageBitmap;
+      try {
+        bitmap = await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
+      } catch {
+        bitmap = await createImageBitmap(blob);
+      }
+      const texture = new THREE.Texture(bitmap);
+      texture.needsUpdate = true;
+      texture.userData.mimeType = def.mimeType;
+      return texture;
+    });
+    p.sourceCache[index] = promise;
+    return promise;
+  };
 }
 
 /** Shared single-file build: binaries come as base64 text (`<file>.txt`), the host serves text only. */

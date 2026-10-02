@@ -176,3 +176,23 @@ export function extract(doc, prim, keep, offset = [0, 0, 0]) {
   np.setMode(prim.getMode());
   return np;
 }
+
+/**
+ * Textures re-encoded in formats every browser decodes (older Safari has no WebP): JPEG, or PNG
+ * when the alpha channel is used. Longest side capped at `max` px.
+ */
+export async function encodeTextures(doc, sharp, { max = 1024, quality = 86 } = {}) {
+  for (const tex of doc.getRoot().listTextures()) {
+    const src = tex.getImage();
+    if (!src) continue;
+    let img = sharp(Buffer.from(src));
+    const meta = await img.metadata();
+    if (Math.max(meta.width, meta.height) > max) img = img.resize(max, max, { fit: 'inside' });
+    let alpha = false;
+    if (meta.hasAlpha) alpha = (await sharp(Buffer.from(src)).stats()).channels[3].min < 250;
+    const out = alpha ? await img.png({ compressionLevel: 9, palette: false }).toBuffer() : await img.flatten({ background: '#000' }).jpeg({ quality, mozjpeg: true }).toBuffer();
+    tex.setImage(new Uint8Array(out)).setMimeType(alpha ? 'image/png' : 'image/jpeg');
+    const uri = tex.getURI();
+    if (uri) tex.setURI(uri.replace(/\.[a-z0-9]+$/i, alpha ? '.png' : '.jpg'));
+  }
+}

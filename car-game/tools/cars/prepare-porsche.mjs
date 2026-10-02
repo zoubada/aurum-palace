@@ -11,12 +11,12 @@
  */
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { dedup, meshopt, prune, textureCompress } from '@gltf-transform/functions';
+import { dedup, meshopt, prune } from '@gltf-transform/functions';
 import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer';
 import sharp from 'sharp';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { bbox, extract, flatten, indicesOf, transformAll, triCentroid } from './lib.mjs';
+import { bbox, encodeTextures, extract, flatten, indicesOf, transformAll, triCentroid } from './lib.mjs';
 
 const SRC = process.argv[2];
 const REPORT = process.argv.includes('--report');
@@ -340,14 +340,14 @@ for (const [i, x] of [[0, 0.1], [1, -0.1]]) scene.addChild(doc.createNode(`exhau
 scene.addChild(doc.createNode('driver_eye').setTranslation([0.36, 0.99, -1.52]));
 
 // =============================================================================
-// Output: weld/dedup/prune, textures to WebP ≤ 1024 px.
+// Output: weld/dedup/prune, textures to JPEG / PNG ≤ 1024 px.
 // =============================================================================
 await doc.transform(
   prune({ keepLeaves: true }), // keep the empty marker nodes (driver_eye, exhaust_tip_N)
   dedup(),
-  textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [1024, 1024], quality: 82 }),
   meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
 );
+await encodeTextures(doc, sharp);
 const asset = root.getAsset();
 asset.generator = 'apex tools/cars/prepare-porsche.mjs';
 asset.extras = { author: 'Mona x Supercars (https://sketchfab.com/Car2022)', license: 'CC-BY-4.0', source: 'https://sketchfab.com/3d-models/porsche-911-gt3-rs-992-23-99c74d8fa7df42d984903868f6e593f6', title: "Porsche 911 GT3 RS (992) '23" };

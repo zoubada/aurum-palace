@@ -12,12 +12,12 @@
  */
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { dedup, meshopt, prune, textureCompress } from '@gltf-transform/functions';
+import { dedup, meshopt, prune } from '@gltf-transform/functions';
 import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer';
 import sharp from 'sharp';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { bbox, extract, flatten, indicesOf, transformAll, triCentroid } from './lib.mjs';
+import { bbox, encodeTextures, extract, flatten, indicesOf, transformAll, triCentroid } from './lib.mjs';
 
 const SRC = process.argv[2];
 const REPORT = process.argv.includes('--report');
@@ -396,9 +396,9 @@ void S;
 await doc.transform(
   prune({ keepLeaves: true }), // keep the empty marker nodes (driver_eye, exhaust_tip_N)
   dedup(),
-  textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [1024, 1024], quality: 88 }),
   meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
 );
+await encodeTextures(doc, sharp);
 const asset = root.getAsset();
 asset.generator = 'apex tools/cars/prepare-rs3.mjs';
 asset.extras = { title: '2021 Audi RS3 Sportback', source: 'Sketchfab', license: 'voir CREDITS.txt' };

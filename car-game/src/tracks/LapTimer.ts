@@ -1,7 +1,8 @@
 /**
  * Lap timing (SPEC §5 "chronos, tours, checkpoints, pénalités de raccourci"):
- * start/finish line, sectors, checkpoints every 250 m that must be passed in order, and lap
- * invalidation when the car leaves the track (all four wheels off) or cuts the circuit.
+ * start/finish line, sectors, checkpoints every 250 m that must be passed in order. With `strict`
+ * set, a lap is invalidated when the car leaves the track (all four wheels off) or cuts the
+ * circuit; off by default (every lap counts), the street circuits have no clear limits.
  */
 
 export interface LapRecord {
@@ -28,6 +29,8 @@ export class LapTimer {
   current = 0;
   valid = true;
   invalidReason = '';
+  /** Invalidate laps for track limits and shortcuts. */
+  strict = false;
   sectorTimes: number[] = [];
   lastLap: LapRecord | null = null;
   bestLap: LapRecord | null = null;
@@ -75,7 +78,7 @@ export class LapTimer {
   }
 
   private invalidate(reason: string, ev: TimerEvents): void {
-    if (!this.valid || !this.started) return;
+    if (!this.strict || !this.valid || !this.started) return;
     this.valid = false;
     this.invalidReason = reason;
     ev.invalidated = reason;

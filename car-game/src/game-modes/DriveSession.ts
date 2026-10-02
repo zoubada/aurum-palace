@@ -30,6 +30,8 @@ const PHYSICS_DT = 1 / 240;
 const MAX_STEPS_PER_FRAME = 24;
 /** Start lights: 5 s of red lamps, then go. */
 const COUNTDOWN = 5.6;
+/** Seconds the green start lights stay on screen after the start. */
+const LIGHTS_OUT_AFTER = 1.5;
 
 interface Opponent {
   racer: Racer;
@@ -367,6 +369,9 @@ export class DriveSession implements Screen {
           this.world.hold = false;
           this.hud.showToast('Départ !');
         }
+      } else if (this.countdown > -LIGHTS_OUT_AFTER) {
+        // Green lights stay up a moment after the start, then the panel goes away.
+        this.countdown -= dt;
       }
       const held = this.countdown > 0;
       this.accumulator += dt;
@@ -411,7 +416,7 @@ export class DriveSession implements Screen {
     this.mirrors.update(this.app.renderer.renderer, this.scene, this.visual, (mode === 'cockpit' || mode === 'hood') && !input.lookBack);
     this.hud.update(dt, v, input.drive.steer);
     this.raceHud?.update(dt, this.player, this.world.racers);
-    this.raceHud?.setCountdown(this.opponents.length > 0 && this.countdown > -1.5 ? this.countdown : null);
+    this.raceHud?.setCountdown(this.opponents.length > 0 && this.countdown > -LIGHTS_OUT_AFTER ? this.countdown : null);
     this.hud.perf.sim = performance.now() - t0;
   }
 
