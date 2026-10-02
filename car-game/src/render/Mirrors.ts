@@ -27,7 +27,7 @@ export class Mirrors {
       rt.texture.wrapS = THREE.RepeatWrapping;
       rt.texture.repeat.x = -1; // a mirror shows the scene flipped left/right
       rt.texture.offset.x = 1;
-      const cam = new THREE.PerspectiveCamera(interior ? 22 : 26, interior ? 4 : 2, 0.2, 800);
+      const cam = new THREE.PerspectiveCamera(interior ? 22 : 26, interior ? 4 : 2, 0.2, 350);
       m.mesh.material = new THREE.MeshBasicMaterial({ map: rt.texture });
       // Exterior mirrors are aimed slightly outwards (left mirror looks back-left).
       const yaw = m.kind === 'left' ? -0.22 : m.kind === 'right' ? 0.22 : 0;

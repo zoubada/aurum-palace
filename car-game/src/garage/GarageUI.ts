@@ -2,6 +2,8 @@ import type { CarConfig } from '../cars/types';
 import { defaultSetup, applySetup, type CarSetup } from '../cars/setup';
 import { topSpeed, zeroTo } from '../physics/benchmark';
 import { QUALITY_PRESETS, type QualityId } from '../core/quality';
+import { loadJSON } from '../core/storage';
+import { DEFAULT_DRIVE, MAX_OPPONENTS, TRACK_NAMES, type DriveOptions, type TrackId } from '../game-modes/options';
 
 /**
  * Garage interface: car list, spec sheet with comparison bars, paint / rims, setup sliders.
@@ -13,7 +15,7 @@ export interface GarageCallbacks {
   onSetup(setup: CarSetup): void;
   /** Toggle the doors; returns the new state. */
   onDoors(): boolean;
-  onDrive(): void;
+  onDrive(options: DriveOptions): void;
   onQuality(q: QualityId): void;
 }
 
@@ -58,6 +60,7 @@ export class GarageUI {
   private quality: QualityId = 'high';
   private simTimer = 0;
   private sim: { zeroTo100: number; topSpeed: number } | null = null;
+  private drive: DriveOptions = { ...DEFAULT_DRIVE, ...loadJSON<Partial<DriveOptions>>('drive', {}) };
 
   constructor(
     parent: HTMLElement,
@@ -147,11 +150,28 @@ export class GarageUI {
             ${(Object.keys(QUALITY_PRESETS) as QualityId[]).map((q) => `<option value="${q}" ${q === this.quality ? 'selected' : ''}>${QUALITY_PRESETS[q].label}</option>`).join('')}
           </select>
         </label>
-        <button class="g-drive" data-action="drive">Rouler <span>· piste d'essai</span></button>
+        ${this.raceHtml()}
+        <button class="g-drive" data-action="drive">Rouler <span>· ${escapeHtml(TRACK_NAMES[this.drive.track])}</span></button>
         <div class="g-hint">Glisser pour tourner autour · molette pour zoomer</div>
       </footer>`;
     this.bind();
     this.renderSim();
+  }
+
+  /** Track, weather and opponents for the next drive. */
+  private raceHtml(): string {
+    const d = this.drive;
+    const circuit = d.track !== 'test';
+    const seg = (name: string, items: Array<[string, string]>, value: string, disabled = false) =>
+      `<div class="g-seg" role="group" aria-label="${name}">${items
+        .map(([v, l]) => `<button data-race="${name}" data-value="${v}" class="${v === value ? 'on' : ''}" ${disabled ? 'disabled' : ''}>${l}</button>`)
+        .join('')}</div>`;
+    return `
+      <div class="g-race">
+        <div class="g-race-item"><span>Circuit</span>${seg('track', (Object.keys(TRACK_NAMES) as TrackId[]).reverse().map((t) => [t, TRACK_NAMES[t]]), d.track)}</div>
+        <div class="g-race-item"><span>Météo</span>${seg('rain', [['0', 'Sec'], ['1', 'Pluie']], d.rain ? '1' : '0', !circuit)}</div>
+        <div class="g-race-item"><span>Adversaires</span>${seg('opponents', Array.from({ length: MAX_OPPONENTS + 1 }, (_, i) => [String(i), String(i)]), String(circuit ? d.opponents : 0), !circuit)}</div>
+      </div>`;
   }
 
   private specsHtml(): string {
@@ -317,7 +337,16 @@ export class GarageUI {
       const open = this.cb.onDoors();
       (e.currentTarget as HTMLButtonElement).textContent = open ? 'Fermer les portes' : 'Ouvrir les portes';
     });
-    r.querySelector('[data-action="drive"]')?.addEventListener('click', () => this.cb.onDrive());
+    r.querySelector('[data-action="drive"]')?.addEventListener('click', () => this.cb.onDrive({ ...this.drive }));
+    r.querySelectorAll<HTMLButtonElement>('[data-race]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const v = b.dataset.value!;
+        if (b.dataset.race === 'track') this.drive.track = v as TrackId;
+        else if (b.dataset.race === 'rain') this.drive.rain = v === '1';
+        else this.drive.opponents = Number(v);
+        this.render();
+      }),
+    );
   }
 
   dispose(): void {

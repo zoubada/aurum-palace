@@ -7,7 +7,7 @@ import { clamp } from '../physics/math';
  *
  * It drives the same Vehicle physics as the player, with the same tires and aids (ABS, TC,
  * ESP): no grip or power bonus, no rubber-banding (SPEC §8). It follows the racing line with
- * pure-pursuit steering and tracks the car's own speed profile, scaled by its skill; it slows
+ * a Stanley steering controller and tracks the car's own speed profile, scaled by its skill; it slows
  * behind a car in its way and moves over to pass when there is room.
  */
 export class AIDriver {
@@ -33,7 +33,8 @@ export class AIDriver {
     this.lineBias = ((seed * 0.618) % 1) * 0.6 - 0.3;
   }
 
-  update(v: Vehicle, dt: number, others: Vehicle[]): DriveInput {
+  /** `others`: every car on track (this one is skipped). */
+  update(v: Vehicle, dt: number, others: readonly Vehicle[]): DriveInput {
     const line = this.line;
     const M = line.count;
     this.index = line.nearest(v.x, v.z, this.index);
@@ -45,6 +46,7 @@ export class AIDriver {
     let blockSpeed = Infinity;
     let blockSide = 0;
     for (const o of others) {
+      if (o === v) continue;
       const dx = o.x - v.x;
       const dz = o.z - v.z;
       const f = dx * sy + dz * cy;

@@ -39,7 +39,7 @@ export class HUD {
   private frames = 0;
   private fpsStart = performance.now();
   /** CPU time of the last frame's simulation / render submission (ms), shown with F3. */
-  perf = { sim: 0, render: 0 };
+  perf = { sim: 0, render: 0, calls: 0, triangles: 0 };
   private lastRpmLit = -1;
   debugVisible = false;
 
@@ -51,7 +51,7 @@ export class HUD {
     this.info = el('div', 'hud-info', tl);
 
     this.banner = el('div', 'hud-banner', this.root);
-    this.banner.innerHTML = `<b>PROVISOIRE</b> · ${carName} : modèle 3D de remplacement · piste d'essai`;
+    this.banner.innerHTML = `<b>PROVISOIRE</b> · ${carName} : modèle 3D de remplacement`;
     this.setPlaceholderBanner(placeholder);
 
     // Bottom-right cluster.
@@ -233,6 +233,7 @@ export class HUD {
       `u ${v.u.toFixed(2)} m/s   v ${v.v.toFixed(2)} m/s   r ${v.r.toFixed(3)} rad/s   β ${beta.toFixed(1)}°`,
       `ax ${(v.axF / G).toFixed(2)} g   ay ${(v.ayF / G).toFixed(2)} g   δ ${((v.steerAngle * 180) / Math.PI).toFixed(1)}°`,
       `CPU : simulation ${this.perf.sim.toFixed(2)} ms · envoi rendu ${this.perf.render.toFixed(2)} ms`,
+      `GPU : ${this.perf.calls} appels de dessin · ${(this.perf.triangles / 1e6).toFixed(2)} M triangles`,
       `moteur ${v.engineRpm.toFixed(0)} tr/min  couple ${v.engineTorque.toFixed(0)} N·m  embrayage ${v.clutchSlipping ? 'patine' : 'verrouillé'}${v.revLimiterOn ? '  LIMITEUR' : ''}`,
       ...rows,
     ].join('\n');

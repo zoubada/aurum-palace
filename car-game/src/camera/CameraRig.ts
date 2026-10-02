@@ -39,6 +39,8 @@ export class CameraRig {
 
   private camYaw = 0;
   private initialised = false;
+  /** Smoothed road height under the chase camera. */
+  private camY: number | null = null;
   private readonly head = new THREE.Vector3();
   private readonly headVel = new THREE.Vector3();
   private readonly tmpV = new THREE.Vector3();
@@ -72,6 +74,7 @@ export class CameraRig {
   /** Snap the chase camera behind the car (after a reset). */
   snap(): void {
     this.initialised = false;
+    this.camY = null;
   }
 
   update(dt: number, vehicle: Vehicle, visual: CarVisual, lookBack: boolean): void {
@@ -101,8 +104,15 @@ export class CameraRig {
       const yaw = this.camYaw + (lookBack ? Math.PI : 0);
       const dist = this.settings.distance * (far ? 1.75 : 1) + clamp(vehicle.axF / G, -1, 1) * 0.3;
       const height = this.settings.height * (far ? 1.55 : 1);
-      cam.position.set(vehicle.x - Math.sin(yaw) * dist, height, vehicle.z - Math.cos(yaw) * dist);
-      this.tmpV.set(vehicle.x + Math.sin(yaw) * 2, 0.95, vehicle.z + Math.cos(yaw) * 2);
+      const cx = vehicle.x - Math.sin(yaw) * dist;
+      const cz = vehicle.z - Math.cos(yaw) * dist;
+      // Height above the road under the camera (ground plane through the car: slopes, banking).
+      const gr = vehicle.ground;
+      const roadY = Math.max(vehicle.y, vehicle.y - (gr.nx * (cx - vehicle.x) + gr.nz * (cz - vehicle.z)) / gr.ny);
+      if (this.camY === null) this.camY = roadY;
+      this.camY += (roadY - this.camY) * smoothFactor(dt, 0.12);
+      cam.position.set(cx, this.camY + height, cz);
+      this.tmpV.set(vehicle.x + Math.sin(yaw) * 2, vehicle.y + 0.95, vehicle.z + Math.cos(yaw) * 2);
       cam.up.set(0, 1, 0);
       cam.lookAt(this.tmpV);
     } else {
@@ -140,7 +150,7 @@ export class CameraRig {
       cam.quaternion.copy(this.tmpQ);
       this.initialised = false;
     }
-    cam.position.y = Math.max(cam.position.y, 0.15);
+    cam.position.y = Math.max(cam.position.y, vehicle.y + 0.15);
 
     if (Math.abs(cam.fov - fov) > 0.01 || cam.near !== near) {
       cam.fov = fov;

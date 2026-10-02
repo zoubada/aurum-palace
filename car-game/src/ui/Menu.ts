@@ -17,6 +17,8 @@ export interface MenuState {
   cameraSettings: CameraSettings;
   device: string;
   volumes: VolumeSettings;
+  /** Ideal racing line shown on the road; null when the track has none. */
+  racingLine: boolean | null;
 }
 
 export interface MenuCallbacks {
@@ -28,6 +30,7 @@ export interface MenuCallbacks {
   onCameraSettings(s: CameraSettings): void;
   onVolumes(v: VolumeSettings): void;
   onGarage(): void;
+  onRacingLine(on: boolean): void;
 }
 
 const PRESET_LABELS: Record<AssistPresetId, string> = {
@@ -96,6 +99,15 @@ export class Menu {
                 <span class="t"><b>${label}</b><small>${hint}</small></span>
               </label>`,
             ).join('')}
+            ${
+              s.racingLine === null
+                ? ''
+                : `<label class="toggle">
+                <input type="checkbox" data-line ${s.racingLine ? 'checked' : ''}>
+                <span class="sw"></span>
+                <span class="t"><b>Trajectoire idéale</b><small>Ligne au sol : verte = accélérer, jaune = lever, rouge = freiner</small></span>
+              </label>`
+            }
           </div>
         </section>
         <section>
@@ -187,6 +199,10 @@ export class Menu {
         this.render();
       }),
     );
+    r.querySelector<HTMLInputElement>('[data-line]')?.addEventListener('change', (e) => {
+      this.state.racingLine = (e.target as HTMLInputElement).checked;
+      this.cb.onRacingLine(this.state.racingLine);
+    });
     r.querySelectorAll<HTMLButtonElement>('[data-quality]').forEach((b) =>
       b.addEventListener('click', () => {
         this.state.quality = b.dataset.quality as QualityId;

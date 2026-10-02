@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeStatic } from './mergeStatic';
 import type { CarConfig, PaintOption } from './types';
 import type { Vehicle } from '../physics/vehicle';
 import type { CarParts } from './parts';
@@ -18,6 +19,8 @@ import { radialTexture } from '../render/textures';
  *
  * Car space: x = left, y = up, z = forward, origin on the ground under the CG.
  */
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
 export class CarVisual {
   readonly root = new THREE.Group();
   /** Pitch/roll pivot placed at CG height. */
@@ -32,6 +35,10 @@ export class CarVisual {
   private doorsTarget = 0;
   private doorsOpen = 0;
   private readonly tmpQ = new THREE.Quaternion();
+  private readonly tmpQ2 = new THREE.Quaternion();
+  private readonly tmpN = new THREE.Vector3();
+  private night = false;
+  private simplified = false;
   readonly isPlaceholder: boolean;
 
   constructor(
@@ -63,6 +70,34 @@ export class CarVisual {
     for (const w of parts.wheels) this.wheelHolder.add(w.pivot);
     (this as { isPlaceholder: boolean }).isPlaceholder = parts.body.name === 'placeholder-body';
     this.placeFlames();
+    this.setNight(this.night);
+  }
+
+  /**
+   * Opponent car seen from outside: merge static meshes by material (far fewer draw calls) and
+   * stop drawing its dashboard.
+   */
+  simplify(): void {
+    this.simplified = true;
+    const p = this.parts;
+    const keep = new Set<THREE.Object3D>();
+    if (p.wing) keep.add(p.wing.pivot);
+    for (const d of p.doors) keep.add(d.pivot);
+    if (p.steeringWheel) keep.add(p.steeringWheel);
+    mergeStatic(p.body, keep);
+    for (const w of p.wheels) {
+      mergeStatic(w.spin, new Set());
+      mergeStatic(w.pivot, new Set([w.spin]));
+    }
+  }
+
+  /** Night: headlamp glass lit at full power. */
+  setNight(on: boolean): void {
+    this.night = on;
+    for (const m of this.parts.headLights) {
+      const base = (m.userData.baseEmissive ??= m.emissiveIntensity) as number;
+      m.emissiveIntensity = on ? Math.max(base, 8) : base;
+    }
   }
 
   /** Driver eye in car space. */
@@ -144,8 +179,12 @@ export class CarVisual {
 
   update(vehicle: Vehicle, dt: number, ev?: EngineEventFrame): void {
     const p = this.parts;
-    this.root.position.set(vehicle.x, 0, vehicle.z);
-    this.root.rotation.y = vehicle.yaw;
+    // Follow the road surface: heading, then tilt onto the ground normal (slopes, banking).
+    this.root.position.set(vehicle.x, vehicle.y, vehicle.z);
+    const gr = vehicle.ground;
+    this.tmpQ.setFromAxisAngle(Y_AXIS, vehicle.yaw);
+    this.tmpQ2.setFromUnitVectors(Y_AXIS, this.tmpN.set(gr.nx, gr.ny, gr.nz));
+    this.root.quaternion.multiplyQuaternions(this.tmpQ2, this.tmpQ);
     this.body.rotation.set(vehicle.pitch, 0, vehicle.roll, 'YXZ');
     let travel = 0;
     for (const w of vehicle.wheels) travel += w.travel;
@@ -188,7 +227,7 @@ export class CarVisual {
       for (const d of p.doors) d.pivot.quaternion.copy(this.tmpQ.setFromAxisAngle(d.axis, d.angle * smooth(this.doorsOpen)));
     }
 
-    if (p.dash) {
+    if (p.dash && !this.simplified) {
       this.dashTimer -= dt;
       if (this.dashTimer <= 0) {
         this.dashTimer = 1 / 20;

@@ -18,6 +18,12 @@ export interface QualitySettings {
   anisotropy: number;
   /** Number of decorative trees around the test area. */
   treeCount: number;
+  /** Share of city blocks that get a building (0–1); applied when a circuit is built. */
+  cityDensity: number;
+  /** Real street/tunnel lights moved around the camera (each one costs shader time). */
+  dynamicLights: number;
+  /** Rain streaks drawn around the camera. */
+  rainDrops: number;
 }
 
 export const QUALITY_PRESETS: Record<QualityId, QualitySettings> = {
@@ -32,6 +38,9 @@ export const QUALITY_PRESETS: Record<QualityId, QualitySettings> = {
     msaa: 0,
     anisotropy: 2,
     treeCount: 150,
+    cityDensity: 0.55,
+    dynamicLights: 2,
+    rainDrops: 2500,
   },
   medium: {
     id: 'medium',
@@ -44,6 +53,9 @@ export const QUALITY_PRESETS: Record<QualityId, QualitySettings> = {
     msaa: 2,
     anisotropy: 4,
     treeCount: 400,
+    cityDensity: 0.75,
+    dynamicLights: 4,
+    rainDrops: 5000,
   },
   high: {
     id: 'high',
@@ -56,6 +68,9 @@ export const QUALITY_PRESETS: Record<QualityId, QualitySettings> = {
     msaa: 4,
     anisotropy: 8,
     treeCount: 900,
+    cityDensity: 0.9,
+    dynamicLights: 6,
+    rainDrops: 9000,
   },
   ultra: {
     id: 'ultra',
@@ -68,6 +83,9 @@ export const QUALITY_PRESETS: Record<QualityId, QualitySettings> = {
     msaa: 8,
     anisotropy: 16,
     treeCount: 1600,
+    cityDensity: 1.0,
+    dynamicLights: 10,
+    rainDrops: 14000,
   },
 };
 

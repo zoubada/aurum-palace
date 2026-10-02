@@ -34,12 +34,16 @@ export class TireEffects {
   private markHead = 0;
   private markCount = 0;
   /** Last laid edge per wheel (centre, left edge, right edge). */
-  private readonly last: Array<{ x: number; z: number; lx: number; lz: number; rx: number; rz: number } | null> = [
+  private readonly last: Array<{ x: number; y: number; z: number; lx: number; lz: number; rx: number; rz: number } | null> = [
     null,
     null,
     null,
     null,
   ];
+
+  /** Wet road: spray behind the wheels at speed, no rubber marks. */
+  wet = false;
+  private sprayAcc = 0;
 
   // Smoke
   private readonly particles: Particle[] = [];
@@ -132,7 +136,10 @@ export class TireEffects {
     vehicle.wheels.forEach((w, i) => {
       // World contact point (at the wheel position, steering ignored for the mark).
       const [x, z] = vehicle.bodyToWorld(w.x, w.y);
-      const intensity = w.fz > 400 ? Math.min(1, Math.max(0, (w.slipSpeed - 2.5) / 7)) : 0;
+      // Road height under the wheel (the ground plane through the car on slopes and banking).
+      const gr = vehicle.ground;
+      const y = vehicle.y - (gr.nx * (x - vehicle.x) + gr.nz * (z - vehicle.z)) / gr.ny;
+      const intensity = w.fz > 400 && !this.wet ? Math.min(1, Math.max(0, (w.slipSpeed - 2.5) / 7)) : 0;
       if (intensity > 0.04) {
         const prev = this.last[i];
         // Mark direction follows the travel of the contact patch.
@@ -143,27 +150,39 @@ export class TireEffects {
           if (len > 0.3) {
             const nx = (-dz / len) * (MARK_WIDTH / 2);
             const nz = (dx / len) * (MARK_WIDTH / 2);
-            this.addMark(prev.lx, prev.lz, prev.rx, prev.rz, x + nx, z + nz, x - nx, z - nz, intensity);
-            this.last[i] = { x, z, lx: x + nx, lz: z + nz, rx: x - nx, rz: z - nz };
+            this.addMark(prev.lx, prev.lz, prev.rx, prev.rz, x + nx, z + nz, x - nx, z - nz, prev.y, y, intensity);
+            this.last[i] = { x, y, z, lx: x + nx, lz: z + nz, rx: x - nx, rz: z - nz };
             marksDirty = true;
           }
         } else {
           // Start a new trail: edges perpendicular to the car heading.
           const hx = cy * MARK_WIDTH * 0.5;
           const hz = -sy * MARK_WIDTH * 0.5;
-          this.last[i] = { x, z, lx: x + hx, lz: z + hz, rx: x - hx, rz: z - hz };
+          this.last[i] = { x, y, z, lx: x + hx, lz: z + hz, rx: x - hx, rz: z - hz };
         }
         // Smoke only from a real slide (burnout, drift, locked wheels), proportional to it.
         const smoke = Math.max(0, (w.slipSpeed - 5) / 12);
         this.emitAcc[i] += dt * Math.min(1, smoke) * 16;
         while (this.emitAcc[i] > 1) {
           this.emitAcc[i] -= 1;
-          this.spawnSmoke(x, z, vehicle, Math.min(1, smoke));
+          this.spawnSmoke(x, y, z, vehicle, Math.min(1, smoke));
         }
       } else {
         this.last[i] = null;
       }
     });
+
+    // Spray from the rear tires on a wet road.
+    const speed = Math.hypot(vehicle.u, vehicle.v);
+    if (this.wet && speed > 8) {
+      this.sprayAcc += dt * Math.min(1, (speed - 8) / 40) * 70;
+      while (this.sprayAcc > 1) {
+        this.sprayAcc -= 1;
+        const w = vehicle.wheels[2 + Math.floor(Math.random() * 2)];
+        const [x, z] = vehicle.bodyToWorld(w.x - 0.4, w.y);
+        this.spawnSpray(x, vehicle.y, z, vehicle, Math.min(1, speed / 50));
+      }
+    }
 
     if (marksDirty) {
       (this.markGeo.attributes.position as THREE.BufferAttribute).needsUpdate = true;
@@ -182,24 +201,27 @@ export class TireEffects {
     cz: number,
     dx: number,
     dz: number,
+    y0: number,
+    y1: number,
     intensity: number,
   ): void {
-    const y = 0.008;
+    const a0 = y0 + 0.012;
+    const a1 = y1 + 0.012;
     const i = this.markHead;
     // Quad: previous left/right edge → current left/right edge.
-    this.markPos.set([ax, y, az, bx, y, bz, cx, y, cz, dx, y, dz], i * 12);
+    this.markPos.set([ax, a0, az, bx, a0, bz, cx, a1, cz, dx, a1, dz], i * 12);
     const a = 0.55 * intensity;
     for (let k = 0; k < 4; k++) this.markCol.set([0.02, 0.02, 0.02, a], i * 16 + k * 4);
     this.markHead = (this.markHead + 1) % MAX_MARKS;
     this.markCount = Math.min(MAX_MARKS, this.markCount + 1);
   }
 
-  private spawnSmoke(x: number, z: number, vehicle: Vehicle, strength: number): void {
+  private spawnSmoke(x: number, y: number, z: number, vehicle: Vehicle, strength: number): void {
     if (this.particles.length >= MAX_SMOKE) this.particles.shift();
     const [vx, vz] = vehicle.worldVelocity();
     this.particles.push({
       x: x + (Math.random() - 0.5) * 0.3,
-      y: 0.25,
+      y: y + 0.25,
       z: z + (Math.random() - 0.5) * 0.3,
       vx: vx * 0.25 + (Math.random() - 0.5) * 1.5,
       vy: 0.4 + Math.random() * 0.6,
@@ -208,6 +230,23 @@ export class TireEffects {
       life: 2 + Math.random() * 1.5,
       size: 0.8,
       strength,
+    });
+  }
+
+  private spawnSpray(x: number, y: number, z: number, vehicle: Vehicle, strength: number): void {
+    if (this.particles.length >= MAX_SMOKE) this.particles.shift();
+    const [vx, vz] = vehicle.worldVelocity();
+    this.particles.push({
+      x: x + (Math.random() - 0.5) * 0.4,
+      y: y + 0.2,
+      z: z + (Math.random() - 0.5) * 0.4,
+      vx: vx * 0.55 + (Math.random() - 0.5) * 3,
+      vy: 0.6 + Math.random() * 1.2,
+      vz: vz * 0.55 + (Math.random() - 0.5) * 3,
+      age: 0,
+      life: 0.7 + Math.random() * 0.6,
+      size: 0.9,
+      strength: strength * 0.8,
     });
   }
 

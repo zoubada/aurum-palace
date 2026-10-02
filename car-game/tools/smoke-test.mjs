@@ -1,6 +1,7 @@
 /**
- * Browser smoke test: garage → drive session → menu → back to garage, plus the glTF pipeline
- * round trip and an offline engine-sound render. Fails on any console error.
+ * Browser smoke test: garage → test track → menu → back to garage → night city with rain and
+ * AI opponents (start lights, lap timing, tunnel), plus the glTF pipeline round trip and an
+ * offline engine-sound render. Fails on any console error.
  *
  *   npm run build && npm run preview   (in another terminal)
  *   npm run smoke [-- <url> <screenshot-dir> <quality>]
@@ -48,7 +49,9 @@ const simText = await page.textContent('[data-sim]');
 check(/2,[6-9]\d? s|2\.[6-9]\d? s/.test(simText ?? ''), `garage measures the 720S in simulation: "${simText?.trim()}"`);
 await page.screenshot({ path: `${OUT}/01-garage.png` });
 
-// --- Drive.
+// --- Drive on the test track.
+await page.click('[data-race="track"][data-value="test"]');
+check((await page.textContent('[data-action="drive"]'))?.includes("Piste d'essai"), 'garage: test track selected');
 await page.click('[data-action="drive"]');
 await page.waitForFunction(() => window.__app.current?.vehicle, null, { timeout: 120000 });
 const waitSim = async (s) => {
@@ -97,6 +100,57 @@ check((await state()).finite, 'vehicle state is finite');
 await page.click('[data-action="garage"]');
 await page.waitForSelector('.garage', { timeout: 120000 });
 check(true, 'back to the garage');
+
+// --- Night city, rain, two AI opponents.
+await page.click('[data-race="track"][data-value="city"]');
+await page.click('[data-race="rain"][data-value="1"]');
+await page.click('[data-race="opponents"][data-value="2"]');
+await page.click('[data-action="drive"]');
+await page.waitForFunction(() => window.__app.current?.world, null, { timeout: 300000 });
+const city = await page.evaluate(() => {
+  const s = window.__app.current;
+  return { track: s.track.name, grip: s.track.grip, racers: s.world.racers.length, lights: !!document.querySelector('.race-lights:not([hidden])') };
+});
+check(city.track === 'Métropole de nuit' && city.grip < 1 && city.racers === 3, `city loaded: ${JSON.stringify(city)}`);
+check(city.lights, 'start lights shown');
+await waitSim(1);
+await page.screenshot({ path: `${OUT}/05-city-grid.png` });
+const held = await page.evaluate(() => window.__app.current.world.racers.map((r) => r.vehicle.speedKmh));
+check(held.every((k) => k < 1), `cars held during the countdown (${held.map((k) => k.toFixed(1)).join(', ')} km/h)`);
+await waitSim(5);
+await page.keyboard.down('ArrowUp');
+await waitSim(6);
+await page.keyboard.up('ArrowUp');
+const race = await page.evaluate(() => {
+  const s = window.__app.current;
+  return {
+    started: s.player.timer.started,
+    ai: s.world.racers.filter((r) => r.ai).map((r) => r.vehicle.speedKmh),
+    pos: document.querySelector('.race-pos')?.textContent,
+    kmh: s.vehicle.speedKmh,
+  };
+});
+check(race.started && race.kmh > 60, `player away and timing: ${race.kmh.toFixed(0)} km/h, lap started ${race.started}`);
+check(race.ai.every((k) => k > 60), `AI cars racing (${race.ai.map((k) => k.toFixed(0)).join(', ')} km/h)`);
+check(/P\d\/3/.test(race.pos ?? ''), `position shown (${race.pos})`);
+await page.screenshot({ path: `${OUT}/06-city-race.png` });
+// Teleport into the tunnel: exposure and enclosure adapt.
+await page.evaluate(() => {
+  const s = window.__app.current;
+  s.track.surface.place(s.player, 2900, 0);
+  s.rig.snap();
+});
+await waitSim(2.5);
+const tunnel = await page.evaluate(() => ({ enc: window.__app.current.track.enclosure, exp: window.__app.current.track.exposure }));
+check(tunnel.enc > 0.9 && tunnel.exp < 1.1, `inside the tunnel: enclosure ${tunnel.enc.toFixed(2)}, exposure ${tunnel.exp.toFixed(2)}`);
+await page.screenshot({ path: `${OUT}/07-city-tunnel.png` });
+check((await state()).finite, 'vehicle state is finite');
+await page.keyboard.press('Escape');
+await page.waitForSelector('.menu:not(.hidden)', { timeout: 120000 });
+await page.click('label:has([data-line])');
+check(await page.evaluate(() => JSON.parse(localStorage.getItem('cargame.racingLine')).on === true), 'racing line toggled from the menu');
+await page.click('[data-action="garage"]');
+await page.waitForSelector('.garage', { timeout: 120000 });
 
 // --- Pipelines.
 const rt = await page.evaluate(() => window.__debug.gltfRoundTrip('porsche-911-gt3-rs-992'));

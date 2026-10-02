@@ -41,6 +41,11 @@ export class AudioEngine {
     return a;
   }
 
+  /** Final mix input (after the volume buses), for sends such as reverb returns. */
+  get masterBus(): GainNode {
+    return this.master;
+  }
+
   get ready(): boolean {
     return !!this.ctx && this.ctx.state === 'running';
   }

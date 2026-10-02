@@ -134,14 +134,25 @@ export interface AISetup {
   seed: number;
 }
 
+/**
+ * Input of a car held on the grid: handbrake only (the brake pedal at a standstill would select
+ * reverse with the automatic gearbox).
+ */
+export const HOLD: DriveInput = { throttle: 0, brake: 0, steer: 0, handbrake: 1 };
+
 export class RaceWorld {
   readonly racers: Racer[] = [];
+  /** Hold every AI car on its brakes (start countdown). */
+  hold = false;
+  private vehicles: Vehicle[] = [];
   /** Timer events of the last step, per racer. */
   readonly events: Array<{ racer: Racer; ev: TimerEvents }> = [];
 
   constructor(
     readonly surface: WorldSurface,
     private readonly sectors: number[] = [0],
+    /** Tire grip of the surface for every car (1 = dry, ~0.78 = wet). */
+    readonly grip = 1,
   ) {}
 
   add(car: CarConfig, ai?: AISetup, best: LapRecord | null = null): Racer {
@@ -166,6 +177,7 @@ export class RaceWorld {
       // AI drivers use the standard aids, like a pro with traction control on.
       vehicle.assists = { ...ASSIST_PRESETS.intermediate, esp: true, steerLimit: false };
     }
+    vehicle.surfaceGrip = this.grip;
     this.racers.push(racer);
     return racer;
   }
@@ -173,14 +185,10 @@ export class RaceWorld {
   /** Advance the whole world by one fixed physics step. */
   step(dt: number): void {
     this.events.length = 0;
-    const all = this.racers.map((r) => r.vehicle);
+    if (this.vehicles.length !== this.racers.length) this.vehicles = this.racers.map((r) => r.vehicle);
     for (const r of this.racers) {
       if (r.ai) {
-        r.input = r.ai.update(
-          r.vehicle,
-          dt,
-          all.filter((v) => v !== r.vehicle),
-        );
+        r.input = this.hold ? HOLD : r.ai.update(r.vehicle, dt, this.vehicles);
         if (r.ai.needsReset && this.surface.spline) {
           // Put a stranded AI car back on its line, a little further on.
           const p = r.ai.index >= 0 ? this.surface.spline.indexAt(r.s + 15) : 0;
@@ -206,7 +214,8 @@ export class RaceWorld {
       if (!r.timer) continue;
       const ev = r.timer.update(dt, r.s, r.offTrack);
       if (ev.lap || ev.sector || ev.invalidated) this.events.push({ racer: r, ev });
-      r.progress = r.timer.laps * r.timer.length + r.s;
+      // Before its first crossing of the line a car is still behind it (on the grid).
+      r.progress = r.timer.started ? r.timer.laps * r.timer.length + r.s : r.s - r.timer.length;
     }
   }
 }

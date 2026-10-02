@@ -1,4 +1,4 @@
-# Jeu de course 3D — Prototype (Phases 1 et 2)
+# Jeu de course 3D — Prototype (Phases 1 à 3)
 
 Jeu de course réaliste dans le navigateur (TypeScript + Vite + Three.js), développé par phases selon le cahier des charges.
 « APEX » est un nom de travail provisoire.
@@ -15,10 +15,10 @@ Autres commandes :
 
 | Commande | Rôle |
 |---|---|
-| `npm test` | Tests unitaires de la physique (0–100, vitesse max, freinage, adhérence, aides, collisions) |
+| `npm test` | Tests unitaires : physique (0–100, vitesse max, freinage, aides, collisions), circuit, chronos, IA |
 | `npm run build` | Vérification des types + build de production dans `dist/` |
 | `npm run preview` | Sert le build sur http://localhost:4173 |
-| `npm run smoke` | Test navigateur (Playwright) sur le build : garage, conduite, caméras, menu, pipeline glTF, son, erreurs console |
+| `npm run smoke` | Test navigateur (Playwright) sur le build : garage, piste d'essai, ville de nuit sous la pluie avec IA, feux de départ, tunnel, menu, pipeline glTF, son, erreurs console |
 
 ## Commandes
 
@@ -39,6 +39,35 @@ Autres commandes :
 Les vibrations de la manette suivent le glissement des pneus et les chocs.
 
 ## État du projet
+
+### Phase 3 (circuit 1 : Métropole de nuit) — fait
+- **Circuit de 4,9 km** tracé par une spline (`src/tracks/city/layout.ts`) : boulevard de départ, chicane, montée sur un **pont à haubans** à 14 m au-dessus du fleuve, épingle en descente, **tunnel sous le fleuve** (−12 m), enchaînement entre les tours, **viaduc** relevé, retour sur le boulevard. Relief, dévers, bordures, murs, grillages, panneaux de sponsors (fictifs), trottoirs, ligne de départ et grille.
+- **Ville générée** autour : rues en damier, fleuve et quais, tours avec fenêtres éclairées (calculées dans le shader), enseignes au néon, écrans LED animés, feux d'obstacle clignotants, circulation, piétons et feux tricolores décoratifs.
+- **Éclairage de nuit** : ciel étoilé, lune (ombres), halo orangé de la ville, brume ; chaque lampadaire éclaire la route, et les plus proches de la caméra deviennent de vraies lumières qui éclairent aussi les voitures (leur nombre dépend de la qualité). Phares de la voiture du joueur, pinceaux de phares des adversaires. Les reflets des voitures et de la route mouillée viennent de la ville elle-même.
+- **Tunnel** : éclairage propre, adaptation des yeux à l'entrée et à la sortie (exposition), écho du son.
+- **Pluie** (au choix dans le garage) : route mouillée et brillante, gerbes d'eau, pluie qui tombe, brume plus dense, moins d'adhérence (×0,78), bruit de pluie.
+- **Physique du relief** : la voiture suit les pentes, les bosses et les dévers (charge des pneus, gravité), adhérence différente sur les bordures et les dégagements, murs du circuit, chocs entre voitures.
+- **Chronos** : tours, 3 secteurs (violet = meilleur secteur), dernier et meilleur tour (sauvegardés par voiture, circuit et météo), points de passage tous les 250 m, **tour invalidé** en cas de sortie de piste ou de raccourci.
+- **IA de base** (0 à 5 adversaires) : trajectoire idéale calculée, vitesse limite de chaque voiture en chaque point, mêmes pneus et mêmes aides que le joueur, aucun « élastique » ; ralentit derrière une voiture et se décale pour passer. **Feux de départ**, position en course, mini-carte.
+- **Trajectoire idéale** affichable (menu pause) : verte = accélérer, jaune = lever le pied, rouge = freiner.
+- Tours de l'IA mesurés par les tests (adhérence 95 %, sec) :
+
+| Voiture (IA) | Tour |
+|---|---|
+| McLaren 720S | 1:56.9 |
+| Porsche 911 GT3 RS | 1:59.3 (pluie : 2:08.0) |
+| Nissan GT-R | 2:07.6 |
+| BMW M3 Competition | 2:08.8 |
+| Audi RS 6 performance | 2:11.7 |
+| Audi RS 3 | 2:13.5 |
+| Ford Mustang GT | 2:14.9 |
+
+#### Provisoire / limites (Phase 3)
+- **Bâtiments** : volumes simples avec fenêtres dessinées par le shader, pas de façades détaillées ni de modèles 3D d'architecture.
+- **IA** : pas encore de vraie stratégie de dépassement ni de défense (Phase 6) ; en peloton, une voiture rapide peut rester bloquée derrière une plus lente.
+- **Courses** : pour l'instant c'est un « essai libre » chronométré avec adversaires ; course avec nombre de tours, classement final, fantôme et championnat arrivent en Phase 6.
+- **Reflets** : la ville est capturée une fois depuis un point du boulevard ; les reflets ne suivent pas exactement la position de la voiture.
+- **Physique** : Rapier n'est pas utilisé ; les collisions (murs du circuit, voitures) sont calculées par notre propre code à partir de la spline, plus simple et plus rapide pour un circuit routier.
 
 ### Phase 2 (voitures) — fait
 - **7 voitures** avec leurs caractéristiques officielles (`src/cars/<id>/config.ts`) : Audi RS 3 (8Y), Audi RS 6 Avant performance (C8), Porsche 911 GT3 RS (992), Ford Mustang GT (S650), BMW M3 Competition (G80), Nissan GT-R (R35), McLaren 720S.
@@ -65,7 +94,7 @@ Les vibrations de la manette suivent le glissement des pneus et les chocs.
 ### Provisoire
 - **Modèles 3D** : en attendant vos fichiers `.glb`, chaque voiture est une maquette procédurale à ses vraies dimensions, avec les signatures de la marque (calandre, feux, aileron). Ce n'est pas une reproduction fidèle ; c'est signalé dans le garage et en jeu.
 - **Sons** : synthèse, pas d'enregistrements des vrais moteurs.
-- **Non fait** : livrées, mains du pilote, clignotants et phares automatiques (avec les circuits de nuit, Phase 3), température et usure des pneus.
+- **Non fait** : livrées, mains du pilote, clignotants, température et usure des pneus.
 
 ## Phase 1 (socle) — rappel
 Rendu PBR, physique 240 Hz (pneus Pacejka, transferts de charge, aides), piste d'essai, 5 caméras + regard arrière, HUD, menu, clavier et manette.
@@ -79,15 +108,17 @@ src/
   cars/        un dossier par voiture (config.ts), maquettes procédurales, chargeur glTF, compteurs
   audio/       moteur audio et synthèse des sons de voiture
   garage/      garage / showroom
-  game-modes/  session de conduite (courses en Phase 6)
-  tracks/      pistes (Phase 1 : piste d'essai)
+  game-modes/  session de conduite, monde de course (physique de toutes les voitures, chronos)
+  tracks/      spline de circuit, chronométrage, génération de la route ; city/ = circuit 1 ; piste d'essai
   camera/      caméras de conduite
-  render/      renderer, ciel/éclairage, textures procédurales, effets pneus
-  ui/          HUD, menu, styles
-  ai/          (Phase 3+)
+  render/      renderer, ciel de jour / de nuit, phares, pluie, textures procédurales, effets pneus
+  ui/          HUD, tour de chronométrage et mini-carte, menu, styles
+  ai/          trajectoire idéale, profil de vitesse, pilote IA
 assets/cars, assets/tracks  modèles et textures (à venir)
 tests/        tests unitaires de la physique
 tools/        test navigateur ; scripts de génération des circuits (Phase 4)
 ```
 
 Ajouter une voiture consiste à créer `src/cars/<id>/config.ts` (un `CarConfig` : physique, visuel, valeurs officielles), puis à l'ajouter dans `src/cars/registry.ts`.
+
+Ajouter un circuit consiste à créer un dossier `src/tracks/<id>/` avec son tracé (points de contrôle : position, altitude, largeur, dévers, zone pont/tunnel/viaduc) et une classe qui implémente `TrackScene` (décor, éclairage, grille de départ), puis à l'ajouter au choix du garage.

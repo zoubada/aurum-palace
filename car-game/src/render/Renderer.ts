@@ -31,6 +31,8 @@ export class Renderer {
     this.renderer.toneMappingExposure = 1.0;
     this.renderer.shadowMap.enabled = quality.shadows;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    // Count draw calls over the whole frame (all passes), not just the last pass.
+    this.renderer.info.autoReset = false;
     this.applyQuality(quality);
   }
 
@@ -92,8 +94,14 @@ export class Renderer {
     this.camera.updateProjectionMatrix();
   }
 
+  /** Draw calls and triangles of the last frame (telemetry overlay). */
+  readonly stats = { calls: 0, triangles: 0 };
+
   render(): void {
+    this.renderer.info.reset();
     if (this.composer) this.composer.render();
     else this.renderer.render(this.scene, this.camera);
+    this.stats.calls = this.renderer.info.render.calls;
+    this.stats.triangles = this.renderer.info.render.triangles;
   }
 }

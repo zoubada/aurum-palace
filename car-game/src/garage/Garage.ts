@@ -108,7 +108,7 @@ export class Garage implements Screen {
         this.visual?.setDoorsOpen(this.doorsOpen);
         return this.doorsOpen;
       },
-      onDrive: () => app.drive(this.car.id),
+      onDrive: (options) => app.drive(this.car.id, options),
       onQuality: (q) => app.setQuality(q),
     });
     this.ui.setQuality(app.quality.id);

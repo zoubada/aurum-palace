@@ -93,9 +93,14 @@ export class CarAudio {
   private interior = false;
   private stopped = false;
 
+  /** Other cars: distance attenuation and stereo position, set by `setSpatial`. */
+  private readonly spatialGain: GainNode | null = null;
+  private readonly panner: StereoPannerNode | null = null;
+
   constructor(
     private readonly audio: AudioEngine,
     car: CarConfig,
+    spatial = false,
   ) {
     const ctx = audio.ctx!;
     this.ctx = ctx;
@@ -106,9 +111,18 @@ export class CarAudio {
     this.out = ctx.createGain();
     this.out.gain.value = 0;
     this.out.gain.setTargetAtTime(1, t, 0.3);
-    this.out.connect(audio.engineBus);
     this.fx = ctx.createGain();
-    this.fx.connect(audio.effectsBus);
+    if (spatial) {
+      this.spatialGain = ctx.createGain();
+      this.spatialGain.gain.value = 0;
+      this.panner = ctx.createStereoPanner();
+      this.out.connect(this.spatialGain);
+      this.fx.connect(this.spatialGain);
+      this.spatialGain.connect(this.panner).connect(audio.engineBus);
+    } else {
+      this.out.connect(audio.engineBus);
+      this.fx.connect(audio.effectsBus);
+    }
 
     // --- Engine core.
     this.oscOn = ctx.createOscillator();
@@ -153,6 +167,14 @@ export class CarAudio {
     this.road = audio.noiseVoice('lowpass', 130, 0.8, this.fx);
 
     for (const o of [this.oscOn, this.oscOff, this.limiterLfo, this.turboOsc]) o.start(t);
+  }
+
+  /** Level (0–1, from distance) and stereo position (−1 left … 1 right) of another car. */
+  setSpatial(level: number, pan: number): void {
+    if (!this.spatialGain || !this.panner) return;
+    const t = this.ctx.currentTime;
+    this.spatialGain.gain.setTargetAtTime(level, t, 0.05);
+    this.panner.pan.setTargetAtTime(pan, t, 0.05);
   }
 
   setInterior(interior: boolean): void {
@@ -251,6 +273,8 @@ export class CarAudio {
       for (const v of voices) v.src.stop();
       this.out.disconnect();
       this.fx.disconnect();
+      this.spatialGain?.disconnect();
+      this.panner?.disconnect();
     }, 400);
   }
 }

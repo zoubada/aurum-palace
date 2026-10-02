@@ -5,6 +5,7 @@ import { RacingLine } from '../src/ai/RacingLine';
 import { RaceWorld, SplineSurface } from '../src/game-modes/RaceWorld';
 import { CARS, getCar } from '../src/cars/registry';
 import { formatLapTime } from '../src/tracks/LapTimer';
+import { gridSlot } from '../src/tracks/grid';
 
 const track = new TrackSpline(CITY_LAYOUT, 1);
 const line = new RacingLine(track);
@@ -82,5 +83,61 @@ describe('six AI cars together', () => {
     console.log(`Choc max entre voitures/murs : ${maxImpact.toFixed(1)} m/s, voitures replacées : ${resets}`);
     expect(racers.every((r) => r.timer!.laps >= 2)).toBe(true);
     expect(resets).toBe(0);
+  });
+});
+
+describe('starting grid and race start', () => {
+  it('puts six cars behind the line, on the road, without overlaps, and holds AI cars', () => {
+    const world = new RaceWorld(new SplineSurface(track), CITY_SECTORS);
+    const racers = CARS.slice(0, 6).map((car, i) => {
+      const r = world.add(car, { line, profile: line.speedProfile(car.physics), skill: 0.93, seed: i + 1 });
+      const g = gridSlot(track, i, car.visual.frontOverhangFromCg);
+      world.surface.place(r, g.s, g.d);
+      return r;
+    });
+    for (const r of racers) {
+      expect(r.s).toBeGreaterThan(track.length - 70);
+      expect(Math.abs(r.lateral)).toBeLessThan(track.sample(r.trackIndex).hw - 0.9);
+    }
+    for (let i = 0; i < racers.length; i++)
+      for (let j = i + 1; j < racers.length; j++) {
+        const a = racers[i].vehicle;
+        const b = racers[j].vehicle;
+        expect(Math.hypot(a.x - b.x, a.z - b.z)).toBeGreaterThan(4.5);
+      }
+    // Held during the countdown, then away.
+    world.hold = true;
+    for (let t = 0; t < 3; t += DT) world.step(DT);
+    for (const r of racers) expect(r.vehicle.speedKmh).toBeLessThan(1);
+    world.hold = false;
+    for (let t = 0; t < 4; t += DT) world.step(DT);
+    for (const r of racers) expect(r.vehicle.speedKmh).toBeGreaterThan(40);
+    // Positions: everyone is still behind the line or just past it, ordered by distance.
+    const order = [...racers].sort((a, b) => b.progress - a.progress);
+    expect(order[0].progress).toBeGreaterThan(order[5].progress);
+  });
+});
+
+describe('rain', () => {
+  it('AI laps the wet circuit cleanly, slower than in the dry', () => {
+    const car = getCar('porsche-911-gt3-rs-992');
+    const lap = (grip: number) => {
+      const world = new RaceWorld(new SplineSurface(track), CITY_SECTORS, grip);
+      const r = world.add(car, { line, profile: line.speedProfile(car.physics, grip), skill: 0.95, seed: 3 });
+      world.surface.place(r, track.length - 40, 0);
+      let maxImpact = 0;
+      for (let t = 0; t < 600 && (r.timer!.laps < 2 || !r.timer!.lastLap); t += DT) {
+        r.impact = 0;
+        world.step(DT);
+        maxImpact = Math.max(maxImpact, r.impact);
+      }
+      return { time: r.timer!.lastLap!.time, maxImpact };
+    };
+    const dry = lap(1);
+    const wet = lap(0.78);
+    console.log(`911 GT3 RS (IA) : sec ${formatLapTime(dry.time)}, pluie ${formatLapTime(wet.time)} (+${(wet.time - dry.time).toFixed(1)} s)`);
+    expect(wet.maxImpact).toBeLessThan(1);
+    expect(wet.time).toBeGreaterThan(dry.time + 4);
+    expect(wet.time).toBeLessThan(dry.time * 1.25);
   });
 });

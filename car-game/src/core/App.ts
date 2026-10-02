@@ -4,6 +4,7 @@ import { AudioEngine } from '../audio/AudioEngine';
 import { Input } from './Input';
 import { QUALITY_PRESETS, loadQuality, saveQuality, type QualityId, type QualitySettings } from './quality';
 import { DriveSession } from '../game-modes/DriveSession';
+import { DEFAULT_DRIVE, TRACK_NAMES, type DriveOptions } from '../game-modes/options';
 import { Garage } from '../garage/Garage';
 import { CARS, getCar } from '../cars/registry';
 import { applySetup, loadSetup } from '../cars/setup';
@@ -30,7 +31,8 @@ export interface AppContext {
   readonly quality: QualitySettings;
   setQuality(id: QualityId): void;
   goToGarage(): void;
-  drive(carId: string): void;
+  /** Drive a car (setup applied) on a track; options are remembered for next time. */
+  drive(carId: string, options?: DriveOptions): void;
 }
 
 export class App implements AppContext {
@@ -73,10 +75,25 @@ export class App implements AppContext {
     this.show(new Garage(this, last));
   }
 
-  drive(carId: string): void {
+  drive(carId: string, options?: DriveOptions): void {
     const base = getCar(carId);
     saveJSON('lastCar', { id: base.id });
-    this.show(new DriveSession(this, applySetup(base, loadSetup(base))));
+    const opts = options ?? loadJSON<DriveOptions>('drive', DEFAULT_DRIVE);
+    saveJSON('drive', opts);
+    // Building a circuit takes a moment: show a loading card first (after it has been painted).
+    const card = document.createElement('div');
+    card.className = 'track-loading';
+    card.innerHTML = `<div><small>Chargement</small><b>${TRACK_NAMES[opts.track]}</b><span></span></div>`;
+    this.uiRoot.appendChild(card);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        try {
+          this.show(new DriveSession(this, applySetup(base, loadSetup(base)), opts));
+        } finally {
+          card.remove();
+        }
+      }),
+    );
   }
 
   setQuality(id: QualityId): void {
