@@ -26,6 +26,8 @@ function getLoader(renderer: THREE.WebGLRenderer): GLTFLoader {
 
 /** True when the model file exists (dev servers answer missing files with index.html). */
 export async function modelAvailable(url: string): Promise<boolean> {
+  // Single-file builds (shared link) carry no model files: skip the probe.
+  if ((window as unknown as { __NO_MODELS__?: boolean }).__NO_MODELS__ || location.protocol === 'file:') return false;
   try {
     const res = await fetch(url, { method: 'HEAD' });
     const type = res.headers.get('content-type') ?? '';
