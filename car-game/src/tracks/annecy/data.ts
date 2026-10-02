@@ -63,11 +63,23 @@ export function unpack(buf: ArrayBuffer): { header: Record<string, unknown>; arr
   return { header, arrays };
 }
 
-/** Fetch a gzip-compressed binary file (decompressed in the browser). */
+/** Base64 text → bytes. */
+function fromBase64(text: string): Uint8Array<ArrayBuffer> {
+  const bin = atob(text.trim());
+  const out = new Uint8Array(bin.length);
+  for (let k = 0; k < bin.length; k++) out[k] = bin.charCodeAt(k);
+  return out;
+}
+
+/**
+ * Fetch a gzip-compressed binary file (decompressed in the browser). Hosts that only serve text
+ * get the same bytes in base64 (`<file>.txt`, flag `__BIN_AS_TEXT__` set by the single-file build).
+ */
 export async function fetchGzip(url: string): Promise<ArrayBuffer> {
-  const res = await fetch(url);
+  const asText = typeof window !== 'undefined' && (window as unknown as { __BIN_AS_TEXT__?: boolean }).__BIN_AS_TEXT__;
+  const res = await fetch(asText ? `${url}.txt` : url);
   if (!res.ok) throw new Error(`${url}: ${res.status}`);
-  const raw = await res.arrayBuffer();
+  const raw = asText ? fromBase64(await res.text()).buffer : await res.arrayBuffer();
   const head = new Uint8Array(raw, 0, 2);
   if (head[0] !== 0x1f || head[1] !== 0x8b) return raw; // already decompressed by the server
   const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream('gzip'));
