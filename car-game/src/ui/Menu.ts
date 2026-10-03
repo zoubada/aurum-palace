@@ -20,6 +20,8 @@ export interface MenuState {
   volumes: VolumeSettings;
   /** Ideal racing line shown on the road; null when the track has none. */
   racingLine: boolean | null;
+  /** Data / model attributions of the circuit (shown here on phones, where the HUD hides them). */
+  credits?: string;
 }
 
 export interface MenuCallbacks {
@@ -159,6 +161,7 @@ export class Menu {
             <tr><td>Presets d’aides</td><td>1 · 2 · 3</td><td>—</td></tr>
             <tr><td>Masquer HUD / télémétrie</td><td>H / F3</td><td>—</td></tr>
           </table>
+          ${s.credits ? `<p class="device">${escapeHtml(s.credits)}</p>` : ''}
           <p class="device">Périphérique actif : <b>${s.device === 'keyboard' ? 'clavier' : s.device === 'tactile' ? 'écran tactile' : escapeHtml(s.device)}</b></p>
         </section>
         <footer>

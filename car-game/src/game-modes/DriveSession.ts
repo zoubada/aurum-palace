@@ -269,6 +269,7 @@ export class DriveSession implements Screen {
         device: this.app.input.device,
         volumes: this.app.audio.volumes,
         racingLine: this.track.racingLine ? this.racingLineOn : null,
+        credits: this.track.credits,
       });
     } else {
       this.menu.hide();

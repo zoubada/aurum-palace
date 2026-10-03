@@ -1464,10 +1464,9 @@ body {
 .touch .hud-bl {
   display: none;
 }
-.touch .hud-info {
-  max-width: 300px;
-  font-size: 10px;
-  line-height: 1.35;
+/* Phones: no permanent text over the road (frame rate, settings and data credits are in the menu). */
+.touch .hud-tl {
+  display: none;
 }
 .touch .hud-cluster {
   right: auto;
