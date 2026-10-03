@@ -7,7 +7,7 @@ Déposez le modèle de chaque voiture ici : `assets/cars/<id>/model.glb`. Le jeu
 | Audi RS 3 Sportback (8Y) | `audi-rs3-8y/` |
 | Audi RS 6 Avant performance (C8) | `audi-rs6-c8/` |
 | Porsche 911 GT3 RS (992) | `porsche-911-gt3-rs-992/` |
-| Ford Mustang GT (S650) | `ford-mustang-gt-s650/` |
+| Ford Mustang GT (2021) | `ford-mustang-gt-2021/` |
 | BMW M3 Competition (G80) | `bmw-m3-competition-g80/` |
 | Nissan GT-R (R35) | `nissan-gt-r-r35/` |
 | McLaren 675LT | `mclaren-675lt/` |
@@ -34,6 +34,7 @@ Les nœuds sans maillage (`driver_eye`, `exhaust_tip_N`) doivent survivre à l'o
 | `exhaust_tip_0`, `exhaust_tip_1`… | Sorties d'échappement (flammes). |
 | `driver_eye` | Position des yeux du pilote (caméra cockpit). |
 | `hide_in_cockpit…` | Éléments masqués en vue cockpit (appui-tête, etc.). |
+| `cabin_kit`, `cabin_kit_noseats` | Modèle sans habitacle : le jeu installe le sien autour de `driver_eye`, tableau de bord jusqu'à ce repère (base du pare-brise). |
 
 ## Noms des matériaux
 

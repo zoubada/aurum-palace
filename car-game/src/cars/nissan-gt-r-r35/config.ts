@@ -78,6 +78,7 @@ export const nissanGtr: CarConfig = {
   sound: { cylinders: 6, roughness: 0.35, brightness: 0.45, intake: 0.5, turbo: 0.9, pops: 0.3, seed: 66 },
   visual: {
     model: 'assets/cars/nissan-gt-r-r35/model.glb',
+    modelCredit: 'Modèle 3D « Nissan GTR R35 » par Ciasny (Sketchfab), licence CC-BY 4.0 — adapté pour le jeu',
     brand: 'Nissan',
     length: 4.71,
     width: 1.895,

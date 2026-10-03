@@ -186,7 +186,7 @@ await page.waitForSelector('.garage', { timeout: 120000 });
 const rt = await page.evaluate(() => window.__debug.gltfRoundTrip('porsche-911-gt3-rs-992'));
 const hubOk = rt.frontLeftHub.every((v, i) => Math.abs(v - rt.expectedFrontLeftHub[i]) < 0.005);
 check(rt.wheels === 4 && hubOk && rt.steeringWheel && rt.wing && rt.mirrors.length === 3 && rt.dash, `glTF round trip maps the model (${JSON.stringify(rt)})`);
-const wavLen = await page.evaluate(async () => (await window.__debug.engineSoundWav('ford-mustang-gt-s650')).length);
+const wavLen = await page.evaluate(async () => (await window.__debug.engineSoundWav('ford-mustang-gt-2021')).length);
 check(wavLen > 100000, `offline engine sound render (${Math.round((wavLen * 0.75) / 1024)} KB WAV)`);
 
 check(errors.length === 0, `no console errors${errors.length ? ': ' + errors.join(' | ') : ''}`);

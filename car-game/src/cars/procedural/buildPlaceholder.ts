@@ -712,8 +712,6 @@ function buildWing(c: Ctx): void {
 }
 
 function buildInterior(c: Ctx): void {
-  const m = c.mats;
-  const v = c.car.visual;
   // Driver eye: under the roof, a little behind its leading edge, left-hand drive.
   const eye: V3 = [c.halfW * 0.4, c.roofY - 0.25, c.zRoofF - 0.22];
   c.parts.eye = eye;
@@ -721,17 +719,49 @@ function buildInterior(c: Ctx): void {
   eyeMarker.name = 'driver_eye';
   eyeMarker.position.set(...eye);
   c.shell.add(eyeMarker);
-  const [ex, ey, ez] = eye;
-  const dashTop = c.yCowl - 0.03;
-  const dashDepth = Math.min(0.55, c.zCowl - (ez + 0.3));
-  box(c.halfW * 2 - 0.16, 0.3, dashDepth, m.interior, [0, dashTop - 0.15, c.zCowl - dashDepth / 2], c.shell);
-  box(c.halfW * 2 - 0.16, 0.03, 0.25, m.trim, [0, dashTop + 0.005, c.zCowl - 0.12], c.shell);
+  const kit = buildCabin(c.car, c.mats, c.shell, { eye, halfW: c.halfW, dashTop: c.yCowl - 0.03, zCowl: c.zCowl, roofY: c.roofY, zRoofF: c.zRoofF, seats: true });
+  c.parts.steeringWheel = kit.steeringWheel;
+  c.parts.dash = kit.dash;
+  c.parts.mirrors.push(kit.mirror);
+  c.parts.hiddenInCockpit.push(...kit.hiddenInCockpit);
+}
+
+interface CabinFrame {
+  eye: V3;
+  /** Half the cabin's inner width (m). */
+  halfW: number;
+  /** Top of the dashboard and z of the windscreen's base. */
+  dashTop: number;
+  zCowl: number;
+  /** Underside of the roof and z of its leading edge (interior mirror). */
+  roofY: number;
+  zRoofF: number;
+  seats: boolean;
+  /** Free space between the eye and the dashboard's rear face (steering wheel, cluster). */
+  dashGap?: number;
+}
+
+interface Cabin {
+  steeringWheel: THREE.Object3D;
+  dash: { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture };
+  mirror: { mesh: THREE.Mesh; kind: 'interior' };
+  hiddenInCockpit: THREE.Object3D[];
+}
+
+/** Dashboard with the live cluster screen, steering wheel, seats, console, interior mirror. */
+function buildCabin(car: CarConfig, m: Mats, parent: THREE.Object3D, f: CabinFrame): Cabin {
+  const v = car.visual;
+  const [ex, ey, ez] = f.eye;
+  const dashTop = f.dashTop;
+  const dashDepth = Math.max(0.15, Math.min(0.55, f.zCowl - (ez + (f.dashGap ?? 0.3))));
+  box(f.halfW * 2 - 0.16, 0.3, dashDepth, m.interior, [0, dashTop - 0.15, f.zCowl - dashDepth / 2], parent);
+  box(f.halfW * 2 - 0.16, 0.03, 0.25, m.trim, [0, dashTop + 0.005, f.zCowl - 0.12], parent);
   // Cluster hood and screen (brand display drawn on a canvas).
   // Cluster seen above the steering-wheel rim, like in the real cars.
   const clusterZ = ez + 0.66;
   const clusterY = dashTop + 0.06;
   // Visor above the screen (shades it, does not cover it).
-  box(0.4, 0.025, 0.16, m.trim, [ex, clusterY + 0.08, clusterZ + 0.07], c.shell, [0.15, 0, 0]);
+  box(0.4, 0.025, 0.16, m.trim, [ex, clusterY + 0.08, clusterZ + 0.07], parent, [0.15, 0, 0]);
   const canvas = document.createElement('canvas');
   canvas.width = DASH_WIDTH;
   canvas.height = DASH_HEIGHT;
@@ -742,33 +772,35 @@ function buildInterior(c: Ctx): void {
     new THREE.PlaneGeometry(0.33, 0.124),
     new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }),
     [ex, clusterY, clusterZ - 0.02],
-    c.shell,
+    parent,
   );
   screen.rotation.set(0.32, Math.PI, 0);
   screen.name = 'dash_screen';
-  c.parts.dash = { canvas, texture };
   // Centre screen (infotainment), off.
   if (v.dash !== 'porsche-gt' && v.dash !== 'mclaren-folding') {
-    const cs = mesh(new THREE.PlaneGeometry(0.26, 0.15), m.gloss, [0, dashTop - 0.02, clusterZ - 0.02], c.shell);
+    const cs = mesh(new THREE.PlaneGeometry(0.26, 0.15), m.gloss, [0, dashTop - 0.02, clusterZ - 0.02], parent);
     cs.rotation.set(0.2, Math.PI, 0);
   }
   // Seats and console.
+  const hiddenInCockpit: THREE.Object3D[] = [];
   const seatZ = ez - 0.1;
-  for (const s of [1, -1]) {
-    const sx = s * Math.abs(ex);
-    box(0.48, 0.12, 0.5, m.leather, [sx, Math.max(ey - 0.65, 0.4), seatZ + 0.1], c.shell);
-    box(0.48, 0.66, 0.12, m.leather, [sx, ey - 0.3, seatZ - 0.22], c.shell, [-0.2, 0, 0]);
-    const head = box(0.26, 0.2, 0.1, m.leather, [sx, ey + 0.09, seatZ - 0.3], c.shell, [-0.15, 0, 0]);
-    if (s > 0) c.parts.hiddenInCockpit.push(head);
+  if (f.seats) {
+    for (const s of [1, -1]) {
+      const sx = s * Math.abs(ex);
+      box(0.48, 0.12, 0.5, m.leather, [sx, Math.max(ey - 0.65, 0.4), seatZ + 0.1], parent);
+      box(0.48, 0.66, 0.12, m.leather, [sx, ey - 0.3, seatZ - 0.22], parent, [-0.2, 0, 0]);
+      const head = box(0.26, 0.2, 0.1, m.leather, [sx, ey + 0.09, seatZ - 0.3], parent, [-0.15, 0, 0]);
+      if (s > 0) hiddenInCockpit.push(head);
+    }
   }
-  box(0.26, 0.2, 0.8, m.interior, [0, ey - 0.62, seatZ + 0.25], c.shell);
-  box(0.05, 0.08, 0.05, m.chrome, [0, ey - 0.5, seatZ + 0.42], c.shell);
+  box(0.26, 0.2, 0.8, m.interior, [0, ey - 0.62, seatZ + 0.25], parent);
+  box(0.05, 0.08, 0.05, m.chrome, [0, ey - 0.5, seatZ + 0.42], parent);
 
   // Steering wheel (flat-bottomed for the sporty brands), rotates about the column.
   const column = new THREE.Group();
   column.position.set(ex, ey - 0.37, ez + 0.47);
   column.rotation.x = 0.3;
-  c.shell.add(column);
+  parent.add(column);
   const wheel = new THREE.Group();
   wheel.name = 'steering_wheel';
   const rim = mesh(new THREE.TorusGeometry(0.175, 0.019, 12, 40), m.leather, undefined, wheel);
@@ -783,17 +815,50 @@ function buildInterior(c: Ctx): void {
   for (const s of [1, -1]) box(0.07, 0.11, 0.008, m.carbon, [s * 0.15, 0.03, 0.04], wheel);
   mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.32, 10), m.trim, [0, 0, 0.18], column).rotation.x = Math.PI / 2;
   column.add(wheel);
-  c.parts.steeringWheel = wheel;
 
   // Interior rear-view mirror (real-time render).
   const rvm = new THREE.Group();
-  rvm.position.set(0, c.roofY - 0.09, c.zRoofF - 0.08);
-  c.shell.add(rvm);
+  rvm.position.set(0, f.roofY - 0.09, f.zRoofF - 0.08);
+  parent.add(rvm);
   box(0.26, 0.07, 0.03, m.trim, [0, 0, 0.012], rvm);
   const rvmGlass = mesh(new THREE.PlaneGeometry(0.24, 0.06), m.mirror, [0, 0, -0.005], rvm);
   rvmGlass.rotation.y = Math.PI;
   rvmGlass.name = 'mirror_interior';
-  c.parts.mirrors.push({ mesh: rvmGlass, kind: 'interior' });
+  return { steeringWheel: wheel, dash: { canvas, texture }, mirror: { mesh: rvmGlass, kind: 'interior' }, hiddenInCockpit };
+}
+
+/**
+ * Stand-in cabin for real models delivered without an interior (exterior-only Sketchfab cars):
+ * placed around the driver's eye (car space) and up to the windscreen's base (`cowl`), so the
+ * cockpit view keeps a dashboard, the live cluster and a turning steering wheel.
+ */
+export function buildCabinKit(car: CarConfig, eye: V3, seats: boolean, cowl?: V3): Cabin & { group: THREE.Group } {
+  const group = new THREE.Group();
+  group.name = 'cabin-kit';
+  const [, ey, ez] = eye;
+  // The dashboard rises to the windscreen's base when the model tells where it is.
+  const useCowl = cowl && cowl[2] > ez + 0.5 && cowl[1] > ey - 0.45 && cowl[1] < ey;
+  const kit = buildCabin(car, makeMats(car), group, {
+    eye,
+    halfW: car.visual.width / 2 - 0.12,
+    dashTop: useCowl ? cowl[1] - 0.01 : ey - 0.27,
+    zCowl: useCowl ? cowl[2] : ez + 1.0,
+    roofY: ey + 0.24,
+    zRoofF: ez + 0.32,
+    seats,
+    dashGap: 0.6,
+  });
+  // The model has no door trims: inner door cards close the cabin's sides.
+  const m = makeMats(car);
+  const halfW = car.visual.width / 2 - 0.1;
+  const belt = useCowl ? cowl[1] : ey - 0.27;
+  const zFront = (useCowl ? cowl[2] : ez + 1.0) - 0.15;
+  const zBack = ez - 0.75;
+  for (const s of [1, -1]) box(0.03, belt - 0.3, zFront - zBack, m.interior, [s * halfW, 0.3 + (belt - 0.3) / 2, (zFront + zBack) / 2], group);
+  group.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) o.castShadow = o.receiveShadow = true;
+  });
+  return { ...kit, group };
 }
 
 function buildWheels(c: Ctx): void {

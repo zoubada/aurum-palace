@@ -6,6 +6,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import type { CarConfig } from './types';
 import type { CarParts, WheelNode } from './parts';
 import { DASH_HEIGHT, DASH_WIDTH } from './dashboards';
+import { buildCabinKit } from './procedural/buildPlaceholder';
 
 /**
  * Real car models (SPEC §4): glTF/GLB, optionally Draco / meshopt compressed with KTX2 textures.
@@ -245,6 +246,31 @@ export function mapCarModel(scene: THREE.Object3D, car: CarConfig, a: number): C
   if (eye) {
     const p = eye.getWorldPosition(new THREE.Vector3());
     parts.eye = [p.x, p.y, p.z];
+  }
+  // Exterior-only models (marker `cabin_kit` on the windscreen's base, `cabin_kit_noseats` when
+  // the model has its own seats): the game's stand-in cabin is fitted around the driver's eye.
+  const kitMarker = findNode(scene, /^cabin[_-]?kit/i);
+  if (kitMarker && !parts.steeringWheel) {
+    const cowl = kitMarker.getWorldPosition(new THREE.Vector3());
+    const kit = buildCabinKit(car, parts.eye, !/noseats/i.test(kitMarker.name), [cowl.x, cowl.y, cowl.z]);
+    shell.add(kit.group);
+    parts.steeringWheel = kit.steeringWheel;
+    parts.dash = kit.dash;
+    parts.mirrors.push(kit.mirror);
+    parts.hiddenInCockpit.push(...kit.hiddenInCockpit);
+    // Body panels modelled for the outside only: from the seat the roof and pillars would vanish.
+    // Their inner side gets a dark trim (a back-face copy sharing the geometry).
+    const lining = new THREE.MeshStandardMaterial({ name: 'int_lining', color: 0x1b1c1f, roughness: 0.9, side: THREE.BackSide, envMapIntensity: 0.3 });
+    const painted: THREE.Mesh[] = [];
+    shell.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh && !Array.isArray(m.material) && (parts.paint.includes(m.material as THREE.MeshPhysicalMaterial) || /stripe/i.test(m.material.name))) painted.push(m);
+    });
+    for (const m of painted) {
+      const inner = new THREE.Mesh(m.geometry, lining);
+      inner.name = `${m.name}_lining`;
+      m.add(inner);
+    }
   }
   const screen = findNode(scene, /^dash[_-]?screen$/i) as THREE.Mesh | null;
   if (screen?.isMesh) {
