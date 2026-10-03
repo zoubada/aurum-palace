@@ -1,0 +1,10 @@
+Nissan GTR R35
+Auteur : Ciasny — https://sketchfab.com/Ciasny
+Source : https://sketchfab.com/3d-models/nissan-gtr-r35-51c912a8310c4e00a82ad7673d84228a
+Licence : Creative Commons Attribution 4.0 (CC-BY-4.0) — https://creativecommons.org/licenses/by/4.0/
+
+Modifications : modèle orienté et remis à l'empattement officiel, maillages allégés (meshoptimizer),
+roues et étriers détachés en nœuds animables, matériaux renommés pour le jeu, vitres rendues
+transparentes, repères ajoutés (yeux du pilote, échappements, habitacle). Le modèle n'a pas
+d'habitacle : le jeu y installe le sien (tableau de bord, compteur, volant, sièges).
+Script : tools/cars/prepare-exterior.mjs

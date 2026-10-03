@@ -1,0 +1,10 @@
+Maclaren 675LT
+Auteur : MdMahib — https://sketchfab.com/MdMahib
+Source : https://sketchfab.com/3d-models/maclaren-675lt-305fede1879d4b7e83596640c4c4c170
+Licence : Creative Commons Attribution 4.0 (CC-BY-4.0) — https://creativecommons.org/licenses/by/4.0/
+
+Modifications : modèle remis à l'empattement officiel (2,670 m), roues, étriers, volant, aileron
+aérofrein, portes papillon, rétroviseurs, feux, écran de compteurs et sorties d'échappement détachés
+en nœuds animables ; finitions des matériaux refaites (la carte métal / rugosité d'origine était
+inutilisable), matériaux renommés pour le jeu, textures en JPEG / PNG, géométrie compressée (meshopt).
+Script : tools/cars/prepare-mclaren.mjs
