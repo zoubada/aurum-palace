@@ -114,7 +114,7 @@ export interface CarPhysicsConfig {
     clARear: number;
     /**
      * Active rear wing. 'drs' flattens the wing on full throttle in a straight line (911 GT3 RS);
-     * 'airbrake' raises it under hard braking (McLaren 720S). Deltas are added to cdA / clARear.
+     * 'airbrake' raises it under hard braking (McLaren 675LT). Deltas are added to cdA / clARear.
      */
     activeWing?: { mode: 'drs' | 'airbrake'; cdADelta: number; clARearDelta: number; minSpeedKmh: number };
   };

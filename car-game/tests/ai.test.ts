@@ -20,7 +20,7 @@ describe('racing line', () => {
   });
 
   it('gives a plausible ideal lap time', () => {
-    const prof = line.speedProfile(getCar('mclaren-720s').physics);
+    const prof = line.speedProfile(getCar('mclaren-675lt').physics);
     let t = 0;
     for (let i = 0; i < line.count; i++) t += line.spacing / Math.max(1, prof[i]);
     console.log(`Tour théorique (720S, profil de vitesse) : ${formatLapTime(t)}`);

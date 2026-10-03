@@ -10,14 +10,14 @@
  *
  *   node tools/cars/prepare-rs3.mjs <source.glb> <textures dir> [--report]
  */
-import { NodeIO } from '@gltf-transform/core';
+import { NodeIO, PropertyType } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { dedup, meshopt, prune } from '@gltf-transform/functions';
 import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer';
 import sharp from 'sharp';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { bbox, encodeTextures, extract, flatten, indicesOf, transformAll, triCentroid } from './lib.mjs';
+import { bbox, dashScreen, encodeTextures, extract, flatten, indicesOf, steeringWheel, transformAll } from './lib.mjs';
 
 const SRC = process.argv[2];
 const REPORT = process.argv.includes('--report');
@@ -241,40 +241,7 @@ wheelNodes.forEach((n, w) => {
 const parts = [];
 {
   const n = one(/^LOD_A_STEERING_WHEEL_mm_cab$/);
-  const prim = n.getMesh().listPrimitives()[0];
-  const pos = prim.getAttribute('POSITION').getArray();
-  const c = bbox(prim).center;
-  // Covariance → the smallest eigenvector is the wheel's axis (power iteration on (trace·I − C)).
-  const C = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-  for (let i = 0; i < pos.length; i += 3) {
-    const d = [pos[i] - c[0], pos[i + 1] - c[1], pos[i + 2] - c[2]];
-    for (let r = 0; r < 3; r++) for (let k = 0; k < 3; k++) C[r * 3 + k] += d[r] * d[k];
-  }
-  const tr = C[0] + C[4] + C[8];
-  let ax = [0, 0, 1];
-  for (let it = 0; it < 200; it++) {
-    const v = [0, 1, 2].map((r) => tr * ax[r] - (C[r * 3] * ax[0] + C[r * 3 + 1] * ax[1] + C[r * 3 + 2] * ax[2]));
-    const l = Math.hypot(...v);
-    ax = v.map((x) => x / l);
-  }
-  if (ax[2] < 0) ax = ax.map((x) => -x);
-  // Rotation about X taking +Z to the column axis (the column has no sideways component here).
-  const tilt = Math.atan2(-ax[1], ax[2]);
-  console.log('volant : axe', ax.map((v) => v.toFixed(3)).join(','), 'inclinaison', ((tilt * 180) / Math.PI).toFixed(1), '°');
-  const cos = Math.cos(tilt), sin = Math.sin(tilt);
-  const np = extract(doc, prim, () => true, c);
-  for (const sem of ['POSITION', 'NORMAL']) {
-    const acc = np.getAttribute(sem);
-    const a = acc.getArray();
-    for (let i = 0; i < a.length; i += 3) {
-      const y = a[i + 1], z = a[i + 2];
-      a[i + 1] = cos * y + sin * z; // R_x(−tilt): world → wheel frame
-      a[i + 2] = -sin * y + cos * z;
-    }
-    acc.setArray(a);
-  }
-  const mesh = doc.createMesh('steering_wheel').addPrimitive(np);
-  scene.addChild(doc.createNode('steering_wheel').setMesh(mesh).setTranslation(c).setRotation([Math.sin(tilt / 2), 0, 0, Math.cos(tilt / 2)]));
+  const { c, ax } = steeringWheel(doc, scene, n.getMesh().listPrimitives());
   parts.push({ name: 'steering', c, ax });
   n.getMesh().dispose();
   n.dispose();
@@ -313,70 +280,14 @@ for (const [side, word] of [['L', 'LEFT'], ['R', 'RIGHT']]) {
 {
   const sw = parts.find((p) => p.name === 'steering').c;
   // Look from the driver's eye through the wheel's upper opening: the first cabin surface hit is
-  // the binnacle's screen; the live display goes 5 mm in front of it.
-  const eye = [sw[0], sw[1] + EYE_UP, sw[2] - EYE_BACK];
-  const aim = [sw[0], sw[1] + DASH_UP, sw[2] + DASH_AHEAD];
-  const dir = aim.map((v, k) => v - eye[k]);
-  const len = Math.hypot(...dir);
-  const d = dir.map((v) => v / len);
-  let hit = Infinity;
-  let hitN = null;
-  const cabin = one(/^LOD_A_INTERIOR_mm_cab$/).getMesh().listPrimitives()[0];
-  const pos = cabin.getAttribute('POSITION').getArray();
-  const idx = indicesOf(cabin);
-  for (let t = 0; t < idx.length / 3; t++) {
-    const P = [0, 1, 2].map((j) => [pos[idx[t * 3 + j] * 3], pos[idx[t * 3 + j] * 3 + 1], pos[idx[t * 3 + j] * 3 + 2]]);
-    const e1 = P[1].map((v, k) => v - P[0][k]);
-    const e2 = P[2].map((v, k) => v - P[0][k]);
-    const cr = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-    const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-    const pv = cr(d, e2);
-    const det = dot(e1, pv);
-    if (Math.abs(det) < 1e-12) continue;
-    const tv = eye.map((v, k) => v - P[0][k]);
-    const u = dot(tv, pv) / det;
-    if (u < 0 || u > 1) continue;
-    const qv = cr(tv, e1);
-    const v = dot(d, qv) / det;
-    if (v < 0 || u + v > 1) continue;
-    const dist = dot(e2, qv) / det;
-    if (dist > 0.3 && dist < hit) {
-      hit = dist;
-      const n = cr(e1, e2);
-      const l = Math.hypot(...n);
-      hitN = n.map((x) => x / l);
-      if (dot(hitN, d) > 0) hitN = hitN.map((x) => -x); // towards the driver
-    }
-  }
-  if (!Number.isFinite(hit)) throw new Error('combiné introuvable');
-  const ctr = eye.map((v, k) => v + d[k] * (hit - 0.005));
-  console.log('combiné à', hit.toFixed(3), 'm des yeux, centre', ctr.map((v) => v.toFixed(3)).join(','));
-  // 12.3" Audi virtual cockpit: 0.31 × 0.115 m with the bezel, facing the driver, leaning back ≈ 15°.
-  const w = 0.31, h = 0.115;
-  const quad = new Float32Array([-w / 2, -h / 2, 0, w / 2, -h / 2, 0, w / 2, h / 2, 0, -w / 2, h / 2, 0]);
-  const nrm = new Float32Array([0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1]);
-  // Seen from the driver (looking towards +Z), +X is on the viewer's left: u runs the other way.
-  const quv = new Float32Array([1, 1, 0, 1, 0, 0, 1, 0]);
-  const buf = root.listBuffers()[0];
-  const sp = doc
-    .createPrimitive()
-    .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(quad).setBuffer(buf))
-    .setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(nrm).setBuffer(buf))
-    .setAttribute('TEXCOORD_0', doc.createAccessor().setType('VEC2').setArray(quv).setBuffer(buf))
-    .setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint16Array([0, 2, 1, 0, 3, 2])).setBuffer(buf))
-    // A (dummy) texture keeps `prune` from dropping the UV set: the game replaces the material.
-    .setMaterial(doc.createMaterial('dash_screen_material').setBaseColorFactor([0, 0, 0, 1]).setBaseColorTexture(doc.createTexture('dash_dummy').setMimeType('image/png').setImage(new Uint8Array(await sharp({ create: { width: 2, height: 2, channels: 3, background: '#000' } }).png().toBuffer()))));
-  // Lie flat on the binnacle surface (local −Z = its normal), rows kept horizontal.
-  const Z = hitN.map((x) => -x);
-  const Xr = [Z[2], 0, -Z[0]]; // up × Z
-  const xl = Math.hypot(...Xr);
-  const X = Xr.map((x) => x / xl);
-  const Y = [Z[1] * X[2] - Z[2] * X[1], Z[2] * X[0] - Z[0] * X[2], Z[0] * X[1] - Z[1] * X[0]];
-  const tr = X[0] + Y[1] + Z[2];
-  const qw = Math.sqrt(Math.max(0, 1 + tr)) / 2;
-  const q = [(Y[2] - Z[1]) / (4 * qw), (Z[0] - X[2]) / (4 * qw), (X[1] - Y[0]) / (4 * qw), qw];
-  console.log('combiné : normale', hitN.map((v) => v.toFixed(2)).join(','));
-  scene.addChild(doc.createNode('dash_screen').setMesh(doc.createMesh('dash_screen').addPrimitive(sp)).setTranslation(ctr).setRotation(q));
+  // the binnacle's screen. 12.3" Audi virtual cockpit: 0.31 × 0.115 m with the bezel.
+  const ctr = await dashScreen(doc, scene, sharp, {
+    eye: [sw[0], sw[1] + EYE_UP, sw[2] - EYE_BACK],
+    aim: [sw[0], sw[1] + DASH_UP, sw[2] + DASH_AHEAD],
+    prims: one(/^LOD_A_INTERIOR_mm_cab$/).getMesh().listPrimitives(),
+    w: 0.31,
+    h: 0.115,
+  });
   parts.push({ name: 'dash', ctr });
 }
 
@@ -395,7 +306,8 @@ void S;
 // =============================================================================
 await doc.transform(
   prune({ keepLeaves: true }), // keep the empty marker nodes (driver_eye, exhaust_tip_N)
-  dedup(),
+  // Materials are never merged: their names drive the game (lights, paint, rims…).
+  dedup({ propertyTypes: [PropertyType.ACCESSOR, PropertyType.MESH, PropertyType.TEXTURE] }),
   meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
 );
 await encodeTextures(doc, sharp);

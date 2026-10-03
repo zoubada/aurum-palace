@@ -186,7 +186,9 @@ export function mapCarModel(scene: THREE.Object3D, car: CarConfig, a: number): C
     const list = Array.isArray(m.material) ? m.material : [m.material];
     list.forEach((mat, idx) => {
       const n = mat.name.toLowerCase();
-      if (/paint|carpaint/.test(n) && !(mat as THREE.MeshPhysicalMaterial).isMeshPhysicalMaterial) {
+      // Body paint (garage colour); painted calipers keep their own colour.
+      const bodyPaint = /paint/.test(n) && !/caliper/.test(n);
+      if (bodyPaint && !(mat as THREE.MeshPhysicalMaterial).isMeshPhysicalMaterial) {
         // Upgrade the body paint to a clear-coated physical material.
         const std = mat as THREE.MeshStandardMaterial;
         const phys = new THREE.MeshPhysicalMaterial({ name: mat.name, color: std.color, map: std.map, metalness: std.metalness, roughness: std.roughness, clearcoat: 1, clearcoatRoughness: 0.03 });
@@ -199,7 +201,7 @@ export function mapCarModel(scene: THREE.Object3D, car: CarConfig, a: number): C
       const s = mat as THREE.MeshStandardMaterial;
       // Cabin (`int_…`): the roof and pillars hide most of the sky from the interior.
       if (/^int_/.test(n) && s.isMeshStandardMaterial) s.envMapIntensity = 0.3;
-      if (/paint/.test(n)) parts.paint.push(mat as THREE.MeshPhysicalMaterial);
+      if (bodyPaint) parts.paint.push(mat as THREE.MeshPhysicalMaterial);
       else if (/brake|tail/.test(n) && /light/.test(n)) parts.brakeLights.push(s);
       else if (/reverse/.test(n)) parts.reverseLights.push(s);
       else if (/head|drl/.test(n)) parts.headLights.push(s);

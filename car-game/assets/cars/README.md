@@ -10,7 +10,7 @@ Déposez le modèle de chaque voiture ici : `assets/cars/<id>/model.glb`. Le jeu
 | Ford Mustang GT (S650) | `ford-mustang-gt-s650/` |
 | BMW M3 Competition (G80) | `bmw-m3-competition-g80/` |
 | Nissan GT-R (R35) | `nissan-gt-r-r35/` |
-| McLaren 720S | `mclaren-720s/` |
+| McLaren 675LT | `mclaren-675lt/` |
 
 ## Format
 
@@ -39,7 +39,7 @@ Les nœuds sans maillage (`driver_eye`, `exhaust_tip_N`) doivent survivre à l'o
 
 | Contient | Effet |
 |---|---|
-| `paint` | Peinture carrosserie (vernis ajouté, couleur choisie au garage). |
+| `paint` | Peinture carrosserie (vernis ajouté, couleur choisie au garage), sauf `caliper…`. |
 | `light_brake` / `brake_light` / `taillight` | Feux stop (s'allument au freinage). |
 | `reverse` | Feux de recul. |
 | `light_head` / `drl` | Phares et feux de jour. |

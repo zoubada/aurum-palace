@@ -294,24 +294,29 @@ export class Vehicle {
   }
 
   private autoGearbox(throttle: number, brake: number): void {
-    if (this.gear < 1 || this.shiftTimer > 0 || this.shiftCooldown > 0 || this.clutchSlipping) return;
+    if (this.gear < 1 || this.shiftTimer > 0 || this.shiftCooldown > 0) return;
     const red = this.cfg.engine.redlineRpm;
     const n = this.cfg.gearbox.ratios.length;
-    const rpm = this.engineRpm;
-    const ratios = this.cfg.gearbox.ratios;
+    // Shift points from the road speed, not the engine: when the clutch slips (the car slowed
+    // right down in a tall gear after a crash or a hard stop) the engine sits at its launch rpm
+    // and would hide that the gear is far too long.
+    const omega = this.drivetrainOmega();
+    const rpmIn = (g: number) => omega * this.totalRatio(g) * RADS_TO_RPM;
+    const rpm = rpmIn(this.gear);
     // Lift-off upshifts only when cruising: never while braking (that would make the box hunt
-    // between gears on the way into a corner).
+    // between gears on the way into a corner), nor while the clutch is still slipping (launch).
     const upRpm = lerp(0.62, 0.97, clamp(throttle * 1.15, 0, 1)) * red;
-    if (this.gear < n && rpm > upRpm && (brake < 0.05 || rpm > 0.97 * red)) {
+    if (this.gear < n && !this.clutchSlipping && rpm > upRpm && (brake < 0.05 || rpm > 0.97 * red)) {
       this.setGear(this.gear + 1);
       return;
     }
-    if (this.gear > 1) {
-      const rpmAfter = (rpm * ratios[this.gear - 2]) / ratios[this.gear - 1];
-      const downRpm = brake > 0.2 ? 0.45 * red : lerp(0.28, 0.6, throttle) * red;
-      const maxAfter = brake > 0.2 ? 0.86 * red : 0.92 * red;
-      if (rpm < downRpm && rpmAfter < maxAfter) this.setGear(this.gear - 1);
-    }
+    // Downshifts skip straight to the gear that suits the speed (several at once if needed,
+    // like a dual-clutch kickdown), without ever over-revving the engine.
+    const downRpm = brake > 0.2 ? 0.45 * red : lerp(0.28, 0.6, throttle) * red;
+    const maxAfter = brake > 0.2 ? 0.86 * red : 0.92 * red;
+    let g = this.gear;
+    while (g > 1 && rpmIn(g) < downRpm && rpmIn(g - 1) < maxAfter) g--;
+    if (g < this.gear) this.setGear(g);
   }
 
   // ---------------------------------------------------------------------------

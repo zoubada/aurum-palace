@@ -43,11 +43,11 @@ await page.waitForFunction(() => window.__app?.current, null, { timeout: 120000 
 // --- Garage.
 const cars = await page.evaluate(() => [...document.querySelectorAll('[data-car]')].map((b) => b.dataset.car));
 check(cars.length === 7, `garage lists the 7 cars (${cars.join(', ')})`);
-await page.click('[data-car="mclaren-720s"]');
+await page.click('[data-car="mclaren-675lt"]');
 await page.click('[data-tab="setup"]');
 await page.waitForFunction(() => /km\/h/.test(document.querySelector('[data-sim]')?.textContent ?? ''), null, { timeout: 120000 });
 const simText = await page.textContent('[data-sim]');
-check(/2,[6-9]\d? s|2\.[6-9]\d? s/.test(simText ?? ''), `garage measures the 720S in simulation: "${simText?.trim()}"`);
+check(/2,[6-9]\d? s|2\.[6-9]\d? s/.test(simText ?? ''), `garage measures the 675LT in simulation: "${simText?.trim()}"`);
 await page.screenshot({ path: `${OUT}/01-garage.png` });
 
 // --- Drive on the test track.
@@ -69,7 +69,7 @@ await waitSim(0.5);
 await page.keyboard.down('ArrowUp');
 await waitSim(4);
 const s1 = await state();
-check(s1.kmh > 120, `720S accelerates: ${s1.kmh.toFixed(1)} km/h after 4 s, gear ${s1.gear}`);
+check(s1.kmh > 120, `675LT accelerates: ${s1.kmh.toFixed(1)} km/h after 4 s, gear ${s1.gear}`);
 check(await page.evaluate(() => !!window.__app.current.carAudio), 'engine sound running');
 await page.screenshot({ path: `${OUT}/02-drive.png` });
 for (const [i, mode] of ['cockpit', 'hood', 'chase'].entries()) {
@@ -89,7 +89,7 @@ const t1 = await page.evaluate(() => window.__app.current.simTime);
 await page.keyboard.up('ArrowDown');
 const decelG = ((b0.kmh - b1.kmh) / 3.6 / (t1 - t0)) / 9.81;
 check(decelG > 0.9, `brakes: ${b0.kmh.toFixed(0)} → ${b1.kmh.toFixed(0)} km/h, ${decelG.toFixed(2)} g average`);
-check(wing > 0.5, `720S airbrake deployed under hard braking above 100 km/h (${wing.toFixed(2)})`);
+check(wing > 0.5, `675LT airbrake deployed under hard braking above 100 km/h (${wing.toFixed(2)})`);
 
 await page.keyboard.press('Escape');
 await page.waitForSelector('.menu:not(.hidden)', { timeout: 120000 });

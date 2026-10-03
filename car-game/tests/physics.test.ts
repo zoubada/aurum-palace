@@ -163,6 +163,30 @@ describe('drivability and driver aids', () => {
     expect(without).toBeGreaterThan(withTc);
   });
 
+  it('automatic gearbox: kicks down at once after a sudden loss of speed (crash, big stop)', () => {
+    for (const preset of ['arcade', 'intermediate'] as const) {
+      const v = makeCar(preset);
+      runUntil(v, input({ throttle: 1 }), () => v.gear >= 5);
+      // Hit something: 50 km/h left, still in 5th, foot down again.
+      const u = 50 / 3.6;
+      v.u = u;
+      for (const w of v.wheels) w.omega = u / w.tire.radius;
+      runUntil(v, input({ throttle: 1 }), (t) => t > 1);
+      expect(v.gear, preset).toBeLessThanOrEqual(2);
+      const t = runUntil(v, input({ throttle: 1 }), () => v.speedKmh >= 100, 10);
+      // From 50 to 100 km/h in about 2.5 s (≈ the car's 0–100 minus the launch), not 10 s in 5th.
+      expect(t, preset).toBeLessThan(3.5);
+    }
+  });
+
+  it('automatic gearbox: comes down through the gears when braking to a stop', () => {
+    const v = makeCar();
+    runUntil(v, input({ throttle: 1 }), () => v.speedKmh >= 160);
+    runUntil(v, input({ brake: 1 }), () => v.speedKmh < 20, 10);
+    runUntil(v, input(), (t) => t > 0.6);
+    expect(v.gear).toBeLessThanOrEqual(2);
+  });
+
   it('manual gearbox: shifts on request and the rev limiter caps engine speed', () => {
     const v = makeCar('simulation');
     v.assists.autoGear = false;

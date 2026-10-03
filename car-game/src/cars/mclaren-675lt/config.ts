@@ -1,18 +1,19 @@
 import type { CarConfig, CarPhysicsConfig } from '../types';
 import { overhangsFromCg, tire, tireRadius, withDriver, yawInertia } from '../helpers';
 
-// McLaren 720S (2017–2023). M840T 4.0 V8 biturbo (flat-plane crank), 720 PS @ 7500 / 770 N·m @ 5500,
-// 7-speed SSG dual-clutch, RWD, active rear wing with airbrake. Pirelli P Zero Corsa.
-// Kerb weight DIN 1419 kg. Gear ratios are close estimates.
-const rf = tireRadius(245, 35, 19);
+// McLaren 675LT Coupé (2015–2016, 500 built). M838TL 3.8 V8 biturbo (flat-plane crank),
+// 675 PS @ 7100 / 700 N·m @ 5000–6500, 7-speed SSG dual-clutch, RWD, carbon-ceramic brakes,
+// "Longtail" active airbrake (50 % larger than the 650S's). Pirelli P Zero Trofeo R.
+// Dry weight 1230 kg, about 1330 kg with fluids. Gear ratios and rear track are close estimates.
+const rf = tireRadius(235, 35, 19);
 const rr = tireRadius(305, 30, 20);
-const kerb = 1419;
+const kerb = 1328;
 const physics: CarPhysicsConfig = {
   mass: withDriver(kerb),
   wheelbase: 2.67,
   frontWeightFraction: 0.42,
-  trackFront: 1.674,
-  trackRear: 1.629,
+  trackFront: 1.676,
+  trackRear: 1.583,
   cgHeight: 0.4,
   yawInertia: yawInertia(withDriver(kerb), 2.67, 0.42, 0.95),
   drive: 'RWD',
@@ -20,14 +21,14 @@ const physics: CarPhysicsConfig = {
     idleRpm: 900,
     redlineRpm: 8500,
     torqueCurve: [
-      [800, 340],
-      [2500, 580],
-      [4000, 720],
-      [5500, 770],
-      [6500, 740],
-      [7500, 675],
-      [8100, 600],
-      [8600, 510],
+      [800, 300],
+      [2500, 520],
+      [4000, 660],
+      [5000, 700],
+      [6500, 700],
+      [7100, 667],
+      [7800, 590],
+      [8600, 500],
     ],
     engineBrakeTorque: 120,
     inertia: 0.16,
@@ -73,18 +74,19 @@ const physics: CarPhysicsConfig = {
   steering: { maxAngle: 0.56, steeringWheelMaxDeg: 360 },
 };
 
-export const mclaren720s: CarConfig = {
-  id: 'mclaren-720s',
-  name: 'McLaren 720S',
+export const mclaren675lt: CarConfig = {
+  id: 'mclaren-675lt',
+  name: 'McLaren 675LT',
   placeholder: true,
   physics,
   sound: { cylinders: 8, roughness: 0.1, brightness: 0.8, intake: 0.6, turbo: 0.7, pops: 0.45, seed: 78 },
   visual: {
-    model: 'assets/cars/mclaren-720s/model.glb',
+    model: 'assets/cars/mclaren-675lt/model.glb',
+    modelCredit: 'Modèle 3D « Maclaren 675LT » par MdMahib (Sketchfab), licence CC-BY 4.0 — adapté pour le jeu',
     brand: 'McLaren',
-    length: 4.543,
-    width: 1.93,
-    height: 1.196,
+    length: 4.546,
+    width: 1.945,
+    height: 1.188,
     ...overhangsFromCg(physics, 0.98, 0.89),
     bodyStyle: 'midengine',
     headlights: 'mclaren-socket',
@@ -96,14 +98,14 @@ export const mclaren720s: CarConfig = {
     exhaust: { count: 2, layout: 'center' },
     rimDesign: { spokes: 10 },
     paints: [
-      { name: 'Orange Azores', color: 0xd0561a, metallic: 0.7 },
-      { name: 'Papaya Spark', color: 0xff7a0d, metallic: 0.5 },
-      { name: 'Bleu Aurora', color: 0x2c60ad, metallic: 0.7 },
-      { name: 'Or Aztec', color: 0x8b6a3b, metallic: 0.8 },
+      { name: 'Orange McLaren', color: 0xf26b12, metallic: 0 },
+      { name: 'Vert Napier', color: 0x1d3a2c, metallic: 0.7 },
+      { name: 'Rouge Delta', color: 0x8c1420, metallic: 0.7 },
+      { name: 'Gris Chicane', color: 0x66696c, metallic: 0.3 },
       { name: 'Blanc Silica', color: 0xedeeec, metallic: 0 },
-      { name: 'Noir Onyx', color: 0x0d0d0f, metallic: 0.6 },
+      { name: 'Noir Saphir', color: 0x0d0e11, metallic: 0.6 },
     ],
-    paint: 0xd0561a,
+    paint: 0xf26b12,
     rimColors: [
       { name: 'Argent', color: 0xbcc0c3 },
       { name: 'Noir brillant', color: 0x151618 },
@@ -114,13 +116,13 @@ export const mclaren720s: CarConfig = {
     driverEye: [0.34, 0.98, 0.35],
   },
   reference: {
-    engine: '4.0 V8 biturbo (M840T)',
+    engine: '3.8 V8 biturbo (M838TL)',
     drivetrain: 'Propulsion, moteur central arrière',
     zeroTo100: 2.9,
-    topSpeedKmh: 341,
-    powerHp: 720,
-    torqueNm: 770,
+    topSpeedKmh: 330,
+    powerHp: 675,
+    torqueNm: 700,
     massKg: kerb,
-    source: 'McLaren Automotive, fiche 720S Coupé 2017',
+    source: 'McLaren Automotive, fiche 675LT Coupé 2015',
   },
 };

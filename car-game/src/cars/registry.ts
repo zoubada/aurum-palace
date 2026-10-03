@@ -5,10 +5,10 @@ import { porscheGt3Rs } from './porsche-911-gt3-rs-992/config';
 import { fordMustangGt } from './ford-mustang-gt-s650/config';
 import { bmwM3 } from './bmw-m3-competition-g80/config';
 import { nissanGtr } from './nissan-gt-r-r35/config';
-import { mclaren720s } from './mclaren-720s/config';
+import { mclaren675lt } from './mclaren-675lt/config';
 
 /** All playable cars (SPEC §4). One folder per car in src/cars/<id>/. */
-export const CARS: CarConfig[] = [audiRs3, audiRs6, porscheGt3Rs, fordMustangGt, bmwM3, nissanGtr, mclaren720s];
+export const CARS: CarConfig[] = [audiRs3, audiRs6, porscheGt3Rs, fordMustangGt, bmwM3, nissanGtr, mclaren675lt];
 
 export function getCar(id: string): CarConfig {
   return CARS.find((c) => c.id === id) ?? CARS[0];

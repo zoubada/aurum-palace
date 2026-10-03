@@ -381,7 +381,7 @@ function buildSides(c: Ctx, fourDoors: boolean): void {
     }
   }
   if (c.car.visual.bodyStyle === 'midengine') {
-    // 720S: dark intakes behind the doors.
+    // McLaren: dark intakes behind the doors.
     for (const side of [1, -1]) {
       box(0.06, 0.22, 0.4, c.mats.gloss, [side * (c.halfW - 0.01), c.yCowl - 0.08, c.zr + c.Rr + 0.35], c.shell);
     }
@@ -445,7 +445,7 @@ function buildGreenhouse(c: Ctx, fourDoors: boolean): void {
   const roof = mesh(new THREE.BoxGeometry(topW * 2 + 0.07, 0.035, roofLen + 0.05), [m.paint, m.paint, m.paint, m.interior, m.paint, m.paint] as unknown as THREE.Material, [0, roofY + 0.015, (zRoofF + zRoofR) / 2], c.shell);
   roof.name = 'roof';
   if (c.car.visual.bodyStyle === 'midengine' || c.car.visual.wing === 'gt3rs-swan') {
-    // Carbon roof on the 720S and the GT3 RS (Weissach-style).
+    // Carbon roof on the McLaren and the GT3 RS (Weissach-style).
     (roof.material as unknown as THREE.Material[])[2] = m.carbon;
   }
   // Pillars: A (black), B, C (body colour, wide on coupés).
@@ -624,7 +624,7 @@ function buildRear(c: Ctx): void {
         box(0.18, 0.02, 0.03, m.brake, [s * (hx - 0.2), ly + 0.09, zR + 0.02], c.shell);
         box(0.18, 0.02, 0.03, m.brake, [s * (hx - 0.2), ly - 0.09, zR + 0.02], c.shell);
       }
-      // Open rear mesh of the 720S.
+      // Open rear mesh of the McLaren.
       box(hx * 1.3, 0.22, 0.05, m.gloss, [0, ly - 0.05, zR + 0.03], c.shell);
       break;
     default:
@@ -697,7 +697,7 @@ function buildWing(c: Ctx): void {
       break;
     }
     case 'active-blade': {
-      // 720S: flush blade over the rear deck that rises as an airbrake.
+      // McLaren: flush blade over the rear deck that rises as an airbrake.
       const pivot = new THREE.Group();
       pivot.name = 'wing_active';
       pivot.position.set(0, c.yTail + 0.02, c.zR + 0.42);

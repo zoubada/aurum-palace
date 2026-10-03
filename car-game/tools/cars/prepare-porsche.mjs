@@ -9,7 +9,7 @@
  *
  *   node tools/cars/prepare-porsche.mjs <source.glb> [--report]
  */
-import { NodeIO } from '@gltf-transform/core';
+import { NodeIO, PropertyType } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { dedup, meshopt, prune } from '@gltf-transform/functions';
 import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer';
@@ -344,7 +344,8 @@ scene.addChild(doc.createNode('driver_eye').setTranslation([0.36, 0.99, -1.52]))
 // =============================================================================
 await doc.transform(
   prune({ keepLeaves: true }), // keep the empty marker nodes (driver_eye, exhaust_tip_N)
-  dedup(),
+  // Materials are never merged: their names drive the game (lights, paint, rims…).
+  dedup({ propertyTypes: [PropertyType.ACCESSOR, PropertyType.MESH, PropertyType.TEXTURE] }),
   meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
 );
 await encodeTextures(doc, sharp);
