@@ -1,5 +1,9 @@
 import './ui/styles.css';
 import { App } from './core/App';
+import { isTouchDevice } from './core/device';
+
+// Phone layouts (garage, HUD) and on-screen controls hang off this class.
+if (isTouchDevice()) document.documentElement.classList.add('touch');
 
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
 const ui = document.getElementById('ui') as HTMLElement;
@@ -19,7 +23,7 @@ function showFocusHint(): void {
   if (document.hasFocus()) return;
   const hint = document.createElement('button');
   hint.className = 'focus-hint';
-  hint.textContent = 'Cliquez ici pour prendre le volant';
+  hint.textContent = isTouchDevice() ? 'Touchez ici pour commencer (et activer le son)' : 'Cliquez ici pour prendre le volant';
   const dismiss = () => {
     window.focus();
     hint.remove();

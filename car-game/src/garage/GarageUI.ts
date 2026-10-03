@@ -19,7 +19,10 @@ export interface GarageCallbacks {
   onQuality(q: QualityId): void;
 }
 
-type Tab = 'specs' | 'paint' | 'setup';
+type Tab = 'race' | 'specs' | 'paint' | 'setup';
+
+/** Phone layouts (portrait, or a short landscape screen): race options move into a tab. */
+export const COMPACT_QUERY = '(max-width: 900px) and (orientation: portrait), (max-height: 500px)';
 
 const GEARBOX_LABEL = { dct: 'Double embrayage', automatic: 'Automatique', manual: 'Manuelle' } as const;
 
@@ -61,6 +64,11 @@ export class GarageUI {
   private simTimer = 0;
   private sim: { zeroTo100: number; topSpeed: number } | null = null;
   private drive: DriveOptions = { ...DEFAULT_DRIVE, ...loadJSON<Partial<DriveOptions>>('drive', {}) };
+  private readonly compactQuery = matchMedia(COMPACT_QUERY);
+  private readonly onCompactChange = () => {
+    if (!this.compactQuery.matches && this.tab === 'race') this.tab = 'specs';
+    if (this.car) this.render();
+  };
 
   constructor(
     parent: HTMLElement,
@@ -69,6 +77,12 @@ export class GarageUI {
     this.root = document.createElement('div');
     this.root.className = 'garage';
     parent.appendChild(this.root);
+    if (this.compactQuery.matches) this.tab = 'race';
+    this.compactQuery.addEventListener('change', this.onCompactChange);
+  }
+
+  private get compact(): boolean {
+    return this.compactQuery.matches;
   }
 
   setQuality(q: QualityId): void {
@@ -111,11 +125,14 @@ export class GarageUI {
 
   private render(): void {
     const c = this.car;
+    const compact = this.compact;
     const tabs: Array<[Tab, string]> = [
+      ...(compact ? ([['race', 'Course']] as Array<[Tab, string]>) : []),
       ['specs', 'Fiche'],
-      ['paint', 'Personnaliser'],
+      ['paint', compact ? 'Couleurs' : 'Personnaliser'],
       ['setup', 'Réglages'],
     ];
+    const body = { race: () => this.raceTabHtml(), specs: () => this.specsHtml(), paint: () => this.paintHtml(), setup: () => this.setupHtml() }[this.tab]();
     this.root.innerHTML = `
       <header class="g-head">
         <div class="g-kicker">Garage</div>
@@ -141,21 +158,32 @@ export class GarageUI {
         <div class="g-tabs" role="tablist">
           ${tabs.map(([t, l]) => `<button role="tab" data-tab="${t}" class="${this.tab === t ? 'on' : ''}">${l}</button>`).join('')}
         </div>
-        <div class="g-body">${this.tab === 'specs' ? this.specsHtml() : this.tab === 'paint' ? this.paintHtml() : this.setupHtml()}</div>
+        <div class="g-body">${body}</div>
       </aside>
 
       <footer class="g-foot">
+        ${compact ? '' : this.qualityHtml() + this.raceHtml()}
+        <button class="g-drive" data-action="drive">Rouler <span>· ${escapeHtml(TRACK_NAMES[this.drive.track])}</span></button>
+        ${compact ? '' : '<div class="g-hint">Glisser pour tourner autour · molette pour zoomer</div>'}
+      </footer>`;
+    this.bind();
+    this.renderSim();
+    // Phones: the car strip scrolls sideways; keep the chosen car in view.
+    if (compact) this.root.querySelector('.g-car.on')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
+  private qualityHtml(): string {
+    return `
         <label class="g-quality">Graphismes
           <select id="g-quality">
             ${(Object.keys(QUALITY_PRESETS) as QualityId[]).map((q) => `<option value="${q}" ${q === this.quality ? 'selected' : ''}>${QUALITY_PRESETS[q].label}</option>`).join('')}
           </select>
-        </label>
-        ${this.raceHtml()}
-        <button class="g-drive" data-action="drive">Rouler <span>· ${escapeHtml(TRACK_NAMES[this.drive.track])}</span></button>
-        <div class="g-hint">Glisser pour tourner autour · molette pour zoomer</div>
-      </footer>`;
-    this.bind();
-    this.renderSim();
+        </label>`;
+  }
+
+  /** Phones: race options and graphics in their own tab (the footer only keeps "Rouler"). */
+  private raceTabHtml(): string {
+    return `${this.raceHtml()}${this.qualityHtml()}<p class="g-note">Glisser sur la voiture pour tourner autour · pincer pour zoomer.</p>`;
   }
 
   /** Track, weather and opponents for the next drive. */
@@ -357,6 +385,7 @@ export class GarageUI {
   }
 
   dispose(): void {
+    this.compactQuery.removeEventListener('change', this.onCompactChange);
     clearTimeout(this.simTimer);
     this.root.remove();
   }

@@ -1,4 +1,5 @@
 /** Graphics quality presets (SPEC §2: Low / Medium / High / Ultra). */
+import { isTouchDevice } from './device';
 
 export type QualityId = 'low' | 'medium' | 'high' | 'ultra';
 
@@ -98,7 +99,8 @@ export function loadQuality(): QualityId {
   } catch {
     /* storage unavailable: fall through to default */
   }
-  return 'high';
+  // Phones: smaller screen, battery and heat — Medium keeps the frame rate up.
+  return isTouchDevice() ? 'medium' : 'high';
 }
 
 export function saveQuality(id: QualityId): void {

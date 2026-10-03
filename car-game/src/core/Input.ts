@@ -1,8 +1,9 @@
 import type { DriveInput } from '../physics/vehicle';
+import type { TouchState } from '../ui/TouchControls';
 import { approach, clamp } from '../physics/math';
 
 /**
- * Keyboard + gamepad input (SPEC §3 "Contrôles").
+ * Keyboard + gamepad + touch input (SPEC §3 "Contrôles").
  *
  * Keyboard pedals and steering are digital, so they are ramped to feel like a
  * progressive input. Gamepads use analog triggers/stick with a deadzone and a
@@ -59,8 +60,10 @@ export class Input {
   /** Smoothed outputs. */
   readonly drive: DriveInput = { throttle: 0, brake: 0, steer: 0, handbrake: 0 };
   lookBack = false;
-  /** 'keyboard' or the gamepad id currently in use (shown in the menu). */
+  /** 'keyboard', 'tactile' or the gamepad id currently in use (shown in the menu). */
   device = 'keyboard';
+  /** On-screen controls (phones), set by the drive session while it shows them. */
+  touch: TouchState | null = null;
 
   constructor(target: Window = window) {
     target.addEventListener('keydown', (e) => {
@@ -74,6 +77,11 @@ export class Input {
     });
     target.addEventListener('keyup', (e) => this.keys.delete(e.code));
     target.addEventListener('blur', () => this.keys.clear());
+  }
+
+  /** Queue an action from another source (on-screen buttons). */
+  push(action: Action): void {
+    this.queued.push(action);
   }
 
   /** Edge-triggered actions since the last call. */
@@ -132,6 +140,18 @@ export class Input {
       d.steer = padSteer;
       d.handbrake = padHandbrake;
       this.lookBack = padLookBack;
+      return;
+    }
+
+    // Touch: pedals as pressed, steering slightly smoothed (a tap must not flick the wheel).
+    const t = this.touch;
+    if (t && this.keys.size === 0) {
+      d.throttle = t.throttle;
+      d.brake = t.brake;
+      d.handbrake = t.handbrake;
+      d.steer = approach(d.steer, t.steer, 9 * dt);
+      this.lookBack = false;
+      if (t.active) this.device = 'tactile';
       return;
     }
 

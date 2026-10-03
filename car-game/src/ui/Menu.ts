@@ -3,6 +3,7 @@ import type { VolumeSettings } from '../audio/AudioEngine';
 import { presetOf } from '../core/assists';
 import { QUALITY_PRESETS, type QualityId } from '../core/quality';
 import { CAMERA_MODES, type CameraModeId, type CameraSettings } from '../camera/CameraRig';
+import { isTouchDevice } from '../core/device';
 
 /**
  * Pause / settings menu: driving aids (presets + individual toggles), graphics
@@ -43,7 +44,7 @@ const AID_LABELS: Array<[keyof Assists, string, string]> = [
   ['abs', 'ABS', 'Empêche le blocage des roues au freinage'],
   ['tc', 'Antipatinage', 'Limite le patinage à l’accélération'],
   ['esp', 'ESP', 'Corrige les dérapages en freinant une roue'],
-  ['autoGear', 'Boîte automatique', 'Sinon : E / A·Q ou palettes'],
+  ['autoGear', 'Boîte automatique', isTouchDevice() ? 'Sinon : boutons + / − à l’écran' : 'Sinon : E / A·Q ou palettes'],
   ['steerLimit', 'Limiteur de braquage', 'Adapte l’angle de braquage à la vitesse'],
 ];
 
@@ -140,6 +141,11 @@ export class Menu {
         </section>
         <section>
           <h2>Commandes</h2>
+          ${
+            isTouchDevice()
+              ? `<p class="touch-help">Téléphone à l’horizontale. <b>Pouce gauche</b> : glisser sur la barre pour diriger. <b>Pouce droit</b> : pédales Accél. et Frein (plus le doigt est haut, plus on appuie ; Frein à l’arrêt = marche arrière). Boutons <b>Frein à main</b>, <b>Caméra</b>, <b>Replacer</b> ; <b>+ / −</b> pour les rapports en boîte manuelle. Une manette Bluetooth (PS5, Xbox) marche aussi.</p>`
+              : ''
+          }
           <table class="controls">
             <tr><th></th><th>Clavier</th><th>Manette</th></tr>
             <tr><td>Accélérer</td><td>↑ / Z (AZERTY) · W</td><td>RT</td></tr>
@@ -153,7 +159,7 @@ export class Menu {
             <tr><td>Presets d’aides</td><td>1 · 2 · 3</td><td>—</td></tr>
             <tr><td>Masquer HUD / télémétrie</td><td>H / F3</td><td>—</td></tr>
           </table>
-          <p class="device">Périphérique actif : <b>${s.device === 'keyboard' ? 'clavier' : escapeHtml(s.device)}</b></p>
+          <p class="device">Périphérique actif : <b>${s.device === 'keyboard' ? 'clavier' : s.device === 'tactile' ? 'écran tactile' : escapeHtml(s.device)}</b></p>
         </section>
         <footer>
           <button class="ghost" data-action="garage">Retour au garage</button>

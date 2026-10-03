@@ -7,7 +7,7 @@ import { Vehicle } from '../physics/vehicle';
 import { CarVisual } from '../cars/CarVisual';
 import { loadCarModel, modelAvailable } from '../cars/gltf';
 import { applySetup, loadSetup, saveSetup, type CarSetup } from '../cars/setup';
-import { GarageUI } from './GarageUI';
+import { COMPACT_QUERY, GarageUI } from './GarageUI';
 
 /**
  * Garage / showroom (SPEC §4, §9): the car on a turntable under studio lighting, orbit camera,
@@ -33,23 +33,44 @@ export class Garage implements Screen {
   private distance = 8.5;
   private autoRotate = true;
   private dragging: { x: number; y: number } | null = null;
+  /** Fingers on the showroom (two = pinch to zoom). */
+  private readonly fingers = new Map<number, { x: number; y: number }>();
+  private pinch = 0;
+  /** Extra distance so the car fits a narrow (portrait) screen. */
+  private fit = 1;
   private idleTimer = 0;
   private readonly onPointerDown = (e: PointerEvent) => {
     if ((e.target as HTMLElement).id !== 'scene') return;
-    this.dragging = { x: e.clientX, y: e.clientY };
+    this.fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    this.pinch = this.fingers.size === 2 ? this.fingerSpread() : 0;
+    this.dragging = this.fingers.size === 1 ? { x: e.clientX, y: e.clientY } : null;
     this.autoRotate = false;
   };
   private readonly onPointerMove = (e: PointerEvent) => {
+    if (this.fingers.has(e.pointerId)) this.fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.fingers.size === 2 && this.pinch > 0) {
+      const spread = this.fingerSpread();
+      this.distance = THREE.MathUtils.clamp((this.distance * this.pinch) / spread, 6, 18);
+      this.pinch = spread;
+      this.idleTimer = 0;
+      return;
+    }
     if (!this.dragging) return;
     this.azimuth -= (e.clientX - this.dragging.x) * 0.006;
     this.elevation = THREE.MathUtils.clamp(this.elevation + (e.clientY - this.dragging.y) * 0.004, 0.02, 0.85);
     this.dragging = { x: e.clientX, y: e.clientY };
     this.idleTimer = 0;
   };
-  private readonly onPointerUp = () => {
+  private readonly onPointerUp = (e: PointerEvent) => {
+    this.fingers.delete(e.pointerId);
+    this.pinch = 0;
     this.dragging = null;
     this.idleTimer = 0;
   };
+  private fingerSpread(): number {
+    const [a, b] = [...this.fingers.values()];
+    return Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+  }
   private readonly onWheel = (e: WheelEvent) => {
     if ((e.target as HTMLElement).id !== 'scene') return;
     this.distance = THREE.MathUtils.clamp(this.distance * (1 + Math.sign(e.deltaY) * 0.08), 6, 18);
@@ -116,6 +137,7 @@ export class Garage implements Screen {
     window.addEventListener('pointerdown', this.onPointerDown);
     window.addEventListener('pointermove', this.onPointerMove);
     window.addEventListener('pointerup', this.onPointerUp);
+    window.addEventListener('pointercancel', this.onPointerUp);
     window.addEventListener('wheel', this.onWheel, { passive: true });
     this.selectCar(getCar(carId).id);
   }
@@ -174,7 +196,7 @@ export class Garage implements Screen {
     if (!this.dragging && this.idleTimer > 4) this.autoRotate = true;
     if (this.autoRotate) this.azimuth += dt * 0.18;
     const target = new THREE.Vector3(0, 0.62, 0);
-    const d = this.distance;
+    const d = this.distance * this.fit;
     this.camera.position.set(Math.sin(this.azimuth) * Math.cos(this.elevation) * d, 0.4 + Math.sin(this.elevation) * d, Math.cos(this.azimuth) * Math.cos(this.elevation) * d);
     this.camera.lookAt(target);
     if (this.visual) this.visual.update(this.vehicle, dt);
@@ -184,9 +206,21 @@ export class Garage implements Screen {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.camera.aspect = w / h;
-    // Centre the car in the space left between the car list and the spec panel.
-    if (w > 900) this.camera.setViewOffset(w, h, Math.round(w * 0.04), 0, w, h);
-    else this.camera.clearViewOffset();
+    this.fit = 1;
+    if (matchMedia(COMPACT_QUERY).matches) {
+      if (h > w) {
+        // Phone upright: the car in the band under the title, pulled back to fit the width.
+        this.fit = Math.max(1, 0.7 / (w / h));
+        this.camera.setViewOffset(w, h, 0, Math.round(h * 0.2), w, h);
+      } else {
+        // Phone sideways: the car on the left, a little closer, the panel takes the right side.
+        this.fit = 0.8;
+        this.camera.setViewOffset(w, h, Math.round(w * 0.2), 0, w, h);
+      }
+    } else if (w > 900) {
+      // Centre the car in the space left between the car list and the spec panel.
+      this.camera.setViewOffset(w, h, Math.round(w * 0.04), 0, w, h);
+    } else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
   }
 
@@ -200,6 +234,7 @@ export class Garage implements Screen {
     window.removeEventListener('pointerdown', this.onPointerDown);
     window.removeEventListener('pointermove', this.onPointerMove);
     window.removeEventListener('pointerup', this.onPointerUp);
+    window.removeEventListener('pointercancel', this.onPointerUp);
     window.removeEventListener('wheel', this.onWheel);
     this.ui.dispose();
     this.visual?.dispose();

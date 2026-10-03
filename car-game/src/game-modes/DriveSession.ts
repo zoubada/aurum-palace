@@ -24,6 +24,8 @@ import { CityTrack } from '../tracks/city/CityTrack';
 import { AnnecyTrack, type AnnecyBundle } from '../tracks/annecy/AnnecyTrack';
 import { formatLapTime, type LapRecord } from '../tracks/LapTimer';
 import { DEFAULT_DRIVE, MAX_OPPONENTS, type DriveOptions } from './options';
+import { isTouchDevice } from '../core/device';
+import { TouchControls } from '../ui/TouchControls';
 
 /** Physics runs at a fixed 240 Hz, decoupled from the display refresh rate. */
 const PHYSICS_DT = 1 / 240;
@@ -63,6 +65,9 @@ export class DriveSession implements Screen {
   private readonly hud: HUD;
   private readonly raceHud: RaceHUD | null = null;
   private readonly menu: Menu;
+  /** Phones: on-screen pedals and steering, and the "turn your phone" card. */
+  private readonly touch: TouchControls | null = null;
+  private readonly rotateCard: HTMLDivElement | null = null;
   private accumulator = 0;
   private paused = false;
   private hudVisible = true;
@@ -110,7 +115,8 @@ export class DriveSession implements Screen {
     const course = this.track.id === 'annecy' ? `${this.track.id}-${options.variant ?? 'full'}` : this.track.id;
     this.bestKey = `best.${course}.${options.rain ? 'wet' : 'dry'}.${car.id}`;
     this.player = this.world.add(car, undefined, loadJSON<LapRecord | null>(this.bestKey, null));
-    this.player.vehicle.assists = loadJSON<Assists>('assists', { ...ASSIST_PRESETS.intermediate });
+    // On-screen pedals are less precise than a pad or keys: phones start with the Arcade aids.
+    this.player.vehicle.assists = loadJSON<Assists>('assists', { ...ASSIST_PRESETS[isTouchDevice() ? 'arcade' : 'intermediate'] });
     this.visual = new CarVisual(car, this.player.vehicle);
     this.scene.add(this.visual.root);
     this.mirrors = new Mirrors(this.visual);
@@ -145,6 +151,15 @@ export class DriveSession implements Screen {
     // --- UI.
     this.hud = new HUD(app.uiRoot, car.name, true);
     this.hud.onMenu = () => this.setPaused(!this.paused);
+    if (isTouchDevice()) {
+      this.touch = new TouchControls(app.uiRoot, (a) => app.input.push(a));
+      this.touch.setManual(!this.vehicle.assists.autoGear);
+      app.input.touch = this.touch.state;
+      this.rotateCard = document.createElement('div');
+      this.rotateCard.className = 'rotate-card';
+      this.rotateCard.innerHTML = '<div><b>⟳</b>Tourne ton téléphone à l’horizontale pour conduire</div>';
+      app.uiRoot.appendChild(this.rotateCard);
+    }
     if (this.track.spline) this.raceHud = new RaceHUD(app.uiRoot, this.track.minimap(), this.track.sectors.length, count > 0);
     this.racingLineOn = loadJSON<{ on: boolean }>('racingLine', { on: false }).on;
     this.applyRacingLine();
@@ -262,6 +277,7 @@ export class DriveSession implements Screen {
 
   private setAssists(a: Assists): void {
     this.vehicle.assists = { ...a };
+    this.touch?.setManual(!a.autoGear);
     saveJSON('assists', a);
     this.updateInfo();
   }
@@ -463,6 +479,11 @@ export class DriveSession implements Screen {
     this.mirrors.dispose();
     this.visual.dispose();
     this.track.dispose();
+    if (this.touch) {
+      this.app.input.touch = null;
+      this.touch.dispose();
+    }
+    this.rotateCard?.remove();
     this.hud.root.remove();
     this.raceHud?.root.remove();
     this.menu.root.remove();
