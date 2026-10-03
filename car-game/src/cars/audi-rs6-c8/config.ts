@@ -73,6 +73,7 @@ export const audiRs6: CarConfig = {
   sound: { cylinders: 8, roughness: 0.75, brightness: 0.35, intake: 0.4, turbo: 0.45, pops: 0.6, seed: 28 },
   visual: {
     model: 'assets/cars/audi-rs6-c8/model.glb',
+    modelCredit: 'Modèle 3D « 2020 Audi RS6 Avant » par Ddiaz Design (Sketchfab), licence CC-BY 4.0 — adapté pour le jeu',
     brand: 'Audi',
     length: 4.995,
     width: 1.951,
