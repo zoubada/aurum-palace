@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { QualitySettings } from '../../core/quality';
 import { decodeHeight, fetchGzip, parseTile, unpack, type AnnecyTrackData, type TileData } from './data';
 import { buildBuildings, buildTrees } from './objects';
+import { buildLandscape } from './landscape';
 
 /**
  * Terrain streaming (SPEC §5: "streaming par zones obligatoire + LOD du terrain").
@@ -448,6 +449,7 @@ export class Terrain {
         const heightAt = (x: number, z: number) => this.heightAt(x, z) ?? 0;
         const parts = [
           ...(t.dist < L.buildings ? buildBuildings(t.data, t.x0, t.z0) : []),
+          ...(t.dist < L.buildings ? buildLandscape(t.data, t.x0, t.z0, heightAt) : []),
           ...(t.dist < L.trees ? buildTrees(t.data, t.x0, t.z0, heightAt, L.treeDensity, L.shadows) : []),
         ];
         for (const p of parts) g.add(p);

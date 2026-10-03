@@ -14,6 +14,7 @@ import { ANNECY_BASE, annecyControlPoints, type AnnecyTrackData } from './data';
 import { Terrain, loadFar, type FarTerrain } from './terrain';
 import { Lake } from './lake';
 import { buildRuralRoad, type RuralMaterials } from './roadside';
+import { setBuildingLights } from './objects';
 import { chequerTexture } from '../city/textures';
 
 /**
@@ -132,6 +133,8 @@ export class AnnecyTrack implements TrackScene {
     this.env.sun.color.setRGB(1, 0.62 + 0.33 * low, 0.38 + 0.5 * low);
     this.env.sun.intensity = options.rain ? 0.5 : 0.9 + 1.8 * low;
     this.exposure = options.rain ? 1.3 : 1 + (1 - low) * 0.55;
+    // Windows light up as the sun goes down.
+    setBuildingLights(Math.max(0, Math.min(1, (8 - sun.elevation) / 8)) * (options.rain ? 1 : 0.85));
     // Long-range alpine haze, warmer at sunset, grey in the rain.
     this.env.setFog(options.rain ? 0x8e959c : low < 0.3 ? 0xd9b48f : 0xa9bfd6, options.rain ? 0.00045 : 0.00006);
 
@@ -143,7 +146,7 @@ export class AnnecyTrack implements TrackScene {
     this.lake = new Lake(d.lake.outer, d.lake.inner, quality, sunDir, this.env.sun.color, options.rain);
     this.group.add(this.lake.mesh);
     const lines = full ? [0] : [variant.from, variant.to];
-    this.group.add(buildRuralRoad(this.spline, materials(options.rain, aniso), d.signs, lines));
+    this.group.add(buildRuralRoad(this.spline, materials(options.rain, aniso), d.signs, lines, d.crossings ?? []));
 
     if (options.rain) {
       this.rain = new Rain(quality.rainDrops);

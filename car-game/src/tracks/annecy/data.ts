@@ -25,6 +25,8 @@ export interface AnnecyTrackData {
   waypoints: Array<{ name: string; s: number }>;
   lake: { outer: Array<Array<[number, number]>>; inner: Array<Array<[number, number]>> };
   signs: Array<{ s: number; name: string; entering: boolean }>;
+  /** Zebra crossings on the race road: [distance along the lap, 1 = with traffic lights]. */
+  crossings: Array<[number, number]>;
   /** Tiles: [i, j, x of the west edge, z of the north edge] (game coordinates). */
   tile: { size: number; step: number; n: number; list: Array<[number, number, number, number]> };
 }
@@ -42,7 +44,17 @@ export interface TileData {
   /** Heights (m above the lake), row 0 = north edge, column 0 = west edge. */
   heights: Float32Array;
   trees: { x: Uint16Array; z: Uint16Array; h: Uint8Array; type: Uint8Array; rgb: Uint8Array };
-  buildings: { count: Uint16Array; info: Int16Array; color: Uint8Array; verts: Int16Array };
+  /**
+   * Buildings: info = eave, rise, base (dm) · roof type (0 flat, 1 gable, 2 hip) · style ·
+   * floors · rectangle fill (%) · shops on the ground floor; rect = minimum rectangle centre
+   * (dm from the tile's south-west corner, y north), half-length, half-width (dm), ridge angle
+   * (centi-rad, x east / y north); colours = roof rgb, wall rgb.
+   */
+  buildings: { count: Uint16Array; info: Int16Array; rect: Int16Array; color: Uint8Array; verts: Int16Array };
+  /** Ground features (OSM): areas by kind, footpaths with width, piers (line or area + width). */
+  areas: { kind: Uint8Array; count: Uint16Array; verts: Int16Array };
+  paths: { count: Uint16Array; width: Uint8Array; verts: Int16Array };
+  piers: { count: Uint16Array; info: Uint8Array; verts: Int16Array };
 }
 
 type ArrayCtor = Uint8ArrayConstructor | Uint16ArrayConstructor | Int16ArrayConstructor | Float32ArrayConstructor | Uint32ArrayConstructor;
@@ -100,7 +112,10 @@ export function parseTile(buf: ArrayBuffer): TileData {
     step: header.step as number,
     heights,
     trees: { x: a.treeX as Uint16Array, z: a.treeZ as Uint16Array, h: a.treeH as Uint8Array, type: a.treeType as Uint8Array, rgb: a.treeRGB as Uint8Array },
-    buildings: { count: a.bCount as Uint16Array, info: a.bInfo as Int16Array, color: a.bColor as Uint8Array, verts: a.bVerts as Int16Array },
+    buildings: { count: a.bCount as Uint16Array, info: a.bInfo as Int16Array, rect: a.bRect as Int16Array, color: a.bColor as Uint8Array, verts: a.bVerts as Int16Array },
+    areas: { kind: a.aKind as Uint8Array, count: a.aCount as Uint16Array, verts: a.aVerts as Int16Array },
+    paths: { count: a.pathCount as Uint16Array, width: a.pathWidth as Uint8Array, verts: a.pathVerts as Int16Array },
+    piers: { count: a.pierCount as Uint16Array, info: a.pierInfo as Uint8Array, verts: a.pierVerts as Int16Array },
   };
 }
 

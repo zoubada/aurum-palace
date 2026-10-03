@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "smoke": "node tools/smoke-test.mjs",
-    "data:annecy": "node tools/annecy/0-fetch-osm.mjs && node tools/annecy/1-route.mjs && node tools/annecy/2-fetch-ign.mjs && node --max-old-space-size=8192 tools/annecy/3-build.mjs"
+    "data:annecy": "node tools/annecy/0-fetch-osm.mjs && node tools/annecy/1-route.mjs && node tools/annecy/2-fetch-ign.mjs && node tools/annecy/2b-fetch-roofs.mjs && node --max-old-space-size=8192 tools/annecy/3-build.mjs"
   },
   "dependencies": {
     "three": "^0.186.1"

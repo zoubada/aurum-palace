@@ -74,10 +74,12 @@ function signTexture(name: string, leaving: boolean): THREE.Texture {
   return t;
 }
 
-export function buildRuralRoad(track: TrackSpline, mats: RuralMaterials, signs: Sign[], lines: number[]): THREE.Group {
+export function buildRuralRoad(track: TrackSpline, mats: RuralMaterials, signs: Sign[], lines: number[], crossings: Array<[number, number]> = []): THREE.Group {
   const group = new THREE.Group();
   group.name = 'rural-road';
   const n = track.count;
+  const zebraIdx = crossings.map(([s]) => track.indexAt(s));
+  const nearZebra = (i: number) => zebraIdx.some((z) => Math.abs(z - i) < 7);
   const wall = (side: number): Fn => (s) => side * (side > 0 ? s.wallL : s.wallR);
 
   for (let c0 = 0; c0 < n; c0 += CHUNK) {
@@ -109,7 +111,7 @@ export function buildRuralRoad(track: TrackSpline, mats: RuralMaterials, signs: 
     }
     // Centre line: dashes on straights, continuous in bends, none in roundabouts / narrow lanes.
     for (const [a, b] of runs((s) => !RING(s) && s.hw >= 2.9 && Math.abs(s.kappa) < 1 / 300)) {
-      for (let i = Math.ceil(a / 13) * 13; i + 3 <= b; i += 13) add(mats.line, ribbon(track, i, i + 3, 1, () => -0.07, () => 0.07, () => 0.012, () => 0.012));
+      for (let i = Math.ceil(a / 13) * 13; i + 3 <= b; i += 13) if (!nearZebra(i)) add(mats.line, ribbon(track, i, i + 3, 1, () => -0.07, () => 0.07, () => 0.012, () => 0.012));
     }
     for (const [a, b] of runs((s) => !RING(s) && s.hw >= 2.9 && Math.abs(s.kappa) >= 1 / 300)) {
       add(mats.line, ribbon(track, a, b, 2, () => -0.07, () => 0.07, () => 0.012, () => 0.012));
@@ -145,6 +147,24 @@ export function buildRuralRoad(track: TrackSpline, mats: RuralMaterials, signs: 
     }
     for (const [a, b] of runs(BRIDGE)) {
       add(mats.deck, ribbon(track, a, b, 2, (s) => s.wallL + 0.3, (s) => -(s.wallR + 0.3), () => -1.4, () => -1.4));
+    }
+    // Zebra crossings where OSM maps them: 0.5 m bands, 0.5 m apart, 4 m long, parallel to the
+    // traffic; a stop line before the ones with traffic lights.
+    for (const [s, lights] of crossings) {
+      const i = track.indexAt(s);
+      if (i < c0 + 3 || i >= c1 - 3) continue;
+      const hw = track.sample(i).hw;
+      const bands = Math.floor((2 * hw - 0.6) / 1);
+      const first = -((bands - 1) * 1) / 2 - 0.25;
+      for (let b = 0; b < bands; b++) {
+        const o = first + b;
+        add(mats.line, ribbon(track, i - 2, i + 2, 1, () => o, () => o + 0.5, () => 0.014, () => 0.014));
+      }
+      if (lights) {
+        // Traffic keeps right: forward lane is the right half (negative offsets).
+        add(mats.line, ribbon(track, i - 6, i - 5, 1, (q) => -q.hw + 0.4, () => -0.15, () => 0.014, () => 0.014));
+        add(mats.line, ribbon(track, i + 5, i + 6, 1, () => 0.15, (q) => q.hw - 0.4, () => 0.014, () => 0.014));
+      }
     }
     // Start / finish lines.
     for (const s of lines) {

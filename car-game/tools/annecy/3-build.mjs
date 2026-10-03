@@ -23,6 +23,8 @@ import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import sharp from 'sharp';
 import { CACHE, LAKE_LEVEL, OUT, lonLatToL93 } from './common.mjs';
+import { BUILDING_RADIUS, ROOF, STYLE, WALLS, fitRoof, minRect, pointInPolygon, polygonArea, setOldTown, styleOf } from './buildings.mjs';
+import { areaKind, isPath, isPier, isZebra, pathWidth } from './features.mjs';
 import { TrackSpline } from '../../src/tracks/TrackSpline.ts';
 
 const TILE = 1000;
@@ -388,8 +390,9 @@ const ground = new Float32Array(GW * GH);
 for (let k = 0; k < ground.length; k++) {
   let h = dem[k];
   const dr = roadDist[k];
-  // Beyond ~200 m: the surface model (forests and villages with volume, seen from afar).
-  const w = Math.min(1, Math.max(0, (dr - 190) / 80));
+  // Beyond the modelled buildings (BUILDING_RADIUS): the surface model (forests and villages
+  // with volume, seen from afar).
+  const w = Math.min(1, Math.max(0, (dr - BUILDING_RADIUS - 40) / 100));
   if (w > 0) h = h + (Math.max(h, mns[k]) - h) * (w * w * (3 - 2 * w));
   const rd = roadAt(k);
   if (rd && rd.smp.zone !== 'bridge') {
@@ -413,7 +416,8 @@ log('terrain sculpté');
 // =============================================================================
 // Output.
 // =============================================================================
-if (existsSync(OUT)) rmSync(OUT, { recursive: true });
+// Fresh tiles (the README beside them is kept).
+if (existsSync(join(OUT, 't'))) rmSync(join(OUT, 't'), { recursive: true });
 mkdirSync(join(OUT, 't'), { recursive: true });
 
 /** Binary container: u32 header length, JSON header, then 4-byte aligned typed arrays. */
@@ -447,11 +451,34 @@ const hash = (a, b) => {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 };
 
-// Buildings near the road (by centroid), with real heights from the surface model.
-const PALETTE = [0xe9e4da, 0xe8d9b5, 0xd9b47c, 0xe2b8a8, 0xcfcfca, 0xb9ad99, 0xe6cf8e, 0xf1eee6, 0xd8c3a5];
+// Buildings near the road (by centroid): real heights and roof shapes from the surface model
+// at 1 m (step 2b), facade style from the OSM tags and the district.
+const [OTX, OTY] = lonLatToL93(6.1268, 45.8992); // Vieille Ville (Palais de l'Île)
+setOldTown(OTX, OTY, 380);
+const roofTiles = new Set(existsSync(join(IGN, 'roof-tiles.json')) ? JSON.parse(readFileSync(join(IGN, 'roof-tiles.json'), 'utf8')) : []);
+const mns1Cache = new Map();
+/** Surface model at 1 m (m above the lake), NaN outside the downloaded tiles. */
+function mns1(X, Y) {
+  const i = Math.floor(X / TILE);
+  const j = Math.floor(Y / TILE);
+  const key = `${i}_${j}`;
+  if (!roofTiles.has(key)) return NaN;
+  let a = mns1Cache.get(key);
+  if (!a) {
+    a = new Float32Array(readFileSync(join(IGN, `${key}.mns1.bil`)).buffer.slice(0));
+    mns1Cache.set(key, a);
+  }
+  const c = Math.round(X - i * TILE);
+  const r = Math.round(j * TILE + TILE - Y);
+  if (c < 0 || c > 1000 || r < 0 || r > 1000) return NaN;
+  const h = a[r * 1001 + c];
+  return h > -100 && h < 5000 ? h - LAKE_LEVEL : NaN;
+}
 const tileBuildings = new Map();
 let nBuild = 0;
+const roofStats = [0, 0, 0, 0];
 for (const w of buildingWays) {
+  if (w.tags.location === 'underground' || Number.parseInt(w.tags.layer ?? '0', 10) < 0) continue;
   const pts = w.nodes.slice(0, -1).map(L93);
   let cx = 0;
   let cy = 0;
@@ -460,7 +487,7 @@ for (const w of buildingWays) {
     cy += Y / pts.length;
   }
   const kc = Math.round(gj(cy)) * GW + Math.round(gi(cx));
-  if (!(kc >= 0 && kc < GW * GH) || roadDist[kc] > 180) continue; // beyond: surface model
+  if (!(kc >= 0 && kc < GW * GH) || roadDist[kc] > BUILDING_RADIUS) continue; // beyond: surface model
   // Not on the road itself (bad data or covered passages).
   let onRoad = false;
   for (const [X, Y] of pts) {
@@ -469,30 +496,43 @@ for (const w of buildingWays) {
     if (rd && Math.abs(rd.lat) < Math.max(rd.smp.wallL, rd.smp.wallR) + 0.3 && rd.smp.zone !== 'bridge') onRoad = true;
   }
   if (onRoad) continue;
-  let area = 0;
-  for (let k = 0; k < pts.length; k++) {
-    const [ax, ay] = pts[k];
-    const [bx, by] = pts[(k + 1) % pts.length];
-    area += ax * by - bx * ay;
-  }
-  area = Math.abs(area) / 2;
+  const area = polygonArea(pts);
   if (area < 8) continue;
-  // Height: tag, else median of surface − ground over the footprint.
+  // Base: lowest ground under the footprint (walls go down to it).
+  let base = Infinity;
+  for (const [X, Y] of pts) base = Math.min(base, demAt(X, Y, ground));
+  const rect = minRect(pts);
+  const ca = Math.cos(rect.angle);
+  const sa = Math.sin(rect.angle);
+  // Roof samples: 1 m grid inside the footprint, away from the edges (blurred in the MNS).
+  const samples = [];
+  let x0 = Infinity;
+  let x1 = -Infinity;
+  let y0 = Infinity;
+  let y1 = -Infinity;
+  for (const [X, Y] of pts) {
+    x0 = Math.min(x0, X);
+    x1 = Math.max(x1, X);
+    y0 = Math.min(y0, Y);
+    y1 = Math.max(y1, Y);
+  }
+  for (let Y = Math.ceil(y0); Y <= y1; Y++)
+    for (let X = Math.ceil(x0); X <= x1; X++) {
+      if (!pointInPolygon(X, Y, pts)) continue;
+      if (!(pointInPolygon(X + 0.8, Y, pts) && pointInPolygon(X - 0.8, Y, pts) && pointInPolygon(X, Y + 0.8, pts) && pointInPolygon(X, Y - 0.8, pts))) continue;
+      const h = mns1(X, Y);
+      if (Number.isNaN(h)) continue;
+      const dx = X - rect.cx;
+      const dy = Y - rect.cy;
+      samples.push({ u: dx * ca + dy * sa, v: -dx * sa + dy * ca, h: h - base });
+    }
+  const fit = fitRoof(samples, rect);
+  // Height of the old measure (4 m grid, or OSM tags) when the 1 m data is missing.
   let H = Number.parseFloat(w.tags.height) || (Number.parseFloat(w.tags['building:levels']) ? Number.parseFloat(w.tags['building:levels']) * 3 + 1.5 : 0);
   if (!H) {
     const hs = [];
-    let x0 = Infinity;
-    let x1 = -Infinity;
-    let y0 = Infinity;
-    let y1 = -Infinity;
-    for (const [X, Y] of pts) {
-      x0 = Math.min(x0, gi(X));
-      x1 = Math.max(x1, gi(X));
-      y0 = Math.min(y0, gj(Y));
-      y1 = Math.max(y1, gj(Y));
-    }
-    for (let y = Math.ceil(y0); y <= Math.floor(y1); y++)
-      for (let x = Math.ceil(x0); x <= Math.floor(x1); x++) {
+    for (let y = Math.ceil(gj(y0)); y <= Math.floor(gj(y1)); y++)
+      for (let x = Math.ceil(gi(x0)); x <= Math.floor(gi(x1)); x++) {
         const k = y * GW + x;
         if (buildingMask[k]) hs.push(mns[k] - dem[k]);
       }
@@ -501,19 +541,144 @@ for (const w of buildingWays) {
     H = hs[Math.floor(hs.length * 0.6)];
   }
   H = Math.max(3, Math.min(60, H || 6));
-  // Base: lowest ground under the footprint (walls go down to it).
-  let base = Infinity;
-  for (const [X, Y] of pts) base = Math.min(base, demAt(X, Y, ground));
-  const flat = w.tags['roof:shape'] === 'flat' || area > 900 || H > 22;
-  const roofH = flat ? 0 : Math.max(1.4, Math.min(5, 0.28 * Math.sqrt(area)));
+  let type;
+  let eave;
+  let rise;
+  let ridgeAngle = rect.angle;
+  if (fit && fit.eave > 1.8 && fit.eave < 70) {
+    type = fit.type;
+    eave = Math.max(2.4, fit.eave);
+    rise = type === ROOF.FLAT ? 0 : Math.min(fit.rise, Math.max(1, rect.hw * 1.6));
+    if (!fit.ridgeAlongU) ridgeAngle = rect.angle + Math.PI / 2;
+  } else {
+    const flat = w.tags['roof:shape'] === 'flat' || area > 900 || H > 22;
+    rise = flat ? 0 : Math.max(1.4, Math.min(5, 0.28 * Math.sqrt(area)));
+    type = flat ? ROOF.FLAT : ROOF.HIP;
+    eave = H - rise;
+  }
+  // OSM roof shape wins over the fit when the mapper set it.
+  const tagged = w.tags['roof:shape'];
+  if (tagged === 'flat') {
+    type = ROOF.FLAT;
+    rise = 0;
+  } else if (/gabled|half-hipped/.test(tagged ?? '') && type === ROOF.FLAT) {
+    type = ROOF.GABLE;
+    rise = Math.max(1.5, rect.hw * 0.6);
+  } else if (/hipped|pyramidal/.test(tagged ?? '') && type === ROOF.FLAT) {
+    type = ROOF.HIP;
+    rise = Math.max(1.5, rect.hw * 0.6);
+  }
+  roofStats[fit ? type : 3]++;
+  const rnd = hash(w.id, 3);
+  const style = styleOf(w.tags, area, eave + rise, cx, cy, rnd);
+  const levels = Number.parseInt(w.tags['building:levels'] ?? '', 10);
+  const floors = Math.max(1, Math.min(30, levels > 0 ? levels : Math.round(eave / 2.9)));
+  const palette = WALLS[style];
+  const wall = w.tags['building:colour'] && /^#[0-9a-f]{6}$/i.test(w.tags['building:colour']) ? Number.parseInt(w.tags['building:colour'].slice(1), 16) : palette[Math.floor(hash(w.id, 7) * palette.length)];
   const ti = Math.floor(cx / TILE);
   const tj = Math.floor(cy / TILE);
   const key = `${ti}_${tj}`;
   if (!tileBuildings.has(key)) tileBuildings.set(key, []);
-  tileBuildings.get(key).push({ pts, cx, cy, H, base, roofH, wall: PALETTE[Math.floor(hash(w.id, 7) * PALETTE.length)] });
+  tileBuildings.get(key).push({ pts, cx, cy, eave, rise, base, type, style, floors, rect, ridgeAngle, quality: area / (4 * rect.hl * rect.hw), wall, shop: style === STYLE.SHOPS || style === STYLE.OLD_TOWN });
   nBuild++;
 }
-log(`${nBuild} bâtiments retenus`);
+log(`toits mesurés : ${roofStats[0]} plats, ${roofStats[1]} à deux pans, ${roofStats[2]} à quatre pans ; ${roofStats[3]} sans mesure au mètre`);
+
+// =============================================================================
+// Ground features near the route (OSM): areas, footpaths, piers; zebra crossings.
+// =============================================================================
+const FEATURE_RADIUS = BUILDING_RADIUS;
+const distAt = (X, Y) => {
+  const x = Math.round(gi(X));
+  const y = Math.round(gj(Y));
+  return x < 0 || y < 0 || x >= GW || y >= GH ? Infinity : roadDist[y * GW + x];
+};
+const tileOf = (X, Y) => `${Math.floor(X / TILE)}_${Math.floor(Y / TILE)}`;
+const pushTo = (map, key, v) => {
+  if (!map.has(key)) map.set(key, []);
+  map.get(key).push(v);
+};
+const tileAreas = new Map();
+const tilePaths = new Map();
+const tilePiers = new Map();
+let nAreas = 0;
+let nPaths = 0;
+let nPiers = 0;
+for (const w of osm.ways) {
+  const t = w.tags;
+  if (w.nodes.length < 2 || !w.nodes.every((id) => nodeLL.has(id))) continue;
+  const closed = w.nodes[0] === w.nodes[w.nodes.length - 1] && w.nodes.length >= 4;
+  const kind = closed ? areaKind(t) : 0;
+  const pier = isPier(t);
+  const path = !closed && isPath(t);
+  if (!kind && !pier && !path) continue;
+  const pts = (closed ? w.nodes.slice(0, -1) : w.nodes).map(L93);
+  const dmin = Math.min(...pts.map(([X, Y]) => distAt(X, Y)));
+  if (dmin > FEATURE_RADIUS) continue;
+  if (pier) {
+    const area = closed && t.area !== 'no';
+    const [X, Y] = pts[0];
+    pushTo(tilePiers, tileOf(X, Y), { pts, area, width: Number.parseFloat(t.width) > 0.8 ? Number.parseFloat(t.width) : 2.6 });
+    nPiers++;
+  } else if (kind) {
+    if (polygonArea(pts) > 400000) continue;
+    let cx = 0;
+    let cy = 0;
+    for (const [X, Y] of pts) {
+      cx += X / pts.length;
+      cy += Y / pts.length;
+    }
+    pushTo(tileAreas, tileOf(cx, cy), { kind, pts });
+    nAreas++;
+  } else {
+    // Footpaths: cut where they cross or follow the race road (the road has its own pavements).
+    let run = [];
+    const flush = () => {
+      if (run.length >= 2) {
+        pushTo(tilePaths, tileOf(...run[0]), { pts: run, width: pathWidth(t) });
+        nPaths++;
+      }
+      run = [];
+    };
+    for (const [X, Y] of pts) {
+      const d = distAt(X, Y);
+      if (d < 9 || d > FEATURE_RADIUS + 40) flush();
+      else run.push([X, Y]);
+    }
+    flush();
+  }
+}
+log(`abords : ${nAreas} surfaces (pelouses, terrains, plages, piscines…), ${nPaths} allées, ${nPiers} pontons`);
+
+// Zebra crossings on the race road (OSM crossing nodes and crossing footways).
+const crossings = [];
+const addCrossing = (X, Y, lights) => {
+  const [gx, gz] = toGame(X, Y);
+  const q = spline.project(gx, gz);
+  const smp = spline.sample(spline.indexAt(q.s));
+  const p = spline.pointAt(q.s, 0);
+  if (Math.hypot(p.x - gx, p.z - gz) > smp.hw + 1.5) return;
+  if (crossings.some((c) => Math.abs(c[0] - q.s) < 9)) return;
+  crossings.push([Math.round(q.s * 10) / 10, lights ? 1 : 0]);
+};
+for (const n of osm.nodes) {
+  const t = n[3];
+  if (!t || !isZebra(t)) continue;
+  const [X, Y] = lonLatToL93(n[1], n[2]);
+  if (distAt(X, Y) > 12) continue;
+  addCrossing(X, Y, t.crossing === 'traffic_signals' || t['crossing:signals'] === 'yes');
+}
+for (const w of osm.ways) {
+  if (w.tags.footway !== 'crossing' || /unmarked|no/.test(w.tags.crossing ?? '')) continue;
+  const pts = w.nodes.filter((id) => nodeLL.has(id)).map(L93);
+  if (pts.length < 2) continue;
+  const [X, Y] = [(pts[0][0] + pts[pts.length - 1][0]) / 2, (pts[0][1] + pts[pts.length - 1][1]) / 2];
+  if (distAt(X, Y) > 12) continue;
+  addCrossing(X, Y, w.tags.crossing === 'traffic_signals');
+}
+crossings.sort((a, b) => a[0] - b[0]);
+log(`passages piétons sur le tracé : ${crossings.length}`);
+log(`${nBuild} bâtiments retenus (rayon ${BUILDING_RADIUS} m)`);
 
 let nTrees = 0;
 let bytes = 0;
@@ -570,16 +735,23 @@ for (const [i, j] of tiles) {
 
   // Buildings of this tile: footprint relative to the tile's south-west corner (dm).
   const bl = tileBuildings.get(key) ?? [];
+  const rel = ([X, Y]) => [Math.round((X - i * TILE) * 10), Math.round((Y - j * TILE) * 10)];
   const bCount = new Uint16Array(bl.length);
-  const bInfo = new Int16Array(bl.length * 4); // wall height, roof height, base (dm), wall colour index
+  // eave, rise, base (dm) · roof type · style · floors · rectangle fill (%) · ground-floor shops
+  const bInfo = new Int16Array(bl.length * 8);
+  // Minimum rectangle: centre (dm, tile-relative), half extents along / across the ridge (dm), ridge angle (centi-rad, Lambert)
+  const bRect = new Int16Array(bl.length * 5);
   const bColor = new Uint8Array(bl.length * 6); // roof rgb, wall rgb
   const verts = [];
   bl.forEach((b, q) => {
     bCount[q] = b.pts.length;
-    bInfo[q * 4] = Math.round((b.H - b.roofH) * 10);
-    bInfo[q * 4 + 1] = Math.round(b.roofH * 10);
-    bInfo[q * 4 + 2] = Math.round(b.base * 10);
-    bInfo[q * 4 + 3] = 0;
+    bInfo.set([Math.round(b.eave * 10), Math.round(b.rise * 10), Math.round(b.base * 10), b.type, b.style, b.floors, Math.round(Math.min(1, b.quality) * 100), b.shop ? 1 : 0], q * 8);
+    const [rx, ry] = rel([b.rect.cx, b.rect.cy]);
+    // Half extents along / across the ridge.
+    const across = b.ridgeAngle !== b.rect.angle;
+    const hA = across ? b.rect.hw : b.rect.hl;
+    const hC = across ? b.rect.hl : b.rect.hw;
+    bRect.set([rx, ry, Math.round(hA * 10), Math.round(hC * 10), Math.round(Math.atan2(Math.sin(b.ridgeAngle), Math.cos(b.ridgeAngle)) * 100)], q * 5);
     // Roof colour: average of the photo around the centroid.
     let R = 0;
     let G = 0;
@@ -591,11 +763,24 @@ for (const [i, j] of tiles) {
       B += bb / 5;
     }
     bColor.set([R, G, B, (b.wall >> 16) & 255, (b.wall >> 8) & 255, b.wall & 255], q * 6);
-    for (const [X, Y] of b.pts) verts.push(Math.round((X - i * TILE) * 10), Math.round((Y - j * TILE) * 10));
+    for (const p of b.pts) verts.push(...rel(p));
   });
+  // Ground features.
+  const al = tileAreas.get(key) ?? [];
+  const aKind = new Uint8Array(al.map((a) => a.kind));
+  const aCount = new Uint16Array(al.map((a) => a.pts.length));
+  const aVerts = new Int16Array(al.flatMap((a) => a.pts.flatMap(rel)));
+  const pl = tilePaths.get(key) ?? [];
+  const pathCount = new Uint16Array(pl.map((a) => a.pts.length));
+  const pathWidthDm = new Uint8Array(pl.map((a) => Math.min(255, Math.round(a.width * 10))));
+  const pathVerts = new Int16Array(pl.flatMap((a) => a.pts.flatMap(rel)));
+  const rl = tilePiers.get(key) ?? [];
+  const pierCount = new Uint16Array(rl.map((a) => a.pts.length));
+  const pierInfo = new Uint8Array(rl.flatMap((a) => [a.area ? 1 : 0, Math.min(255, Math.round(a.width * 10))]));
+  const pierVerts = new Int16Array(rl.flatMap((a) => a.pts.flatMap(rel)));
 
   const buf = pack(
-    { i, j, n: N, step: STEP },
+    { i, j, n: N, step: STEP, v: 2 },
     {
       heights,
       treeX: new Uint16Array(tx),
@@ -605,8 +790,18 @@ for (const [i, j] of tiles) {
       treeRGB: new Uint8Array(tc),
       bCount,
       bInfo,
+      bRect,
       bColor,
       bVerts: new Int16Array(verts),
+      aKind,
+      aCount,
+      aVerts,
+      pathCount,
+      pathWidth: pathWidthDm,
+      pathVerts,
+      pierCount,
+      pierInfo,
+      pierVerts,
     },
   );
   writeFileSync(join(OUT, 't', `${key}.bin`), buf);
@@ -724,6 +919,7 @@ const track = {
   waypoints: wpS,
   lake: { outer: lakeOuter.map(lakeGame), inner: lakeInner.map(lakeGame) },
   signs,
+  crossings,
   tile: { size: TILE, step: STEP, n: N, list: tileList.map(([i, j]) => [i, j, ...toGame(i * TILE, j * TILE + TILE)]) },
 };
 writeFileSync(join(OUT, 'track.json'), JSON.stringify(track));
